@@ -1,40 +1,46 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
+import {
+  LayoutDashboard, Users, UserCircle, Settings, FileText,
+  CalendarDays, BarChart2, Paintbrush, ClipboardList, University,
+  type LucideIcon,
+} from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { useUIStore } from '@/store/useUIStore'
 import { useRole } from '@/hooks/useRole'
 import { useTenant } from '@/hooks/useTenant'
 import { ROUTES } from '@/lib/constants'
 
-interface NavItem { label: string; href: string; icon: string }
+interface NavItem { label: string; href: string; icon: LucideIcon }
 
 const adminNav: NavItem[] = [
-  { label: 'Dashboard',      href: ROUTES.admin.dashboard,  icon: '▦' },
-  { label: 'Students',       href: ROUTES.admin.students,   icon: '👥' },
-  { label: 'Officers',       href: ROUTES.admin.officers,   icon: '👤' },
-  { label: 'Stages',         href: ROUTES.admin.stages,     icon: '⚙' },
-  { label: 'Documents',      href: ROUTES.admin.documents,  icon: '📄' },
-  { label: 'Sessions',       href: ROUTES.admin.sessions,   icon: '📅' },
-  { label: 'Reports',        href: ROUTES.admin.reports,    icon: '📊' },
-  { label: 'Branding',       href: ROUTES.admin.branding,   icon: '🎨' },
+  { label: 'Dashboard', href: ROUTES.admin.dashboard,  icon: LayoutDashboard },
+  { label: 'Students',  href: ROUTES.admin.students,   icon: Users },
+  { label: 'Officers',  href: ROUTES.admin.officers,   icon: UserCircle },
+  { label: 'Stages',    href: ROUTES.admin.stages,     icon: Settings },
+  { label: 'Documents', href: ROUTES.admin.documents,  icon: FileText },
+  { label: 'Sessions',  href: ROUTES.admin.sessions,   icon: CalendarDays },
+  { label: 'Reports',   href: ROUTES.admin.reports,    icon: BarChart2 },
+  { label: 'Branding',  href: ROUTES.admin.branding,   icon: Paintbrush },
 ]
 
 const officerNav: NavItem[] = [
-  { label: 'Dashboard', href: ROUTES.officer.dashboard, icon: '▦' },
-  { label: 'Queue',     href: ROUTES.officer.queue,     icon: '📋' },
+  { label: 'Dashboard', href: ROUTES.officer.dashboard, icon: LayoutDashboard },
+  { label: 'Queue',     href: ROUTES.officer.queue,     icon: ClipboardList },
 ]
 
 const platformNav: NavItem[] = [
-  { label: 'Dashboard',     href: ROUTES.platform.dashboard,    icon: '▦' },
-  { label: 'Universities',  href: ROUTES.platform.universities,  icon: '🏛' },
+  { label: 'Dashboard',    href: ROUTES.platform.dashboard,   icon: LayoutDashboard },
+  { label: 'Universities', href: ROUTES.platform.universities, icon: University },
 ]
 
 export function Sidebar() {
   const pathname   = usePathname()
   const { sidebarOpen } = useUIStore()
-  const { isAdmin, isOfficer, isPlatformOwner } = useRole()
+  const { isOfficer, isPlatformOwner } = useRole()
   const { name, logoUrl, primaryColor } = useTenant()
 
   const navItems = isPlatformOwner ? platformNav : isOfficer ? officerNav : adminNav
@@ -49,7 +55,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--color-border)]">
         {logoUrl
-          ? <img src={logoUrl} alt={name} className="h-8 w-8 rounded object-cover" />
+          ? <Image src={logoUrl} alt={name} width={32} height={32} className="h-8 w-8 rounded object-cover" />
           : <div className="h-8 w-8 rounded flex items-center justify-center text-white text-sm font-bold" style={{ backgroundColor: primaryColor }}>{name[0]}</div>
         }
         <span className="font-semibold text-sm text-[var(--color-text)] truncate">{name || 'UniClear'}</span>
@@ -68,7 +74,7 @@ export function Sidebar() {
                 : 'text-[var(--color-muted)] hover:bg-[var(--color-bg)] hover:text-[var(--color-text)]'
             )}
           >
-            <span className="text-base">{item.icon}</span>
+            <item.icon className="h-4 w-4 shrink-0" />
             {item.label}
           </Link>
         ))}

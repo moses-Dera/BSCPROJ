@@ -1,5 +1,4 @@
 import { serverFetch } from '@/lib/api/server'
-import { CardSkeleton } from '@/components/shared/LoadingSkeleton'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Card } from '@/components/ui/card'
 

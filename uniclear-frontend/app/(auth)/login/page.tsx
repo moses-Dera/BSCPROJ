@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -34,7 +35,7 @@ export default function LoginPage() {
       >
         <div className="max-w-sm text-center">
           {logoUrl
-            ? <img src={logoUrl} alt={name} className="h-20 w-20 rounded-xl mx-auto mb-6 object-cover" />
+            ? <Image src={logoUrl} alt={name ?? ''} width={80} height={80} className="rounded-xl mx-auto mb-6 object-cover" />
             : (
               <div className="h-20 w-20 rounded-xl bg-white/20 mx-auto mb-6 flex items-center justify-center text-3xl font-bold">
                 {name?.[0] ?? 'U'}

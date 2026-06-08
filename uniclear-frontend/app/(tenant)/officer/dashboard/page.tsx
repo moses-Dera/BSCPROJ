@@ -1,8 +1,6 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
 import { useOfficerQueue } from '@/features/clearance/hooks/useClearance'
-import { useAuthStore } from '@/store/useAuthStore'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -13,7 +11,6 @@ import { ROUTES } from '@/lib/constants'
 import Link from 'next/link'
 
 export default function OfficerDashboard() {
-  const user = useAuthStore(s => s.user)
   const { data, isLoading } = useOfficerQueue(1)
 
   const pending   = data?.items?.length ?? 0

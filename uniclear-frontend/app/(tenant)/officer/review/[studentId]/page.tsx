@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import Image from 'next/image'
+import { use, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useApproveStage, useRejectStage } from '@/features/clearance/hooks/useClearance'
 import { RejectDialog } from '@/components/officer/RejectDialog'
@@ -15,14 +16,15 @@ import { formatDate } from '@/lib/utils/format'
 import { useRouter } from 'next/navigation'
 import { ROUTES } from '@/lib/constants'
 
-export default function ReviewPage({ params }: { params: { studentId: string } }) {
+export default function ReviewPage({ params }: { params: Promise<{ studentId: string }> }) {
   const router = useRouter()
+  const { studentId } = use(params)
   const [rejectOpen, setRejectOpen] = useState(false)
   const [selectedDocIdx, setSelectedDocIdx] = useState(0)
 
   const { data: clearance, isLoading, isError } = useQuery({
-    queryKey: ['clearance', 'review', params.studentId],
-    queryFn:  () => clearanceApi.getStatus(params.studentId).then((r: any) => r.data.data),
+    queryKey: ['clearance', 'review', studentId],
+    queryFn:  () => clearanceApi.getStatus(studentId).then((r: any) => r.data.data),
   })
 
   const { data: documents } = useQuery({
@@ -138,10 +140,11 @@ export default function ReviewPage({ params }: { params: { studentId: string } }
                 {selectedDoc.mimeType === 'application/pdf' ? (
                   <iframe src={selectedDoc.fileUrl} className="w-full h-full" title={selectedDoc.documentType.name} />
                 ) : (
-                  <img
+                  <Image
                     src={selectedDoc.fileUrl}
                     alt={selectedDoc.documentType.name}
-                    className="w-full h-full object-contain"
+                    fill
+                    className="object-contain"
                   />
                 )}
               </div>

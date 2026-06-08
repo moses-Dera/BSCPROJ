@@ -22,7 +22,7 @@ export default function StudentDocumentsPage() {
   if (loadingClearance || loadingDocs) return <LoadingSkeleton rows={3} />
   if (!clearance) return <EmptyState title="No active clearance" description="Start your clearance first from the dashboard." />
 
-  const currentStage = clearance.stages.find(s => s.stageId === clearance.currentStageId)
+
 
   return (
     <div className="max-w-2xl mx-auto space-y-4">

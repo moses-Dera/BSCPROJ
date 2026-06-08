@@ -4,7 +4,6 @@ import { useRef, useState } from 'react'
 import { cn } from '@/lib/utils/cn'
 import { formatFileSize } from '@/lib/utils/format'
 import { StatusBadge } from '@/components/shared/StatusBadge'
-import { Button } from '@/components/ui/button'
 import type { Document, DocumentType } from '@/types'
 
 interface DocumentUploadCardProps {

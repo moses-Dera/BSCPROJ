@@ -1,5 +1,6 @@
 'use client'
 
+import { Check, Lock, Clock, X } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { formatDate } from '@/lib/utils/format'
 import type { ClearanceRequest, ClearanceStage } from '@/types'
@@ -31,7 +32,7 @@ export function ClearanceStepper({ stages, request }: ClearanceStepperProps) {
                   isRejected  && 'bg-[var(--color-rejected)] border-[var(--color-rejected)] text-white',
                   isLocked    && 'bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-muted)]',
                 )}>
-                  {isCompleted ? '✓' : isLocked ? '🔒' : i + 1}
+                  {isCompleted ? <Check className="h-4 w-4" /> : isLocked ? <Lock className="h-3 w-3" /> : i + 1}
                 </div>
                 <span className="mt-1.5 text-xs font-medium text-center max-w-[80px] leading-tight text-[var(--color-text)]">
                   {stage.name}
@@ -67,14 +68,21 @@ export function ClearanceStepper({ stages, request }: ClearanceStepperProps) {
                   isRejected  && 'bg-[var(--color-rejected)] border-[var(--color-rejected)] text-white',
                   isLocked    && 'bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-muted)]',
                 )}>
-                  {isCompleted ? '✓' : isLocked ? '🔒' : i + 1}
+                  {isCompleted ? <Check className="h-4 w-4" /> : isLocked ? <Lock className="h-3 w-3" /> : i + 1}
                 </div>
                 {i < stages.length - 1 && <div className="w-0.5 flex-1 bg-[var(--color-border)] my-1" />}
               </div>
               <div className="pb-4">
                 <p className="text-sm font-medium text-[var(--color-text)]">{stage.name}</p>
-                <p className={cn('text-xs', isCompleted ? 'text-[var(--color-approved)]' : isRejected ? 'text-[var(--color-rejected)]' : isActive ? 'text-[var(--color-primary)]' : 'text-[var(--color-muted)]')}>
-                  {isCompleted ? `✓ Approved ${approval?.createdAt ? formatDate(approval.createdAt) : ''}` : isRejected ? '✗ Rejected' : isActive ? '⏳ Pending review' : '🔒 Locked'}
+                <p className={cn('text-xs flex items-center gap-1', isCompleted ? 'text-[var(--color-approved)]' : isRejected ? 'text-[var(--color-rejected)]' : isActive ? 'text-[var(--color-primary)]' : 'text-[var(--color-muted)]')}>
+                  {isCompleted
+                    ? <><Check className="h-3 w-3" /> Approved {approval?.createdAt ? formatDate(approval.createdAt) : ''}</>
+                    : isRejected
+                    ? <><X className="h-3 w-3" /> Rejected</>
+                    : isActive
+                    ? <><Clock className="h-3 w-3" /> Pending review</>
+                    : <><Lock className="h-3 w-3" /> Locked</>
+                  }
                 </p>
               </div>
             </div>

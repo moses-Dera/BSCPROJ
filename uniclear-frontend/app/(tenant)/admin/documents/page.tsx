@@ -1,7 +1,6 @@
 'use client'
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { documentTypesApi } from '@/lib/api/documents.api'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Card } from '@/components/ui/card'
@@ -11,7 +10,7 @@ import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
 import { EmptyState, ErrorState } from '@/components/shared/EmptyState'
 
 export default function AdminDocumentsPage() {
-  const qc = useQueryClient()
+  const _qc = useQueryClient()
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['document-types'],

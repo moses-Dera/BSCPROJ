@@ -1,8 +1,10 @@
 import axios from 'axios'
 
+// All client requests go through the Next.js proxy at /api/v1/*
+// The proxy extracts the httpOnly access_token cookie and forwards it as Bearer token to Express
 export const apiClient = axios.create({
-  baseURL: '/api',
-  withCredentials: true, // sends httpOnly cookies automatically
+  baseURL: '/api/v1',
+  withCredentials: true,
 })
 
 // Silent token refresh on 401

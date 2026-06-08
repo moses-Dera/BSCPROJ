@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useTenantStore } from '@/store/useTenantStore'
@@ -21,7 +20,7 @@ export default function CertificatePage() {
 
   const { data: clearance, isLoading, isError } = useClearanceStatus(user?.id ?? '')
 
-  const { data: certificate } = useQuery({
+  const { data: _certificate } = useQuery({
     queryKey: ['certificate', clearance?.id],
     queryFn:  () => clearanceApi.getCertificate(clearance!.id).then((r: any) => r.data.data),
     enabled:  !!clearance?.id && clearance.status === 'COMPLETED',
