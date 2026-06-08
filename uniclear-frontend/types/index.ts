@@ -88,16 +88,21 @@ export interface DocumentType {
   description: string | null
   isRequired: boolean
   isActive: boolean
+  allowedFormats: string[]
+  maxFileSizeMB: number
 }
 
 export interface Document {
   id: string
   documentTypeId: string
   documentType: DocumentType
-  url: string
-  key: string
+  fileName: string
+  fileUrl: string
+  fileKey: string
+  fileSizeMB: number
+  mimeType: string
   status: ClearanceStatus
-  createdAt: string
+  uploadedAt: string
 }
 
 // ─── Student ──────────────────────────────────────────────────────────────────

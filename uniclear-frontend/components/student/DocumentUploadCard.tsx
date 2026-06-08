@@ -94,7 +94,7 @@ export function DocumentUploadCard({ documentType, uploaded, onUpload, onRemove,
             type="file"
             className="hidden"
             accept={documentType.allowedFormats?.map(f => `.${f}`).join(',')}
-            onChange={e => { const f = e.target.files?.[0]; if (f) onUpload(f) }}
+            onChange={e => { const f = e.target.files?.[0]; if (f) onUpload(f as File) }}
           />
         </div>
       )}
