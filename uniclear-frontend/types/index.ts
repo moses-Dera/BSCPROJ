@@ -76,6 +76,10 @@ export interface ClearanceRequest {
   sessionId: string
   status: ClearanceStatus
   currentStageId: string | null
+  currentStage?: { name: string } | null
+  student?: { firstName: string; lastName: string; matricNo: string; department?: { name: string } | null } | null
+  completedAt?: string | null
+  updatedAt: string
   stages: StageApproval[]
   createdAt: string
 }
