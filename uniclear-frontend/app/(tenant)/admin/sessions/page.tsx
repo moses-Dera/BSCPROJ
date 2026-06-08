@@ -12,6 +12,7 @@ import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
+import { CalendarDays } from 'lucide-react'
 import { EmptyState, ErrorState } from '@/components/shared/EmptyState'
 import { formatDate } from '@/lib/utils/format'
 import { cn } from '@/lib/utils/cn'
@@ -75,7 +76,7 @@ export default function AdminSessionsPage() {
       {!isLoading && !isError && (
         <div className="space-y-3">
           {!data?.length ? (
-            <EmptyState icon="📅" title="No sessions yet" />
+            <EmptyState icon={<CalendarDays className="h-10 w-10" />} title="No sessions yet" />
           ) : data.map((s: any) => (
             <Card key={s.id} className={cn('flex items-center justify-between', s.isActive && 'border-l-4 border-l-[var(--color-primary)]')}>
               <div>

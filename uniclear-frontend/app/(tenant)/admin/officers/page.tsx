@@ -13,6 +13,7 @@ import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
+import { UserCircle, AlertTriangle } from 'lucide-react'
 import { EmptyState, ErrorState } from '@/components/shared/EmptyState'
 
 const inviteSchema = z.object({
@@ -92,7 +93,7 @@ export default function AdminOfficersPage() {
       {!isLoading && !isError && (
         <Card padding="sm">
           {!data?.items?.length ? (
-            <EmptyState icon="👤" title="No officers yet" description="Invite an officer to get started." action={{ label: '+ Invite Officer', onClick: () => setShowForm(true) }} />
+            <EmptyState icon={<UserCircle className="h-10 w-10" />} title="No officers yet" description="Invite an officer to get started." action={{ label: '+ Invite Officer', onClick: () => setShowForm(true) }} />
           ) : (
             <table className="w-full text-sm">
               <thead>
@@ -110,7 +111,7 @@ export default function AdminOfficersPage() {
                     <td className="py-3 px-3">
                       {o.stage
                         ? <span className="text-[var(--color-text)]">{o.stage.name}</span>
-                        : <span className="text-[var(--color-pending)] text-xs">⚠ Unassigned</span>
+                        : <span className="text-[var(--color-pending)] text-xs flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> Unassigned</span>
                       }
                     </td>
                   </tr>

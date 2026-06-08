@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { GripVertical, AlertTriangle } from 'lucide-react'
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
   type DragEndEvent,
@@ -29,13 +30,12 @@ function SortableStage({ stage }: { stage: ClearanceStage }) {
         isDragging && 'opacity-50 shadow-[var(--shadow-lg)]'
       )}
     >
-      {/* Drag handle */}
       <button
         {...attributes} {...listeners}
         className="text-[var(--color-muted)] cursor-grab active:cursor-grabbing touch-none p-1"
         aria-label="Drag to reorder"
       >
-        ⠿
+        <GripVertical className="h-4 w-4" />
       </button>
 
       <div className="h-6 w-6 rounded-full bg-[var(--color-primary)] text-white text-xs font-bold flex items-center justify-center shrink-0">
@@ -46,7 +46,9 @@ function SortableStage({ stage }: { stage: ClearanceStage }) {
         <p className="text-sm font-semibold text-[var(--color-text)]">{stage.name}</p>
         <p className="text-xs text-[var(--color-muted)]">
           {stage.officer ? `Officer: ${stage.officer.name}` : (
-            <span className="text-[var(--color-pending)]">⚠ No officer assigned</span>
+            <span className="text-[var(--color-pending)] flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3" /> No officer assigned
+            </span>
           )}
         </p>
       </div>

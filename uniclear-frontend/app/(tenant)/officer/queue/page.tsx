@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
+import { CheckCircle, Search, Check, X } from 'lucide-react'
 import { EmptyState, ErrorState } from '@/components/shared/EmptyState'
 import { formatDateTime } from '@/lib/utils/format'
 import { Card } from '@/components/ui/card'
@@ -28,7 +29,7 @@ export default function OfficerQueuePage() {
         placeholder="Search by name or matric number..."
         value={search}
         onChange={e => setSearch(e.target.value)}
-        icon={<span className="text-xs">🔍</span>}
+        icon={<Search className="h-4 w-4" />}
         className="max-w-sm"
       />
 
@@ -38,7 +39,7 @@ export default function OfficerQueuePage() {
       {!isLoading && !isError && (
         <Card padding="sm">
           {!data?.items?.length ? (
-            <EmptyState icon="✅" title="Queue is empty" description="No students pending review at this stage." />
+            <EmptyState icon={<CheckCircle className="h-10 w-10" />} title="Queue is empty" description="No students pending review at this stage." />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -60,19 +61,11 @@ export default function OfficerQueuePage() {
                       <td className="py-3 px-3"><StatusBadge status={item.status} /></td>
                       <td className="py-3 px-3">
                         <div className="flex gap-2 justify-end">
-                          <Button
-                            size="sm"
-                            onClick={() => approve({ requestId: item.id })}
-                            loading={approving}
-                          >
-                            ✓ Approve
+                          <Button size="sm" onClick={() => approve({ requestId: item.id })} loading={approving}>
+                            <Check className="h-3.5 w-3.5 mr-1" /> Approve
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="danger"
-                            onClick={() => setRejectingId(item.id)}
-                          >
-                            ✗ Reject
+                          <Button size="sm" variant="danger" onClick={() => setRejectingId(item.id)}>
+                            <X className="h-3.5 w-3.5 mr-1" /> Reject
                           </Button>
                         </div>
                       </td>

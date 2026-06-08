@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { FileText, Paperclip, Upload, X, Check, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { formatFileSize } from '@/lib/utils/format'
 import { StatusBadge } from '@/components/shared/StatusBadge'
@@ -29,7 +30,7 @@ export function DocumentUploadCard({ documentType, uploaded, onUpload, onRemove,
     <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-sm)]">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
-          <span className="text-xl">📄</span>
+          <FileText className="h-5 w-5 text-[var(--color-muted)]" />
           <div>
             <p className="text-sm font-semibold text-[var(--color-text)]">{documentType.name}</p>
             {documentType.description && (
@@ -48,7 +49,7 @@ export function DocumentUploadCard({ documentType, uploaded, onUpload, onRemove,
       {uploaded ? (
         <div className="flex items-center justify-between bg-[var(--color-bg)] rounded-[var(--radius-sm)] px-3 py-2.5">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-base">📎</span>
+            <Paperclip className="h-4 w-4 text-[var(--color-muted)] shrink-0" />
             <div className="min-w-0">
               <p className="text-xs font-medium text-[var(--color-text)] truncate">{uploaded.documentType.name}</p>
               <p className="text-xs text-[var(--color-muted)]">{formatFileSize(uploaded.fileSizeMB * 1024 * 1024)}</p>
@@ -57,7 +58,9 @@ export function DocumentUploadCard({ documentType, uploaded, onUpload, onRemove,
           <div className="flex items-center gap-2 shrink-0">
             <StatusBadge status={uploaded.status} />
             {onRemove && (
-              <button onClick={onRemove} className="text-[var(--color-muted)] hover:text-[var(--color-rejected)] transition-colors text-sm" aria-label="Remove document">✕</button>
+              <button onClick={onRemove} className="text-[var(--color-muted)] hover:text-[var(--color-rejected)] transition-colors" aria-label="Remove document">
+                <X className="h-4 w-4" />
+              </button>
             )}
           </div>
         </div>
@@ -81,7 +84,7 @@ export function DocumentUploadCard({ documentType, uploaded, onUpload, onRemove,
             </svg>
           ) : (
             <>
-              <span className="text-2xl">⬆</span>
+              <Upload className="h-6 w-6 text-[var(--color-muted)]" />
               <p className="text-xs text-[var(--color-muted)] text-center">
                 Drag & drop or click to upload<br />
                 {documentType.allowedFormats?.join(', ').toUpperCase()} • Max {documentType.maxFileSizeMB}MB
@@ -98,8 +101,11 @@ export function DocumentUploadCard({ documentType, uploaded, onUpload, onRemove,
         </div>
       )}
 
-      <p className={cn('text-xs mt-2', uploaded ? 'text-[var(--color-approved)]' : 'text-[var(--color-muted)]')}>
-        {uploaded ? '✓ Uploaded — Pending review' : '✗ Not uploaded'}
+      <p className={cn('text-xs mt-2 flex items-center gap-1', uploaded ? 'text-[var(--color-approved)]' : 'text-[var(--color-muted)]')}>
+        {uploaded
+          ? <><Check className="h-3 w-3" /> Uploaded — Pending review</>
+          : <><AlertCircle className="h-3 w-3" /> Not uploaded</>
+        }
       </p>
     </div>
   )

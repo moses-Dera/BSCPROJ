@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
+import { FileText } from 'lucide-react'
 import { EmptyState, ErrorState } from '@/components/shared/EmptyState'
 
 export default function AdminDocumentsPage() {
@@ -31,7 +32,7 @@ export default function AdminDocumentsPage() {
       {!isLoading && !isError && (
         <Card padding="sm">
           {!data?.length ? (
-            <EmptyState icon="📄" title="No document types" description="Add document types to get started." />
+            <EmptyState icon={<FileText className="h-10 w-10" />} title="No document types" description="Add document types to get started." />
           ) : (
             <table className="w-full text-sm">
               <thead>

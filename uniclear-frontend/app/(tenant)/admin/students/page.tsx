@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
+import { Users, Search } from 'lucide-react'
 import { EmptyState, ErrorState } from '@/components/shared/EmptyState'
 
 export default function AdminStudentsPage() {
@@ -27,7 +28,7 @@ export default function AdminStudentsPage() {
         placeholder="Search by name or matric number..."
         value={search}
         onChange={e => { setSearch(e.target.value); setPage(1) }}
-        icon={<span className="text-xs">🔍</span>}
+        icon={<Search className="h-4 w-4" />}
         className="max-w-sm"
       />
 
@@ -37,7 +38,7 @@ export default function AdminStudentsPage() {
       {!isLoading && !isError && (
         <Card padding="sm">
           {!data?.items?.length ? (
-            <EmptyState icon="👥" title="No students found" />
+            <EmptyState icon={<Users className="h-10 w-10" />} title="No students found" />
           ) : (
             <>
               <div className="overflow-x-auto">

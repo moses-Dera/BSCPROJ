@@ -8,6 +8,7 @@ import { clearanceApi } from '@/lib/api/clearance.api'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
+import { Lock, PartyPopper, Download } from 'lucide-react'
 import { ErrorState, EmptyState } from '@/components/shared/EmptyState'
 import { formatDate } from '@/lib/utils/format'
 import { StatusBadge } from '@/components/shared/StatusBadge'
@@ -31,7 +32,7 @@ export default function CertificatePage() {
   if (!clearance || clearance.status !== 'COMPLETED') {
     return (
       <EmptyState
-        icon="🔒"
+        icon={<Lock className="h-10 w-10" />}
         title="Certificate not available"
         description="Your clearance must be fully completed before you can download your certificate."
         action={{ label: '← Back to Dashboard', onClick: () => window.location.href = ROUTES.student.dashboard }}
@@ -43,7 +44,7 @@ export default function CertificatePage() {
     <div className="max-w-lg mx-auto space-y-6">
       {/* Celebration header */}
       <div className="text-center py-6">
-        <p className="text-5xl mb-3">🎉</p>
+        <PartyPopper className="h-12 w-12 text-[var(--color-primary)] mb-3 mx-auto" />
         <h1 className="text-2xl font-bold text-[var(--color-text)]">Clearance Complete!</h1>
         <p className="text-sm text-[var(--color-muted)] mt-1">
           Congratulations! All your clearance stages have been approved.
@@ -83,7 +84,7 @@ export default function CertificatePage() {
         </div>
 
         <Button size="lg" className="w-full mt-2">
-          ⬇ Download PDF Certificate
+          <Download className="h-4 w-4 mr-2" /> Download PDF Certificate
         </Button>
       </Card>
 

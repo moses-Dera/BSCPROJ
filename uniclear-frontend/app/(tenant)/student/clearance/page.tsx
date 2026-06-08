@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
+import { CalendarDays } from 'lucide-react'
 import { ErrorState, EmptyState } from '@/components/shared/EmptyState'
 import { formatDate } from '@/lib/utils/format'
 import { ROUTES } from '@/lib/constants'
@@ -42,7 +43,7 @@ export default function StudentClearancePage() {
       <PageHeader title="Start Clearance" subtitle="Begin your clearance process for the current session" />
 
       {!activeSession ? (
-        <EmptyState icon="📅" title="No active session" description="The university has not opened a clearance session yet. Check back later." />
+        <EmptyState icon={<CalendarDays className="h-10 w-10" />} title="No active session" description="The university has not opened a clearance session yet. Check back later." />
       ) : (
         <Card className="text-center py-8 space-y-4">
           <p className="text-4xl">🎓</p>

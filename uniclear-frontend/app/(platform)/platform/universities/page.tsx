@@ -12,6 +12,7 @@ import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
+import { Building2 } from 'lucide-react'
 import { EmptyState, ErrorState } from '@/components/shared/EmptyState'
 
 const onboardSchema = z.object({
@@ -107,7 +108,7 @@ export default function PlatformUniversitiesPage() {
       {!isLoading && !isError && (
         <Card padding="sm">
           {!data?.items?.length ? (
-            <EmptyState icon="🏛" title="No universities yet" action={{ label: '+ Onboard University', onClick: () => setShowForm(true) }} />
+            <EmptyState icon={<Building2 className="h-10 w-10" />} title="No universities yet" action={{ label: '+ Onboard University', onClick: () => setShowForm(true) }} />
           ) : (
             <table className="w-full text-sm">
               <thead>
