@@ -1,0 +1,65 @@
+'use client'
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import { clearanceApi } from '@/lib/api/clearance.api'
+
+export const clearanceKeys = {
+  all:    ()           => ['clearance'] as const,
+  status: (id: string) => ['clearance', 'status', id] as const,
+  queue:  ()           => ['clearance', 'queue'] as const,
+  history:(id: string) => ['clearance', 'history', id] as const,
+}
+
+export function useClearanceStatus(studentId: string) {
+  return useQuery({
+    queryKey: clearanceKeys.status(studentId),
+    queryFn:  () => clearanceApi.getStatus(studentId).then(r => r.data.data),
+    enabled:  !!studentId,
+  })
+}
+
+export function useOfficerQueue(page = 1, search?: string) {
+  return useQuery({
+    queryKey: [...clearanceKeys.queue(), page, search],
+    queryFn:  () => clearanceApi.getQueue(page, 20, search).then((r: any) => r.data.data),
+  })
+}
+
+export function useApproveStage() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ requestId, remarks }: { requestId: string; remarks?: string }) =>
+      clearanceApi.approve(requestId, remarks),
+    onSuccess: () => {
+      toast.success('Stage approved')
+      qc.invalidateQueries({ queryKey: clearanceKeys.queue() })
+    },
+    onError: (e: any) => toast.error(e.response?.data?.message ?? 'Failed to approve'),
+  })
+}
+
+export function useRejectStage() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ requestId, remarks }: { requestId: string; remarks: string }) =>
+      clearanceApi.reject(requestId, remarks),
+    onSuccess: () => {
+      toast.success('Stage rejected')
+      qc.invalidateQueries({ queryKey: clearanceKeys.queue() })
+    },
+    onError: (e: any) => toast.error(e.response?.data?.message ?? 'Failed to reject'),
+  })
+}
+
+export function useSubmitStage() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (requestId: string) => clearanceApi.submit(requestId),
+    onSuccess: () => {
+      toast.success('Submitted for review')
+      qc.invalidateQueries({ queryKey: clearanceKeys.all() })
+    },
+    onError: (e: any) => toast.error(e.response?.data?.message ?? 'Submission failed'),
+  })
+}

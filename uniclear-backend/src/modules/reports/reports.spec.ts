@@ -1,0 +1,55 @@
+import { ReportsService } from './reports.service'
+import { db } from '@/lib/db'
+
+jest.mock('@/lib/db', () => ({
+  db: {
+    student:          { count: jest.fn() },
+    clearanceRequest: { count: jest.fn(), findMany: jest.fn() },
+    clearanceStage:   { findMany: jest.fn() },
+    stageApproval:    { count: jest.fn() },
+  },
+}))
+
+describe('ReportsService', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  describe('summary', () => {
+    it('should return correct summary stats', async () => {
+      ;(db.student.count as jest.Mock).mockResolvedValue(100)
+      ;(db.clearanceRequest.count as jest.Mock)
+        .mockResolvedValueOnce(80)   // total
+        .mockResolvedValueOnce(50)   // completed
+        .mockResolvedValueOnce(30)   // inProgress
+
+      const result = await ReportsService.summary('uni-id')
+      expect(result.totalStudents).toBe(100)
+      expect(result.completed).toBe(50)
+      expect(result.completionRate).toBe('62.5')
+    })
+
+    it('should return 0 completion rate when no clearances', async () => {
+      ;(db.student.count as jest.Mock).mockResolvedValue(50)
+      ;(db.clearanceRequest.count as jest.Mock).mockResolvedValue(0)
+
+      const result = await ReportsService.summary('uni-id')
+      expect(result.completionRate).toBe('0')
+    })
+  })
+
+  describe('byStage', () => {
+    it('should return breakdown per stage', async () => {
+      ;(db.clearanceStage.findMany as jest.Mock).mockResolvedValue([
+        { id: 'stage-1', name: 'Library', orderIndex: 1 },
+      ])
+      ;(db.clearanceRequest.count as jest.Mock).mockResolvedValue(10)
+      ;(db.stageApproval.count as jest.Mock)
+        .mockResolvedValueOnce(8)  // approved
+        .mockResolvedValueOnce(2)  // rejected
+
+      const result = await ReportsService.byStage('uni-id')
+      expect(result).toHaveLength(1)
+      expect(result[0].stage.name).toBe('Library')
+      expect(result[0].pending).toBe(10)
+    })
+  })
+})

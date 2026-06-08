@@ -1,0 +1,67 @@
+import { Request, Response, NextFunction } from 'express'
+import { ClearanceService } from './clearance.service'
+import { ApiResponse } from '@/core/response/ApiResponse'
+import { startClearanceSchema, approveStageSchema, rejectStageSchema, queueQuerySchema } from './clearance.schema'
+import { param } from '@/lib/utils/param'
+
+export class ClearanceController {
+  static async start(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { sessionId } = startClearanceSchema.parse(req.body)
+      const result = await ClearanceService.start(req.user!.sub, req.universityId!, sessionId)
+      return ApiResponse.created(res, result)
+    } catch (err) { next(err) }
+  }
+
+  static async getStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      const status = await ClearanceService.getStatus(req.user!.sub, req.universityId!)
+      return ApiResponse.success(res, status)
+    } catch (err) { next(err) }
+  }
+
+  static async submit(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await ClearanceService.submit(param(req.params.requestId), req.user!.sub, req.universityId!)
+      return ApiResponse.success(res, result, 'Submitted for review')
+    } catch (err) { next(err) }
+  }
+
+  static async approve(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { remarks } = approveStageSchema.parse(req.body)
+      const result = await ClearanceService.approve(param(req.params.requestId), req.user!.sub, req.universityId!, remarks, req.ip)
+      return ApiResponse.success(res, result, 'Stage approved')
+    } catch (err) { next(err) }
+  }
+
+  static async reject(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { remarks } = rejectStageSchema.parse(req.body)
+      const result = await ClearanceService.reject(param(req.params.requestId), req.user!.sub, req.universityId!, remarks, req.ip)
+      return ApiResponse.success(res, result, 'Stage rejected')
+    } catch (err) { next(err) }
+  }
+
+  static async getQueue(req: Request, res: Response, next: NextFunction) {
+    try {
+      const query = queueQuerySchema.parse(req.query)
+      const { data, total } = await ClearanceService.getQueue(req.user!.sub, req.universityId!, query)
+      return ApiResponse.paginated(res, data, total, query.page, query.limit)
+    } catch (err) { next(err) }
+  }
+
+  static async getHistory(req: Request, res: Response, next: NextFunction) {
+    try {
+      const history = await ClearanceService.getHistory(param(req.params.requestId), req.universityId!)
+      return ApiResponse.success(res, history)
+    } catch (err) { next(err) }
+  }
+
+  static async getCertificate(req: Request, res: Response, next: NextFunction) {
+    try {
+      const clearance = await ClearanceService.getCertificate(param(req.params.requestId), req.universityId!)
+      return ApiResponse.success(res, clearance)
+    } catch (err) { next(err) }
+  }
+}

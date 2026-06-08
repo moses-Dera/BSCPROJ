@@ -1,0 +1,44 @@
+import { db } from '@/lib/db'
+
+export class AuthRepository {
+  static async findUserByEmail(email: string) {
+    return db.user.findUnique({
+      where: { email },
+      include: { officer: true },
+    })
+  }
+
+  static async findUserById(id: string) {
+    return db.user.findUnique({
+      where: { id },
+      select: { id: true, email: true, role: true, universityId: true, isActive: true, passwordSetAt: true },
+    })
+  }
+
+  static async updatePassword(userId: string, passwordHash: string) {
+    return db.user.update({
+      where: { id: userId },
+      data: { passwordHash, passwordSetAt: new Date() },
+    })
+  }
+
+  static async saveRefreshToken(userId: string, token: string, expiresAt: Date) {
+    return db.refreshToken.create({ data: { userId, token, expiresAt } })
+  }
+
+  static async findRefreshToken(token: string) {
+    return db.refreshToken.findUnique({ where: { token }, include: { user: true } })
+  }
+
+  static async deleteRefreshToken(token: string) {
+    return db.refreshToken.delete({ where: { token } })
+  }
+
+  static async deleteAllUserRefreshTokens(userId: string) {
+    return db.refreshToken.deleteMany({ where: { userId } })
+  }
+
+  static async findPlatformOwnerByEmail(email: string) {
+    return db.platformOwner.findUnique({ where: { email } })
+  }
+}
