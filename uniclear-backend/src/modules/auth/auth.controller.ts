@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { AuthService } from './auth.service'
 import { ApiResponse } from '@/core/response/ApiResponse'
-import { loginSchema, setPasswordSchema, changePasswordSchema, refreshTokenSchema } from './auth.schema'
+import { loginSchema, setPasswordSchema, changePasswordSchema, refreshTokenSchema, forgotPasswordSchema, resetPasswordSchema } from './auth.schema'
 
 export class AuthController {
   static async login(req: Request, res: Response, next: NextFunction) {
@@ -41,6 +41,22 @@ export class AuthController {
       const { currentPassword, newPassword } = changePasswordSchema.parse(req.body)
       await AuthService.changePassword(req.user!.sub, currentPassword, newPassword)
       return ApiResponse.success(res, null, 'Password changed successfully')
+    } catch (err) { next(err) }
+  }
+
+  static async forgotPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email } = forgotPasswordSchema.parse(req.body)
+      await AuthService.forgotPassword(email)
+      return ApiResponse.success(res, null, 'If that email exists, a reset link has been sent')
+    } catch (err) { next(err) }
+  }
+
+  static async resetPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { token, password } = resetPasswordSchema.parse(req.body)
+      await AuthService.resetPassword(token, password)
+      return ApiResponse.success(res, null, 'Password reset successfully')
     } catch (err) { next(err) }
   }
 

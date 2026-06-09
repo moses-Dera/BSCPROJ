@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import Image from 'next/image'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -18,22 +19,31 @@ type LoginForm = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
   const { mutate: login, isPending } = useLogin()
-  const { name, primaryColor, accentColor, logoUrl } = useTenantStore()
+
+  // Read from CSS variables set server-side — no flash
+  const name         = useTenantStore(s => s.name)
+  const logoUrl      = useTenantStore(s => s.logoUrl)
+  const primaryColor = 'var(--color-primary)'
+  const accentColor  = 'var(--color-accent)'
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
   })
 
-  const onSubmit = (data: LoginForm) => login(data)
-
   return (
     <div className="min-h-screen flex">
-      {/* Left — branding panel (hidden on mobile) */}
+      {/* Left — branding panel */}
       <div
-        className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-12 text-white"
-        style={{ background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})` }}
+        className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-12 text-white relative overflow-hidden login-bg-panel"
+        style={{
+          background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
+        }}
       >
-        <div className="max-w-sm text-center">
+        {/* bg image sits on top of gradient via CSS variable — no JS needed */}
+        <div className="absolute inset-0 login-bg-image" />
+        {/* overlay darkens the image when present */}
+        <div className="absolute inset-0 login-bg-overlay" />
+        <div className="max-w-sm text-center relative z-10">
           {logoUrl
             ? <Image src={logoUrl} alt={name ?? ''} width={80} height={80} className="rounded-xl mx-auto mb-6 object-cover" />
             : (
@@ -53,7 +63,6 @@ export default function LoginPage() {
       {/* Right — login form */}
       <div className="flex-1 flex items-center justify-center p-6 bg-[var(--color-bg)]">
         <div className="w-full max-w-sm">
-          {/* Mobile logo */}
           <div className="lg:hidden text-center mb-8">
             <div
               className="h-14 w-14 rounded-xl mx-auto mb-3 flex items-center justify-center text-white text-2xl font-bold"
@@ -67,31 +76,18 @@ export default function LoginPage() {
           <h2 className="text-2xl font-bold text-[var(--color-text)] mb-1">Sign in</h2>
           <p className="text-sm text-[var(--color-muted)] mb-8">Enter your credentials to continue</p>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <Input
-              label="Email address"
-              type="email"
-              placeholder="you@university.edu"
-              error={errors.email?.message}
-              {...register('email')}
-            />
-            <Input
-              label="Password"
-              type="password"
-              placeholder="••••••••"
-              error={errors.password?.message}
-              {...register('password')}
-            />
-
-            <Button
-              type="submit"
-              size="lg"
-              loading={isPending}
-              className="w-full mt-2"
-              style={{ backgroundColor: primaryColor }}
-            >
+          <form onSubmit={handleSubmit(d => login(d))} className="space-y-4">
+            <Input label="Email address" type="email" placeholder="you@university.edu" error={errors.email?.message} {...register('email')} />
+            <Input label="Password" type="password" placeholder="••••••••" error={errors.password?.message} {...register('password')} />
+            <Button type="submit" size="lg" loading={isPending} className="w-full mt-2" style={{ backgroundColor: primaryColor }}>
               Sign in
             </Button>
+            <div className="flex items-center justify-between pt-1">
+              <p className="text-xs text-[var(--color-muted)]">No account? Contact your admin</p>
+              <Link href="/forgot-password" className="text-xs text-[var(--color-primary)] hover:underline">
+                Forgot password?
+              </Link>
+            </div>
           </form>
         </div>
       </div>

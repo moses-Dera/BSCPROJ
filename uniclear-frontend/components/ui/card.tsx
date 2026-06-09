@@ -5,7 +5,7 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export function Card({ padding = 'md', className, children, ...props }: CardProps) {
-  const paddings = { sm: 'p-4', md: 'p-6', lg: 'p-8' }
+  const paddings = { sm: 'p-3', md: 'p-4', lg: 'p-5' }
 
   return (
     <div

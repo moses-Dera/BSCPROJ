@@ -20,7 +20,7 @@ export class UniversitiesRepository {
   }
 
   static async findBySlug(slug: string) {
-    return db.university.findUnique({ where: { slug } })
+    return db.university.findUnique({ where: { slug }, include: { branding: true } })
   }
 
   static async create(data: { name: string; slug: string; abbreviation: string; address: string; contactEmail: string; website?: string; primaryColor: string; accentColor: string }) {

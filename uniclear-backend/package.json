@@ -11,6 +11,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "prisma:seed": "ts-node -r tsconfig-paths/register prisma/seed.ts",
+    "setup": "ts-node -r tsconfig-paths/register scripts/setup.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
@@ -27,6 +28,7 @@
     "jsonwebtoken": "^9.0.0",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
+    "nodemailer": "^8.0.10",
     "pg": "^8.21.0",
     "pino": "^8.0.0",
     "pino-pretty": "^10.0.0",
@@ -45,6 +47,7 @@
     "@types/morgan": "^1.9.9",
     "@types/multer": "^1.4.11",
     "@types/node": "^20.0.0",
+    "@types/nodemailer": "^8.0.0",
     "@types/pg": "^8.20.0",
     "@types/supertest": "^7.2.0",
     "@types/swagger-jsdoc": "^6.0.4",

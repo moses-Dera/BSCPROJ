@@ -39,16 +39,21 @@ const platformNav: NavItem[] = [
 
 export function Sidebar() {
   const pathname   = usePathname()
-  const { sidebarOpen } = useUIStore()
+  const { sidebarOpen, setSidebarOpen } = useUIStore()
   const { isOfficer, isPlatformOwner } = useRole()
   const { name, logoUrl, primaryColor } = useTenant()
 
   const navItems = isPlatformOwner ? platformNav : isOfficer ? officerNav : adminNav
 
+  const handleNavClick = () => {
+    // Close sidebar on mobile after navigation
+    if (window.innerWidth < 1024) setSidebarOpen(false)
+  }
+
   return (
     <aside
       className={cn(
-        'fixed inset-y-0 left-0 z-40 flex flex-col bg-[var(--color-surface)] border-r border-[var(--color-border)] transition-all duration-250',
+        'fixed top-14 bottom-0 left-0 z-30 flex flex-col bg-[var(--color-surface)] border-r border-[var(--color-border)] transition-all duration-250',
         sidebarOpen ? 'w-60' : 'w-0 overflow-hidden'
       )}
     >
@@ -67,10 +72,11 @@ export function Sidebar() {
           <Link
             key={item.href}
             href={item.href}
+            onClick={handleNavClick}
             className={cn(
               'flex items-center gap-3 px-3 py-2 rounded-[var(--radius-sm)] text-sm transition-colors',
               pathname.startsWith(item.href)
-                ? 'bg-[var(--color-primary)] text-white font-medium'
+                ? 'bg-[var(--color-primary)] text-white font-medium hover:bg-[var(--color-accent)]'
                 : 'text-[var(--color-muted)] hover:bg-[var(--color-bg)] hover:text-[var(--color-text)]'
             )}
           >

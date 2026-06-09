@@ -47,19 +47,6 @@ enum NotificationType {
 }
 
 // ─────────────────────────────────────────
-// PLATFORM OWNER
-// ─────────────────────────────────────────
-
-model PlatformOwner {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String
-  name         String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-}
-
-// ─────────────────────────────────────────
 // UNIVERSITY (TENANT ROOT)
 // ─────────────────────────────────────────
 
@@ -146,6 +133,7 @@ model User {
   notifications  Notification[]
   auditLogs      AuditLog[]       @relation("ActorLogs")
   refreshTokens  RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
 
   @@index([universityId])
   @@index([email])
@@ -160,6 +148,7 @@ model RefreshToken {
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@index([token])
 }
 
@@ -438,4 +427,21 @@ model AuditLog {
 
   @@index([universityId])
   @@index([actorId])
+}
+
+// ─────────────────────────────────────────
+// PASSWORD RESET TOKENS
+// ─────────────────────────────────────────
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

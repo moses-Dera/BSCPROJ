@@ -1,8 +1,13 @@
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 import { db } from '@/lib/db'
 import { OfficersRepository } from './officers.repository'
 import { ConflictError, NotFoundError, TierLimitError } from '@/core/errors/AppError'
 import { TIER_LIMITS } from '@/lib/constants/tiers'
+import { AuthRepository } from '@/modules/auth/auth.repository'
+import { logger } from '@/core/logger/logger'
+import { sendInviteEmail } from '@/modules/notifications/channels/email.channel'
+import { env } from '@/core/config/env'
 
 export class OfficersService {
   static async list(universityId: string, opts: { page: number; limit: number; stageId?: string }) {
@@ -30,7 +35,23 @@ export class OfficersService {
       data: { email: data.email, passwordHash: tempHash, role: 'OFFICER', universityId },
     })
 
-    return OfficersRepository.create(universityId, user.id, { firstName: data.firstName, lastName: data.lastName, stageId: data.stageId })
+    const token = crypto.randomBytes(32).toString('hex')
+    await AuthRepository.saveInviteToken(user.id, token, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000))
+
+    const tempPassword = crypto.randomBytes(4).toString('hex')
+    const inviteLink = `${env.APP_URL}/set-password?token=${token}`
+
+    await sendInviteEmail({
+      to: data.email,
+      name: `${data.firstName} ${data.lastName}`,
+      role: 'Officer',
+      inviteLink,
+      tempPassword,
+    })
+
+    logger.info({ email: data.email, inviteLink }, 'Officer invite created')
+    const officer = await OfficersRepository.create(universityId, user.id, { firstName: data.firstName, lastName: data.lastName, stageId: data.stageId })
+    return { ...officer, inviteLink, tempPassword }
   }
 
   static async update(id: string, universityId: string, data: { firstName?: string; lastName?: string; stageId?: string | null }) {

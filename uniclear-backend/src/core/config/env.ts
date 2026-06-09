@@ -4,7 +4,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 const envSchema = z.object({
-  DATABASE_URL:             z.string().url(),
+  DATABASE_URL:             z.string().min(1),
   JWT_ACCESS_SECRET:        z.string().min(32),
   JWT_REFRESH_SECRET:       z.string().min(32),
   JWT_ACCESS_EXPIRES_IN:    z.string().default('15m'),
@@ -18,11 +18,20 @@ const envSchema = z.object({
   CLOUDINARY_API_SECRET:    z.string().optional(),
   CACHE_PROVIDER:           z.enum(['memory', 'redis']).default('memory'),
   REDIS_URL:                z.string().optional(),
+  EMAIL_PROVIDER:           z.enum(['mailpit', 'resend']).default('mailpit'),
+  EMAIL_FROM:               z.string().default('UniClear <noreply@uniclear.ng>'),
+  SMTP_HOST:                z.string().default('localhost'),
+  SMTP_PORT:                z.coerce.number().default(1025),
+  RESEND_API_KEY:           z.string().optional(),
+  APP_URL:                  z.string().url().default('http://localhost:3000'),
 }).refine(
   data => data.STORAGE_PROVIDER !== 'cloudinary' || (
     !!data.CLOUDINARY_CLOUD_NAME && !!data.CLOUDINARY_API_KEY && !!data.CLOUDINARY_API_SECRET
   ),
   { message: 'CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET are required when STORAGE_PROVIDER=cloudinary' }
+).refine(
+  data => data.EMAIL_PROVIDER !== 'resend' || !!data.RESEND_API_KEY,
+  { message: 'RESEND_API_KEY is required when EMAIL_PROVIDER=resend' }
 )
 
 const parsed = envSchema.safeParse(process.env)

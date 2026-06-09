@@ -12,6 +12,12 @@ apiClient.interceptors.response.use(
   res => res,
   async error => {
     const original = error.config
+
+    // Network error — server unreachable
+    if (!error.response) {
+      return Promise.reject(new Error('Cannot reach server. Check your connection.'))
+    }
+
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true
       try {

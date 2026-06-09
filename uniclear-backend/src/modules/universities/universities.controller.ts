@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { UniversitiesService } from './universities.service'
+import { UniversitiesRepository } from './universities.repository'
 import { ApiResponse } from '@/core/response/ApiResponse'
 import { createUniversitySchema, updateUniversitySchema, updateContractSchema } from './universities.schema'
 import { z } from 'zod'
@@ -8,6 +9,28 @@ import { param } from '@/lib/utils/param'
 const listSchema = z.object({ page: z.coerce.number().default(1), limit: z.coerce.number().default(20), search: z.string().optional() })
 
 export class UniversitiesController {
+  static async getPublicBranding(req: Request, res: Response, next: NextFunction) {
+    try {
+      const uni = await UniversitiesRepository.findBySlug(req.params.slug)
+      if (!uni || !uni.isActive) return ApiResponse.success(res, null)
+      return ApiResponse.success(res, {
+        name:         uni.name,
+        slug:         uni.slug,
+        logoUrl:      uni.logoUrl,
+        primaryColor: uni.primaryColor,
+        accentColor:  uni.accentColor,
+        loginBgUrl:   uni.branding?.loginBgUrl ?? null,
+      })
+    } catch (err) { next(err) }
+  }
+
+  static async getMe(req: Request, res: Response, next: NextFunction) {
+    try {
+      const uni = await UniversitiesService.getById(req.universityId!)
+      return ApiResponse.success(res, uni)
+    } catch (err) { next(err) }
+  }
+
   static async list(req: Request, res: Response, next: NextFunction) {
     try {
       const { page, limit, search } = listSchema.parse(req.query)

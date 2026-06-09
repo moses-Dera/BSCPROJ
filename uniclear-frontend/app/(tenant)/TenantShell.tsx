@@ -14,8 +14,9 @@ interface TenantShellProps {
 }
 
 export function TenantShell({ university, children }: TenantShellProps) {
-  const setTenant   = useTenantStore(s => s.setTenant)
-  const sidebarOpen = useUIStore(s => s.sidebarOpen)
+  const setTenant      = useTenantStore(s => s.setTenant)
+  const sidebarOpen    = useUIStore(s => s.sidebarOpen)
+  const setSidebarOpen = useUIStore(s => s.setSidebarOpen)
 
   useEffect(() => {
     if (university) {
@@ -23,25 +24,28 @@ export function TenantShell({ university, children }: TenantShellProps) {
         universityId: university.id,
         name:         university.name,
         slug:         university.slug,
-        primaryColor: university.branding?.primaryColor ?? '#1B4F72',
-        accentColor:  university.branding?.accentColor  ?? '#2980B9',
-        logoUrl:      university.branding?.logoUrl      ?? null,
+        primaryColor: university.primaryColor ?? '#1B4F72',
+        accentColor:  university.accentColor  ?? '#2980B9',
+        logoUrl:      university.logoUrl       ?? null,
       })
     }
   }, [university, setTenant])
 
-  const primary = university?.branding?.primaryColor ?? '#1B4F72'
-  const accent  = university?.branding?.accentColor  ?? '#2980B9'
-
   return (
-    <div
-      className="min-h-screen bg-[var(--color-bg)]"
-      style={{ '--color-primary': primary, '--color-accent': accent } as React.CSSProperties}
-    >
+    <div className="min-h-screen bg-[var(--color-bg)]">
       <Sidebar />
+
+      {/* Mobile overlay — tap to close sidebar */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-20 bg-black/40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       <div className={cn('transition-all duration-250', sidebarOpen ? 'lg:pl-60' : 'pl-0')}>
         <Topbar />
-        <main className="p-6">{children}</main>
+        <main className="p-3 md:p-6">{children}</main>
       </div>
     </div>
   )

@@ -5,6 +5,8 @@ import { ValidationError } from '@/core/errors/AppError'
 import { z } from 'zod'
 
 const updateBrandingSchema = z.object({
+  primaryColor:  z.string().optional(),
+  accentColor:   z.string().optional(),
   bannerMessage: z.string().optional(),
   footerText:    z.string().optional(),
 })

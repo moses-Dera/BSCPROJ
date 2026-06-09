@@ -47,5 +47,30 @@
     background-color: var(--color-bg);
     color: var(--color-text);
     font-family: 'Inter', system-ui, sans-serif;
+    font-size: 14px;
+  }
+
+  /* Tighter base on mobile */
+  @media (max-width: 768px) {
+    body { font-size: 13px; }
+  }
+
+  a {
+    color: var(--color-primary);
+  }
+
+  a:hover {
+    color: var(--color-accent);
+  }
+
+  /* Login page background image — driven by CSS var set server-side, no hydration flash */
+  .login-bg-image {
+    background-image: var(--login-bg-url, none);
+    background-size: cover;
+    background-position: center;
+  }
+
+  .login-bg-overlay {
+    background-color: rgba(0, 0, 0, 0.3);
   }
 }

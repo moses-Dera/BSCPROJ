@@ -4,7 +4,7 @@ export class AuthRepository {
   static async findUserByEmail(email: string) {
     return db.user.findUnique({
       where: { email },
-      include: { officer: true },
+      include: { officer: true, university: { select: { slug: true } } },
     })
   }
 
@@ -38,7 +38,20 @@ export class AuthRepository {
     return db.refreshToken.deleteMany({ where: { userId } })
   }
 
-  static async findPlatformOwnerByEmail(email: string) {
-    return db.platformOwner.findUnique({ where: { email } })
+  static async savePasswordResetToken(userId: string, token: string, expiresAt: Date) {
+    await db.passwordResetToken.deleteMany({ where: { userId } })
+    return db.passwordResetToken.create({ data: { userId, token, expiresAt } })
+  }
+
+  static async saveInviteToken(userId: string, token: string, expiresAt: Date) {
+    return AuthRepository.savePasswordResetToken(userId, token, expiresAt)
+  }
+
+  static async findPasswordResetToken(token: string) {
+    return db.passwordResetToken.findUnique({ where: { token }, include: { user: true } })
+  }
+
+  static async markPasswordResetTokenUsed(id: string) {
+    return db.passwordResetToken.update({ where: { id }, data: { usedAt: new Date() } })
   }
 }

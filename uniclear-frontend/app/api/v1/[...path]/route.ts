@@ -5,30 +5,37 @@ const API_URL = process.env.API_URL || 'http://localhost:5000'
 
 async function proxy(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   const cookieStore = await cookies()
-  const token       = cookieStore.get('access_token')?.value
-  const tenantSlug  = req.headers.get('x-tenant-slug')
+  const token = cookieStore.get('access_token')?.value
 
   const { path } = await params
-  const pathStr   = path.join('/')
-  const search      = req.nextUrl.search
-  const url         = `${API_URL}/api/v1/${pathStr}${search}`
+  const pathStr = path.join('/')
+  const search  = req.nextUrl.search
+  const url     = `${API_URL}/api/v1/${pathStr}${search}`
 
-  // Forward original headers, inject auth + tenant
   const headers: HeadersInit = {
     'Content-Type': req.headers.get('content-type') ?? 'application/json',
-    ...(token      ? { Authorization: `Bearer ${token}` } : {}),
-    ...(tenantSlug ? { 'x-tenant-slug': tenantSlug }      : {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   }
 
   const isMultipart = req.headers.get('content-type')?.includes('multipart/form-data')
 
-  const res = await fetch(url, {
-    method:  req.method,
-    headers: isMultipart ? { ...(token ? { Authorization: `Bearer ${token}` } : {}) } : headers,
-    body:    ['GET', 'HEAD'].includes(req.method) ? undefined : (isMultipart ? req.body : await req.text()),
-    // @ts-expect-error — duplex required for streaming body in Node 18+
-    duplex: 'half',
-  })
+  let res: Response
+  try {
+    res = await fetch(url, {
+      method:  req.method,
+      headers: isMultipart
+        ? { ...(token ? { Authorization: `Bearer ${token}` } : {}), 'Content-Type': req.headers.get('content-type')! }
+        : headers,
+      body:    ['GET', 'HEAD'].includes(req.method) ? undefined : (isMultipart ? req.body : await req.text()),
+      // @ts-expect-error — duplex required for streaming body in Node 18+
+      duplex: 'half',
+    })
+  } catch {
+    return NextResponse.json(
+      { success: false, message: 'Cannot reach server. Please try again later.' },
+      { status: 503 }
+    )
+  }
 
   const contentType = res.headers.get('content-type') ?? ''
   const body = contentType.includes('application/json') ? await res.json() : await res.text()

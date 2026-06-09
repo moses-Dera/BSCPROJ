@@ -1,9 +1,14 @@
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 import { db } from '@/lib/db'
 import { StudentsRepository } from './students.repository'
 import { CreateStudentDto, UpdateStudentDto } from './students.types'
 import { ConflictError, NotFoundError, TierLimitError } from '@/core/errors/AppError'
 import { TIER_LIMITS } from '@/lib/constants/tiers'
+import { AuthRepository } from '@/modules/auth/auth.repository'
+import { logger } from '@/core/logger/logger'
+import { sendInviteEmail } from '@/modules/notifications/channels/email.channel'
+import { env } from '@/core/config/env'
 
 export class StudentsService {
   static async list(universityId: string, opts: { page: number; limit: number; search?: string; facultyId?: string; departmentId?: string }) {
@@ -35,7 +40,23 @@ export class StudentsService {
       data: { email: data.email, passwordHash: tempHash, role: 'STUDENT', universityId },
     })
 
-    return StudentsRepository.create(universityId, user.id, data)
+    const token = crypto.randomBytes(32).toString('hex')
+    await AuthRepository.saveInviteToken(user.id, token, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000))
+
+    const tempPassword = crypto.randomBytes(4).toString('hex')
+    const inviteLink = `${env.APP_URL}/set-password?token=${token}`
+
+    await sendInviteEmail({
+      to: data.email,
+      name: `${data.firstName} ${data.lastName}`,
+      role: 'Student',
+      inviteLink,
+      tempPassword,
+    })
+
+    logger.info({ email: data.email, inviteLink }, 'Student invite created')
+    const student = await StudentsRepository.create(universityId, user.id, data)
+    return { ...student, inviteLink, tempPassword }
   }
 
   static async update(id: string, universityId: string, data: UpdateStudentDto) {

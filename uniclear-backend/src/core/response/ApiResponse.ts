@@ -29,7 +29,7 @@ export class ApiResponse {
   }
 
   static error(res: Response, message: string, statusCode: number, details?: unknown) {
-    return res.status(statusCode).json({ success: false, error: message, details })
+    return res.status(statusCode).json({ success: false, message, details })
   }
 
   static noContent(res: Response) {

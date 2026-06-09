@@ -16,8 +16,10 @@ export function Topbar({ title }: TopbarProps) {
   const unreadCount   = useNotificationStore(s => s.unreadCount)
   const { mutate: logout, isPending } = useLogout()
 
+  const user = useAuthStore(s => s.user)
+
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-4 bg-[var(--color-surface)] border-b border-[var(--color-border)]">
+    <header className="sticky top-0 z-40 flex items-center justify-between h-14 px-4 bg-[var(--color-surface)] border-b border-[var(--color-border)]">
       <div className="flex items-center gap-3">
         <button
           onClick={toggleSidebar}
@@ -44,7 +46,7 @@ export function Topbar({ title }: TopbarProps) {
 
         <div className="flex items-center gap-2 pl-2 border-l border-[var(--color-border)]">
           <div className="h-8 w-8 rounded-full bg-[var(--color-primary)] text-white text-xs font-bold flex items-center justify-center">
-            {useAuthStore.getState().user ? getInitials(useAuthStore.getState().user!.email) : '?'}
+            {user ? getInitials(user.email) : '?'}
           </div>
           <button
             onClick={() => logout()}

@@ -3,12 +3,12 @@
 import { useTenantStore } from '@/store/useTenantStore'
 
 export function useTenant() {
-  return useTenantStore(s => ({
-    universityId: s.universityId,
-    name:         s.name,
-    slug:         s.slug,
-    primaryColor: s.primaryColor,
-    accentColor:  s.accentColor,
-    logoUrl:      s.logoUrl,
-  }))
+  const universityId  = useTenantStore(s => s.universityId)
+  const name          = useTenantStore(s => s.name)
+  const slug          = useTenantStore(s => s.slug)
+  const primaryColor  = useTenantStore(s => s.primaryColor)
+  const accentColor   = useTenantStore(s => s.accentColor)
+  const logoUrl       = useTenantStore(s => s.logoUrl)
+
+  return { universityId, name, slug, primaryColor, accentColor, logoUrl }
 }

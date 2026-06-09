@@ -21,18 +21,28 @@ export async function POST(req: NextRequest) {
   cookieStore.set('access_token', json.data.accessToken, {
     httpOnly: true,
     secure: isProd,
-    sameSite: 'strict',
+    sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 15,           // 15 minutes
+    maxAge: 60 * 15,
   })
 
   cookieStore.set('refresh_token', json.data.refreshToken, {
     httpOnly: true,
     secure: isProd,
-    sameSite: 'strict',
+    sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
+    maxAge: 60 * 60 * 24 * 7,
   })
+
+  if (json.data.user.universitySlug) {
+    cookieStore.set('tenant_slug', json.data.user.universitySlug, {
+      httpOnly: false,
+      secure: isProd,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7,
+    })
+  }
 
   // Only return user — never expose tokens to client JS
   return NextResponse.json({ success: true, data: json.data.user })

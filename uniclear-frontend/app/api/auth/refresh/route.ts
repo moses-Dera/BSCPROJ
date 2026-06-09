@@ -25,18 +25,17 @@ export async function POST() {
   cookieStore.set('access_token', json.data.accessToken, {
     httpOnly: true,
     secure: isProd,
-    sameSite: 'strict',
+    sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 15,           // 15 minutes
+    maxAge: 60 * 15,
   })
 
-  // Set rotated refresh token — resets the 7-day window on every activity
   cookieStore.set('refresh_token', json.data.refreshToken, {
     httpOnly: true,
     secure: isProd,
-    sameSite: 'strict',
+    sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 60 * 24 * 7, // 7 days sliding
+    maxAge: 60 * 60 * 24 * 7,
   })
 
   return NextResponse.json({ success: true })

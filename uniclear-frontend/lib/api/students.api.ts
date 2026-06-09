@@ -6,6 +6,9 @@ export const studentsApi = {
     apiClient.get<{ success: true; data: PaginatedData<Student> }>(`/students?page=${page}&limit=${limit}${search ? `&search=${search}` : ''}`),
   getById: (id: string) =>
     apiClient.get<{ success: true; data: Student }>(`/students/${id}`),
+  create: (data: { email: string; firstName: string; lastName: string; matricNo: string; facultyId?: string; departmentId?: string }) =>
+    apiClient.post<{ success: true; data: Student & { inviteLink: string; tempPassword: string } }>('/students', data),
+  delete: (id: string) => apiClient.delete(`/students/${id}`),
 }
 
 export const notificationsApi = {

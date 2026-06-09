@@ -14,5 +14,5 @@ export const updateStageSchema = z.object({
 })
 
 export const reorderStagesSchema = z.object({
-  stages: z.array(z.object({ id: z.string().uuid(), orderIndex: z.number().int().min(1) })),
+  stages: z.array(z.object({ id: z.string().min(1), orderIndex: z.number().int().min(1) })),
 })

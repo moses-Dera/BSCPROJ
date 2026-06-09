@@ -9,11 +9,16 @@ const db = new PrismaClient({ adapter })
 async function main() {
   console.log('🌱 Seeding database...')
 
-  // Platform Owner
-  const platformOwner = await db.platformOwner.upsert({
+  // Platform Owner (role-based user, no university)
+  const platformOwner = await db.user.upsert({
     where:  { email: 'admin@uniclear.ng' },
     update: {},
-    create: { email: 'admin@uniclear.ng', passwordHash: await bcrypt.hash('Admin@1234', 12), name: 'UniClear Admin' },
+    create: {
+      email: 'admin@uniclear.ng',
+      passwordHash: await bcrypt.hash('Admin@1234', 12),
+      passwordSetAt: new Date(),
+      role: 'PLATFORM_OWNER',
+    },
   })
   console.log('✅ Platform owner created:', platformOwner.email)
 
@@ -62,7 +67,7 @@ async function main() {
   for (let i = 0; i < stageNames.length; i++) {
     await db.clearanceStage.upsert({
       where:  { id: `seed-stage-unn-${i}` },
-      update: {},
+      update: { name: stageNames[i], orderIndex: i + 1 },
       create: { id: `seed-stage-unn-${i}`, universityId: unn.id, name: stageNames[i], orderIndex: i + 1 },
     })
   }
@@ -84,9 +89,82 @@ async function main() {
   }
   console.log('✅ UNN document types created')
 
+  // Faculty & Department
+  const faculty = await db.faculty.upsert({
+    where:  { id: 'seed-faculty-unn-0' },
+    update: {},
+    create: { id: 'seed-faculty-unn-0', universityId: unn.id, name: 'Faculty of Engineering' },
+  })
+
+  const department = await db.department.upsert({
+    where:  { id: 'seed-dept-unn-0' },
+    update: {},
+    create: { id: 'seed-dept-unn-0', facultyId: faculty.id, name: 'Computer Engineering' },
+  })
+  console.log('✅ Faculty and department created')
+
+  // Officer user
+  const officerUser = await db.user.upsert({
+    where:  { email: 'officer@unn.edu.ng' },
+    update: {},
+    create: {
+      email: 'officer@unn.edu.ng', role: 'OFFICER', universityId: unn.id,
+      passwordHash: await bcrypt.hash('Admin@1234', 12), passwordSetAt: new Date(),
+    },
+  })
+
+  // Get first stage to assign officer
+  const firstStage = await db.clearanceStage.findFirst({
+    where: { universityId: unn.id },
+    orderBy: { orderIndex: 'asc' },
+  })
+
+  await db.officer.upsert({
+    where:  { userId: officerUser.id },
+    update: {},
+    create: {
+      id: 'seed-officer-unn-0',
+      universityId: unn.id,
+      userId: officerUser.id,
+      firstName: 'Chukwuemeka',
+      lastName:  'Obi',
+      stageId:   firstStage?.id ?? null,
+    },
+  })
+  console.log('✅ Officer created:', officerUser.email)
+
+  // Student user
+  const studentUser = await db.user.upsert({
+    where:  { email: 'student@unn.edu.ng' },
+    update: {},
+    create: {
+      email: 'student@unn.edu.ng', role: 'STUDENT', universityId: unn.id,
+      passwordHash: await bcrypt.hash('Admin@1234', 12), passwordSetAt: new Date(),
+    },
+  })
+
+  await db.student.upsert({
+    where:  { userId: studentUser.id },
+    update: {},
+    create: {
+      id:           'seed-student-unn-0',
+      universityId: unn.id,
+      userId:       studentUser.id,
+      matricNo:     'UNN/2021/001',
+      firstName:    'Adaeze',
+      lastName:     'Nwosu',
+      facultyId:    faculty.id,
+      departmentId: department.id,
+      level:        '500',
+    },
+  })
+  console.log('✅ Student created:', studentUser.email)
+
   console.log('\n🎉 Seed complete!')
-  console.log('Platform Owner  — admin@uniclear.ng   / Admin@1234')
-  console.log('UNN Super Admin — superadmin@unn.edu.ng / Admin@1234')
+  console.log('Platform Owner  — admin@uniclear.ng         / Admin@1234')
+  console.log('UNN Super Admin — superadmin@unn.edu.ng     / Admin@1234')
+  console.log('UNN Officer     — officer@unn.edu.ng        / Admin@1234')
+  console.log('UNN Student     — student@unn.edu.ng        / Admin@1234')
 }
 
 main()

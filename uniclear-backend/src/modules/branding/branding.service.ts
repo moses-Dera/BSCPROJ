@@ -5,18 +5,28 @@ import { storage } from '@/modules/documents/storage'
 
 export class BrandingService {
   static async get(universityId: string) {
-    return db.universityBranding.findUnique({ where: { universityId } })
+    const [branding, university] = await Promise.all([
+      db.universityBranding.findUnique({ where: { universityId } }),
+      db.university.findUnique({ where: { id: universityId }, select: { primaryColor: true, accentColor: true } }),
+    ])
+    return { ...branding, primaryColor: university?.primaryColor, accentColor: university?.accentColor }
   }
 
-  static async update(universityId: string, data: { bannerMessage?: string; footerText?: string }) {
+  static async update(universityId: string, data: { primaryColor?: string; accentColor?: string; bannerMessage?: string; footerText?: string }) {
     const contract = await db.contractPlan.findUnique({ where: { universityId } })
     const tier = contract?.tier ?? 'TRIAL'
     if (!TIER_LIMITS[tier].customBranding) throw new TierLimitError('Custom branding not available on your plan')
 
+    const { primaryColor, accentColor, ...brandingData } = data
+
+    if (primaryColor || accentColor) {
+      await db.university.update({ where: { id: universityId }, data: { primaryColor, accentColor } })
+    }
+
     return db.universityBranding.upsert({
       where: { universityId },
-      create: { universityId, ...data },
-      update: data,
+      create: { universityId, ...brandingData },
+      update: brandingData,
     })
   }
 

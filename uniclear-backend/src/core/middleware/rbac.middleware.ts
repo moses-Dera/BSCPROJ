@@ -11,8 +11,12 @@ export function requireRole(...roles: Role[]) {
 }
 
 export function requireTenant(req: Request, res: Response, next: NextFunction) {
-  if (!req.universityId) return next(new ForbiddenError('Tenant not resolved'))
-  next()
+  if (req.universityId) return next()
+  if (req.user?.universityId) {
+    req.universityId = req.user.universityId
+    return next()
+  }
+  next(new ForbiddenError('Tenant not resolved'))
 }
 
 export function requireSameTenant(req: Request, res: Response, next: NextFunction) {
