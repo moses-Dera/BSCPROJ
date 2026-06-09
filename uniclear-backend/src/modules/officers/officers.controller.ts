@@ -1,10 +1,21 @@
 import { Request, Response, NextFunction } from 'express'
 import { OfficersService } from './officers.service'
+import { OfficersRepository } from './officers.repository'
 import { ApiResponse } from '@/core/response/ApiResponse'
+import { NotFoundError } from '@/core/errors/AppError'
 import { createOfficerSchema, updateOfficerSchema, listOfficersSchema } from './officers.schema'
 import { param } from '@/lib/utils/param'
 
 export class OfficersController {
+  static async getMe(req: Request, res: Response, next: NextFunction) {
+    try {
+      const officer = await OfficersRepository.findByUserId(req.user!.sub)
+      if (!officer) throw new NotFoundError('Officer profile not found')
+      const full = await OfficersService.getById(officer.id, req.universityId!)
+      return ApiResponse.success(res, full)
+    } catch (err) { next(err) }
+  }
+
   static async list(req: Request, res: Response, next: NextFunction) {
     try {
       const query = listOfficersSchema.parse(req.query)

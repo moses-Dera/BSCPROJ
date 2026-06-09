@@ -9,7 +9,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
-import { CalendarDays } from 'lucide-react'
+import { CalendarDays, ArrowRight } from 'lucide-react'
 import { ErrorState, EmptyState } from '@/components/shared/EmptyState'
 import { formatDate } from '@/lib/utils/format'
 import { ROUTES } from '@/lib/constants'
@@ -46,7 +46,7 @@ export default function StudentClearancePage() {
         <EmptyState icon={<CalendarDays className="h-10 w-10" />} title="No active session" description="The university has not opened a clearance session yet. Check back later." />
       ) : (
         <Card className="text-center py-8 space-y-4">
-          <p className="text-4xl">🎓</p>
+          <p className="text-[var(--color-muted)] text-4xl">🎓</p>
           <div>
             <p className="text-base font-semibold text-[var(--color-text)]">{activeSession.name}</p>
             <p className="text-sm text-[var(--color-muted)]">
@@ -57,7 +57,7 @@ export default function StudentClearancePage() {
             Once started, you will be taken through each clearance stage sequentially.
           </p>
           <Button size="lg" loading={isPending} onClick={() => start(activeSession.id)}>
-            Start Clearance →
+            Start Clearance <ArrowRight className="h-4 w-4" />
           </Button>
         </Card>
       )}

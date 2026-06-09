@@ -38,7 +38,7 @@ export default function StudentDashboard() {
             </div>
             {clearance.status === 'COMPLETED' && (
               <Link href={ROUTES.student.certificate}>
-                <Button size="sm">🎉 Download Certificate</Button>
+                <Button size="sm"><Download className="h-3.5 w-3.5" /> Download Certificate</Button>
               </Link>
             )}
           </div>
@@ -57,14 +57,14 @@ export default function StudentDashboard() {
             {stages?.find(s => s.id === clearance.currentStageId)?.name ?? 'Current Stage'}
           </h3>
           <Link href={ROUTES.student.documents}>
-            <Button>Continue Clearance →</Button>
+            <Button>Continue Clearance <ArrowRight className="h-4 w-4" /></Button>
           </Link>
         </Card>
       )}
 
       {!clearance && !isLoading && (
         <Card className="text-center py-10">
-          <p className="text-4xl mb-3">🎓</p>
+          <p className="text-[var(--color-muted)] text-4xl mb-3">🎓</p>
           <h3 className="text-base font-semibold text-[var(--color-text)] mb-1">No active clearance</h3>
           <p className="text-sm text-[var(--color-muted)] mb-4">Start your clearance process for the current session.</p>
           <Link href={ROUTES.student.clearance}>

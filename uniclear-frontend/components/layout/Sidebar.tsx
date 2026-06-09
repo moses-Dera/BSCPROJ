@@ -53,7 +53,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'fixed top-14 bottom-0 left-0 z-30 flex flex-col bg-[var(--color-surface)] border-r border-[var(--color-border)] transition-all duration-250',
+        'fixed top-14 lg:top-0 bottom-0 left-0 z-30 flex flex-col bg-[var(--color-surface)] border-r border-[var(--color-border)] transition-all duration-250',
         sidebarOpen ? 'w-60' : 'w-0 overflow-hidden'
       )}
     >
