@@ -87,27 +87,36 @@ export class StudentsService {
 
         // Map Session
         if (raw.sessionName) {
-          let session = await db.academicSession.findFirst({ where: { universityId, name: raw.sessionName } })
+          const sessionName = raw.sessionName.trim()
+          let session = await db.academicSession.findFirst({ 
+            where: { universityId, name: { equals: sessionName, mode: 'insensitive' } } 
+          })
           if (!session) {
-            session = await db.academicSession.create({ data: { universityId, name: raw.sessionName, startDate: new Date(), endDate: new Date(), isActive: true } })
+            session = await db.academicSession.create({ data: { universityId, name: sessionName, startDate: new Date(), endDate: new Date(), isActive: true } })
           }
           data.entrySessionId = session.id
         }
 
         // Map Faculty
         if (raw.facultyName) {
-          let faculty = await db.faculty.findFirst({ where: { universityId, name: raw.facultyName } })
+          const facultyName = raw.facultyName.trim()
+          let faculty = await db.faculty.findFirst({ 
+            where: { universityId, name: { equals: facultyName, mode: 'insensitive' } } 
+          })
           if (!faculty) {
-            faculty = await db.faculty.create({ data: { universityId, name: raw.facultyName } })
+            faculty = await db.faculty.create({ data: { universityId, name: facultyName } })
           }
           data.facultyId = faculty.id
         }
 
         // Map Department
         if (raw.departmentName && data.facultyId) {
-          let dept = await db.department.findFirst({ where: { facultyId: data.facultyId, name: raw.departmentName } })
+          const departmentName = raw.departmentName.trim()
+          let dept = await db.department.findFirst({ 
+            where: { facultyId: data.facultyId, name: { equals: departmentName, mode: 'insensitive' } } 
+          })
           if (!dept) {
-            dept = await db.department.create({ data: { facultyId: data.facultyId, name: raw.departmentName } })
+            dept = await db.department.create({ data: { facultyId: data.facultyId, name: departmentName } })
           }
           data.departmentId = dept.id
         }

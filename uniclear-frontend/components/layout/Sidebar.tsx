@@ -77,11 +77,14 @@ export function Sidebar() {
       )}
     >
       <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--color-border)]">
-        {logoUrl
-          ? <Image src={logoUrl} alt={name} width={32} height={32} className="h-8 w-8 rounded object-cover" />
-          : <div className="h-8 w-8 rounded flex items-center justify-center text-white text-sm font-bold" style={{ backgroundColor: primaryColor }}>{name[0]}</div>
-        }
-        <span className="font-semibold text-sm text-[var(--color-text)] truncate">{name || 'UniClear'}</span>
+        {isPlatformOwner ? (
+          <div className="h-8 w-8 rounded flex items-center justify-center text-white text-sm font-bold bg-slate-800">UC</div>
+        ) : logoUrl ? (
+          <Image src={logoUrl} alt={name} width={32} height={32} className="h-8 w-8 rounded object-cover" />
+        ) : (
+          <div className="h-8 w-8 rounded flex items-center justify-center text-white text-sm font-bold" style={{ backgroundColor: primaryColor }}>{name?.[0] || 'U'}</div>
+        )}
+        <span className="font-semibold text-sm text-[var(--color-text)] truncate">{isPlatformOwner ? 'UniClear Platform' : (name || 'UniClear')}</span>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
