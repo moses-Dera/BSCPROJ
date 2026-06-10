@@ -87,4 +87,13 @@ export class UniversitiesService {
     await db.university.update({ where: { id }, data: { webhookSecret: newKey } })
     return { apiKey: newKey }
   }
+
+  static async getPlatformStats() {
+    const [totalStudents, totalClearances, totalOfficers] = await Promise.all([
+      db.student.count(),
+      db.clearanceRequest.count(),
+      db.officer.count(),
+    ])
+    return { totalStudents, totalClearances, totalOfficers }
+  }
 }

@@ -104,4 +104,11 @@ export class UniversitiesController {
       return ApiResponse.success(res, data, 'API Key generated successfully')
     } catch (err) { next(err) }
   }
+
+  static async getPlatformStats(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await UniversitiesService.getPlatformStats()
+      return ApiResponse.success(res, data)
+    } catch (err) { next(err) }
+  }
 }

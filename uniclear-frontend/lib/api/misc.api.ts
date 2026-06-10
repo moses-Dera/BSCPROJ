@@ -27,8 +27,9 @@ export const reportsApi = {
 }
 
 export const universitiesApi = {
-  list:   (page = 1, search?: string) =>
+  list: (page = 1, search?: string) =>
     apiClient.get(`/universities?page=${page}${search ? `&search=${search}` : ''}`),
+  getStats: () => apiClient.get<{ data: { totalStudents: number; totalClearances: number; totalOfficers: number } }>('/universities/stats'),
   create: (data: object) => apiClient.post('/universities', data),
   update: (id: string, data: object) => apiClient.patch(`/universities/${id}`, data),
   suspend: (id: string)  => apiClient.patch(`/universities/${id}/suspend`, {}),

@@ -17,6 +17,7 @@ router.post('/settings/api-key/generate', authMiddleware, requireTenant, require
 // Platform owner only
 router.use(authMiddleware, requireRole('PLATFORM_OWNER'))
 router.get('/',               UniversitiesController.list)
+router.get('/stats',          UniversitiesController.getPlatformStats)
 router.get('/:id',            UniversitiesController.getById)
 router.post('/',              UniversitiesController.create)
 router.patch('/:id',          UniversitiesController.update)

@@ -11,7 +11,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
 export default function PlatformDashboard() {
-  const { data, isLoading, isError } = useQuery({
+  const { data: listData, isLoading: listLoading, isError } = useQuery({
     queryKey: ['universities'],
     queryFn:  () => universitiesApi.list().then((r: any) => ({
       items: r.data.data,
@@ -19,9 +19,14 @@ export default function PlatformDashboard() {
     })),
   })
 
-  const total    = data?.total    ?? 0
-  const active   = data?.items?.filter((u: any) => u.isActive).length  ?? 0
-  const suspended = data?.items?.filter((u: any) => !u.isActive).length ?? 0
+  const { data: statsData, isLoading: statsLoading } = useQuery({
+    queryKey: ['platform-stats'],
+    queryFn: () => universitiesApi.getStats().then(r => r.data.data)
+  })
+
+  const total    = listData?.total    ?? 0
+  const active   = listData?.items?.filter((u: any) => u.isActive).length  ?? 0
+  const suspended = listData?.items?.filter((u: any) => !u.isActive).length ?? 0
 
   return (
     <div className="space-y-6">
@@ -35,35 +40,47 @@ export default function PlatformDashboard() {
         }
       />
 
-      <div className="grid grid-cols-3 gap-4">
-        {isLoading ? (
-          <><CardSkeleton /><CardSkeleton /><CardSkeleton /></>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {listLoading || statsLoading ? (
+          Array(6).fill(0).map((_, i) => <CardSkeleton key={i} />)
         ) : isError ? (
-          <ErrorState />
+          <div className="col-span-full"><ErrorState /></div>
         ) : (
           <>
-            <Card>
-              <p className="text-xs text-[var(--color-muted)] uppercase tracking-wide font-medium mb-1">Total Universities</p>
-              <p className="text-3xl font-bold text-[var(--color-text)]">{total}</p>
+            <Card padding="md">
+              <p className="text-[10px] text-[var(--color-muted)] uppercase tracking-widest font-bold mb-1">Universities</p>
+              <p className="text-2xl font-bold text-[var(--color-text)]">{total}</p>
             </Card>
-            <Card>
-              <p className="text-xs text-[var(--color-muted)] uppercase tracking-wide font-medium mb-1">Active</p>
-              <p className="text-3xl font-bold text-[var(--color-approved)]">{active}</p>
+            <Card padding="md">
+              <p className="text-[10px] text-[var(--color-muted)] uppercase tracking-widest font-bold mb-1">Active</p>
+              <p className="text-2xl font-bold text-emerald-600">{active}</p>
             </Card>
-            <Card>
-              <p className="text-xs text-[var(--color-muted)] uppercase tracking-wide font-medium mb-1">Suspended</p>
-              <p className="text-3xl font-bold text-[var(--color-rejected)]">{suspended}</p>
+            <Card padding="md">
+              <p className="text-[10px] text-[var(--color-muted)] uppercase tracking-widest font-bold mb-1">Suspended</p>
+              <p className="text-2xl font-bold text-red-500">{suspended}</p>
+            </Card>
+            <Card padding="md">
+              <p className="text-[10px] text-[var(--color-muted)] uppercase tracking-widest font-bold mb-1">Students</p>
+              <p className="text-2xl font-bold text-[var(--color-text)]">{statsData?.totalStudents?.toLocaleString() ?? 0}</p>
+            </Card>
+            <Card padding="md">
+              <p className="text-[10px] text-[var(--color-muted)] uppercase tracking-widest font-bold mb-1">Clearances</p>
+              <p className="text-2xl font-bold text-[var(--color-text)]">{statsData?.totalClearances?.toLocaleString() ?? 0}</p>
+            </Card>
+            <Card padding="md">
+              <p className="text-[10px] text-[var(--color-muted)] uppercase tracking-widest font-bold mb-1">Officers</p>
+              <p className="text-2xl font-bold text-[var(--color-text)]">{statsData?.totalOfficers?.toLocaleString() ?? 0}</p>
             </Card>
           </>
         )}
       </div>
 
       {/* Recent universities */}
-      {!isLoading && !isError && !!data?.items?.length && (
+      {!listLoading && !isError && !!listData?.items?.length && (
         <Card>
           <h2 className="text-sm font-semibold text-[var(--color-text)] mb-4">Universities</h2>
           <div className="space-y-2">
-            {data.items.slice(0, 8).map((u: any) => (
+            {listData.items.slice(0, 8).map((u: any) => (
               <div key={u.id} className="flex items-center justify-between py-2 border-b border-[var(--color-border)] last:border-0">
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 rounded-lg flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: u.primaryColor ?? '#1B4F72' }}>
