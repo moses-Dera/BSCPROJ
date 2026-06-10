@@ -42,8 +42,6 @@ export default function OfficerDashboard() {
   const pending   = queue?.items?.length ?? 0
   const assignment = meRes?.stageAssignments?.[0]
   const stageName = assignment?.stage?.name ?? '—'
-  const facultyName = assignment?.faculty?.name ?? 'All Faculties'
-  const deptName = assignment?.department?.name ?? 'All Departments'
 
   return (
     <div className="max-w-3xl space-y-4">
@@ -69,8 +67,14 @@ export default function OfficerDashboard() {
             <Card>
               <p className="text-[11px] text-[var(--color-muted)] uppercase tracking-wide font-medium mb-1">Your Scope</p>
               <div className="mt-1 space-y-1">
-                <p className="text-xs text-[var(--color-text)]"><span className="text-[var(--color-muted)]">Faculty:</span> {facultyName}</p>
-                <p className="text-xs text-[var(--color-text)]"><span className="text-[var(--color-muted)]">Dept:</span> {deptName}</p>
+                {!assignment?.faculty && !assignment?.department ? (
+                  <p className="text-sm font-semibold text-[var(--color-text)] text-[var(--color-primary)]">School Wide</p>
+                ) : (
+                  <>
+                    <p className="text-xs text-[var(--color-text)]"><span className="text-[var(--color-muted)]">Faculty:</span> {assignment?.faculty?.name ?? 'All Faculties'}</p>
+                    <p className="text-xs text-[var(--color-text)]"><span className="text-[var(--color-muted)]">Dept:</span> {assignment?.department?.name ?? 'All Departments'}</p>
+                  </>
+                )}
               </div>
             </Card>
           </>

@@ -13,7 +13,10 @@ import { Button } from '@/components/ui/button'
 export default function PlatformDashboard() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['universities'],
-    queryFn:  () => universitiesApi.list().then((r: any) => r.data.data),
+    queryFn:  () => universitiesApi.list().then((r: any) => ({
+      items: r.data.data,
+      total: r.data.pagination.total
+    })),
   })
 
   const total    = data?.total    ?? 0

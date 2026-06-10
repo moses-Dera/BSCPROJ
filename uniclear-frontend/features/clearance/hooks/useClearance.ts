@@ -31,7 +31,10 @@ export function useClearanceStatus() {
 export function useOfficerQueue(page = 1, search?: string) {
   return useQuery({
     queryKey: [...clearanceKeys.queue(), page, search],
-    queryFn:  () => clearanceApi.getQueue(page, 20, search).then((r: any) => r.data.data),
+    queryFn:  () => clearanceApi.getQueue(page, 20, search).then((r: any) => ({
+      items: r.data.data,
+      total: r.data.pagination.total
+    })),
   })
 }
 

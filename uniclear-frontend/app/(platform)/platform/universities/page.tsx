@@ -34,7 +34,10 @@ export default function PlatformUniversitiesPage() {
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['universities'],
-    queryFn:  () => universitiesApi.list().then((r: any) => r.data.data),
+    queryFn:  () => universitiesApi.list().then((r: any) => ({
+      items: r.data.data,
+      total: r.data.pagination.total
+    })),
   })
 
   const { mutate: create, isPending } = useMutation({

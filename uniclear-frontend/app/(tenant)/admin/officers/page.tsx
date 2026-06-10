@@ -41,7 +41,10 @@ export default function AdminOfficersPage() {
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['officers'],
-    queryFn:  () => officersApi.list().then(r => r.data.data),
+    queryFn:  () => officersApi.list().then(r => ({
+      items: r.data.data,
+      total: r.data.pagination.total
+    })),
   })
 
   const { data: stages } = useQuery({
