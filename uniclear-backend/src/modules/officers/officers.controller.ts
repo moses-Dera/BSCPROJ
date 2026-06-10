@@ -2,9 +2,11 @@ import { Request, Response, NextFunction } from 'express'
 import { OfficersService } from './officers.service'
 import { OfficersRepository } from './officers.repository'
 import { ApiResponse } from '@/core/response/ApiResponse'
-import { NotFoundError } from '@/core/errors/AppError'
+import { NotFoundError, ValidationError } from '@/core/errors/AppError'
 import { createOfficerSchema, updateOfficerSchema, listOfficersSchema, assignOfficerSchema } from './officers.schema'
 import { param } from '@/lib/utils/param'
+import { storage } from '@/modules/documents/storage'
+import { db } from '@/lib/db'
 
 export class OfficersController {
   static async getMe(req: Request, res: Response, next: NextFunction) {
@@ -65,6 +67,45 @@ export class OfficersController {
   static async delete(req: Request, res: Response, next: NextFunction) {
     try {
       await OfficersService.delete(param(req.params.id), req.universityId!)
+      return ApiResponse.noContent(res)
+    } catch (err) { next(err) }
+  }
+
+  static async getStamps(req: Request, res: Response, next: NextFunction) {
+    try {
+      const stamps = await db.officerStamp.findMany({
+        where: { officerId: req.user!.sub, universityId: req.universityId! }
+      })
+      return ApiResponse.success(res, stamps)
+    } catch (err) { next(err) }
+  }
+
+  static async uploadStamp(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.file) throw new ValidationError('No image uploaded')
+      const { name } = req.body
+      if (!name) throw new ValidationError('Stamp name is required')
+      
+      const fileData = await storage.upload(req.file.buffer, `stamps/${req.universityId}/${req.user!.sub}`, req.file.mimetype)
+      const stamp = await db.officerStamp.create({
+        data: {
+          universityId: req.universityId!,
+          officerId: req.user!.sub,
+          name,
+          imageUrl: fileData.url,
+          imageKey: fileData.key
+        }
+      })
+      return ApiResponse.created(res, stamp)
+    } catch (err) { next(err) }
+  }
+
+  static async deleteStamp(req: Request, res: Response, next: NextFunction) {
+    try {
+      const stamp = await db.officerStamp.findUnique({ where: { id: req.params.id } })
+      if (!stamp || stamp.officerId !== req.user!.sub) throw new NotFoundError('Stamp not found')
+      await storage.delete(stamp.imageKey)
+      await db.officerStamp.delete({ where: { id: req.params.id } })
       return ApiResponse.noContent(res)
     } catch (err) { next(err) }
   }

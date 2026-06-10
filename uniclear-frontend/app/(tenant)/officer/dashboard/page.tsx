@@ -65,7 +65,7 @@ export default function OfficerDashboard() {
                   <p className="text-xs font-medium text-[var(--color-text)] truncate">
                     {item.student?.firstName} {item.student?.lastName}
                   </p>
-                  <p className="text-[11px] text-[var(--color-muted)] font-mono">{item.student?.matricNo}</p>
+                  <p className="text-[11px] text-[var(--color-muted)] font-mono">{item.student?.jambRegNo}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-2">
                   <p className="text-[11px] text-[var(--color-muted)] hidden sm:block">{formatDateTime(item.updatedAt)}</p>

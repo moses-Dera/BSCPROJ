@@ -82,6 +82,7 @@ model University {
   sessions          AcademicSession[]
   branding          UniversityBranding?
   contract          ContractPlan?
+  officerStamps     OfficerStamp[]
 
   @@index([slug])
 }
@@ -141,6 +142,7 @@ model User {
   auditLogs      AuditLog[]       @relation("ActorLogs")
   refreshTokens  RefreshToken[]
   passwordResetTokens PasswordResetToken[]
+  officerStamps  OfficerStamp[]
 
   @@index([universityId])
   @@index([email])
@@ -241,6 +243,7 @@ model Officer {
   user              User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
   stageAssignments  StageOfficerAssignment[]
   approvals         StageApproval[]
+  stamps            OfficerStamp[]
 
   @@index([universityId])
 }
@@ -400,9 +403,11 @@ model StageApproval {
   stageId      String
   officerId    String
   status       StageStatus
-  remarks      String?
-  decidedAt    DateTime    @default(now())
-  ipAddress    String?
+  remarks       String?
+  attachmentUrl String?
+  attachmentKey String?
+  decidedAt     DateTime    @default(now())
+  ipAddress     String?
 
   request      ClearanceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
   stage        ClearanceStage   @relation(fields: [stageId], references: [id])
@@ -411,6 +416,28 @@ model StageApproval {
 
   @@index([universityId])
   @@index([requestId])
+}
+
+// ─────────────────────────────────────────
+// OFFICER STAMPS (DIGITAL SIGNATURES/STAMPS)
+// ─────────────────────────────────────────
+
+model OfficerStamp {
+  id           String   @id @default(uuid())
+  universityId String
+  officerId    String
+  name         String
+  imageUrl     String
+  imageKey     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  university   University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  officer      User       @relation(fields: [officerId], references: [id], onDelete: Cascade, map: "OfficerStamp_user_fkey")
+  officerRef   Officer    @relation(fields: [officerId], references: [userId], onDelete: Cascade, map: "OfficerStamp_officer_fkey")
+
+  @@index([universityId])
+  @@index([officerId])
 }
 
 // ─────────────────────────────────────────

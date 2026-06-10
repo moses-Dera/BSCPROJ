@@ -75,7 +75,7 @@ export class ClearanceRepository {
     return { data, total }
   }
 
-  static async createStageApproval(data: { universityId: string; requestId: string; stageId: string; officerId: string; status: StageStatus; remarks?: string; ipAddress?: string }) {
+  static async createStageApproval(data: { universityId: string; requestId: string; stageId: string; officerId: string; status: StageStatus; remarks?: string; attachmentUrl?: string; attachmentKey?: string; ipAddress?: string }) {
     return db.stageApproval.create({ data })
   }
 

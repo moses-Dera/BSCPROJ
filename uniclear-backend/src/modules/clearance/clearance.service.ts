@@ -70,7 +70,7 @@ export class ClearanceService {
     return clearance
   }
 
-  static async approve(requestId: string, officerUserId: string, universityId: string, remarks?: string, ipAddress?: string) {
+  static async approve(requestId: string, officerUserId: string, universityId: string, remarks?: string, attachmentUrl?: string, attachmentKey?: string, ipAddress?: string) {
     const clearance = await ClearanceRepository.findById(requestId, universityId)
     if (!clearance) throw new NotFoundError('Clearance request not found')
     if (!clearance.currentStageId) throw new ValidationError('No active stage')
@@ -82,7 +82,7 @@ export class ClearanceService {
 
     await ClearanceRepository.createStageApproval({
       universityId, requestId, stageId: clearance.currentStageId,
-      officerId: officerUserId, status: 'APPROVED', remarks, ipAddress,
+      officerId: officerUserId, status: 'APPROVED', remarks, attachmentUrl, attachmentKey, ipAddress,
     })
 
     const currentStage = await db.clearanceStage.findUnique({ where: { id: clearance.currentStageId } })

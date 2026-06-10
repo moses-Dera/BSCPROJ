@@ -26,7 +26,7 @@ type RegisterForm = z.infer<typeof registerSchema>
 export default function RegisterPage() {
   const router = useRouter()
   const qc = useQueryClient()
-  const { setAuth } = useAuthStore()
+  const { setUser } = useAuthStore()
 
   // Read from CSS variables set server-side
   const name         = useTenantStore(s => s.name)
@@ -43,7 +43,7 @@ export default function RegisterPage() {
     mutationFn: (d: RegisterForm) => authApi.register(slug!, d.jambRegNo, d.email, d.password),
     onSuccess: (res) => {
       const data = res.data.data
-      setAuth(res.data.data as any)
+      setUser(res.data.data as any)
       qc.setQueryData(['officer', 'me'], res.data.data)
       toast.success('Registration successful')
       router.push(ROUTES.student.dashboard)

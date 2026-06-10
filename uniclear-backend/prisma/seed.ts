@@ -103,11 +103,15 @@ async function main() {
   // Assign document types to first stage
   const firstStageSeed = IDS.stages[0]
   for (let i = 0; i < IDS.docTypes.length; i++) {
-    await db.stageDocumentRequirement.upsert({
-      where:  { stageId_documentTypeId: { stageId: firstStageSeed, documentTypeId: IDS.docTypes[i] } },
-      update: {},
-      create: { universityId: unn.id, stageId: firstStageSeed, documentTypeId: IDS.docTypes[i], isRequired: true },
+    const existingReq = await db.stageDocumentRequirement.findFirst({
+      where: { stageId: firstStageSeed, documentTypeId: IDS.docTypes[i] }
     })
+    
+    if (!existingReq) {
+      await db.stageDocumentRequirement.create({
+        data: { universityId: unn.id, stageId: firstStageSeed, documentTypeId: IDS.docTypes[i], isRequired: true }
+      })
+    }
   }
   console.log('✅ Stage document requirements created')
 
@@ -141,7 +145,7 @@ async function main() {
     orderBy: { orderIndex: 'asc' },
   })
 
-  await db.officer.upsert({
+  const officer = await db.officer.upsert({
     where:  { userId: officerUser.id },
     update: {},
     create: {
@@ -150,10 +154,20 @@ async function main() {
       userId: officerUser.id,
       firstName: 'Chukwuemeka',
       lastName:  'Obi',
-      stageId:   firstStage?.id ?? null,
     },
   })
   console.log('✅ Officer created:', officerUser.email)
+
+  if (firstStage) {
+    const existingAssignment = await db.stageOfficerAssignment.findFirst({
+      where: { officerId: officer.id, stageId: firstStage.id }
+    })
+    if (!existingAssignment) {
+      await db.stageOfficerAssignment.create({
+        data: { officerId: officer.id, stageId: firstStage.id, universityId: unn.id }
+      })
+    }
+  }
 
   // Student user
   const studentUser = await db.user.upsert({

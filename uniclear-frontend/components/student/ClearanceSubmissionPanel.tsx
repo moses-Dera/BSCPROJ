@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { CheckCircle2, UploadCloud, X, Loader2 } from 'lucide-react'
 import type { ClearanceRequest, Document } from '@/types'
@@ -56,15 +56,15 @@ export function ClearanceSubmissionPanel({
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Stage: {request.currentStage.name}</CardTitle>
-        <CardDescription>
+    <Card className="w-full flex flex-col gap-6" padding="lg">
+      <div>
+        <h2 className="text-xl font-bold">Stage: {request.currentStage.name}</h2>
+        <p className="text-sm text-[var(--color-muted)] mt-1">
           Upload all required documents to proceed.
-        </CardDescription>
-      </CardHeader>
+        </p>
+      </div>
       
-      <CardContent className="space-y-4">
+      <div className="space-y-4">
         {requirements.map((req) => {
           const doc = documents.find(d => d.documentTypeId === req.documentTypeId)
           
@@ -98,8 +98,7 @@ export function ClearanceSubmissionPanel({
                   </div>
                 ) : (
                   <label className="cursor-pointer">
-                    <Button variant="outline" size="sm" asChild disabled={uploadingId === req.documentTypeId}>
-                      <span>
+                    <Button variant="secondary" size="sm" disabled={uploadingId === req.documentTypeId}>
                         {uploadingId === req.documentTypeId ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
@@ -108,7 +107,6 @@ export function ClearanceSubmissionPanel({
                             Upload
                           </>
                         )}
-                      </span>
                     </Button>
                     <input 
                       type="file" 
@@ -126,9 +124,9 @@ export function ClearanceSubmissionPanel({
         {requirements.length === 0 && (
           <p className="text-sm text-[var(--color-muted)]">No documents required for this stage.</p>
         )}
-      </CardContent>
+      </div>
 
-      <CardFooter>
+      <div>
         <Button 
           className="w-full" 
           size="lg" 
@@ -140,7 +138,7 @@ export function ClearanceSubmissionPanel({
           ) : null}
           Submit for Review
         </Button>
-      </CardFooter>
+      </div>
     </Card>
   )
 }

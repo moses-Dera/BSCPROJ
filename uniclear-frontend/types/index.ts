@@ -74,6 +74,7 @@ export interface StageApproval {
   stageId: string
   status: ClearanceStatus
   remarks: string | null
+  attachmentUrl?: string | null
   createdAt: string
 }
 

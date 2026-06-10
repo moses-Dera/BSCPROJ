@@ -42,6 +42,11 @@ export function ClearanceStepper({ stages, request }: ClearanceStepperProps) {
                 <span className={cn('text-[10px] mt-0.5', isCompleted ? 'text-[var(--color-approved)]' : isRejected ? 'text-[var(--color-rejected)]' : isActive ? 'text-[var(--color-primary)]' : 'text-[var(--color-muted)]')}>
                   {isCompleted ? 'Done' : isRejected ? 'Rejected' : isSubmitted ? 'In Review' : isActive ? 'Upload Docs' : 'Locked'}
                 </span>
+                {isCompleted && approval?.attachmentUrl && (
+                  <a href={approval.attachmentUrl} target="_blank" rel="noreferrer" className="text-[10px] text-blue-500 hover:underline mt-1">
+                    📄 View Receipt
+                  </a>
+                )}
               </div>
               {i < stages.length - 1 && (
                 <div className={cn('flex-1 h-0.5 mx-2 mb-6', isCompleted ? 'bg-[var(--color-approved)]' : 'bg-[var(--color-border)]')} />
@@ -78,17 +83,24 @@ export function ClearanceStepper({ stages, request }: ClearanceStepperProps) {
               </div>
               <div className="pb-4">
                 <p className="text-sm font-medium text-[var(--color-text)]">{stage.name}</p>
-                <p className={cn('text-xs flex items-center gap-1', isCompleted ? 'text-[var(--color-approved)]' : isRejected ? 'text-[var(--color-rejected)]' : isActive ? 'text-[var(--color-primary)]' : 'text-[var(--color-muted)]')}>
-                  {isCompleted
-                    ? <><Check className="h-3 w-3" /> Approved {approval?.createdAt ? formatDate(approval.createdAt) : ''}</>
-                    : isRejected
-                    ? <><X className="h-3 w-3" /> Rejected</>
-                    : isSubmitted
-                    ? <><Clock className="h-3 w-3" /> In Review</>
-                    : isActive
-                    ? <><Clock className="h-3 w-3" /> Upload Docs</>
-                    : <><Lock className="h-3 w-3" /> Locked</>
-                  }
+                <p className={cn('text-xs flex flex-col gap-1', isCompleted ? 'text-[var(--color-approved)]' : isRejected ? 'text-[var(--color-rejected)]' : isActive ? 'text-[var(--color-primary)]' : 'text-[var(--color-muted)]')}>
+                  <span className="flex items-center gap-1">
+                    {isCompleted
+                      ? <><Check className="h-3 w-3" /> Approved {approval?.createdAt ? formatDate(approval.createdAt) : ''}</>
+                      : isRejected
+                      ? <><X className="h-3 w-3" /> Rejected</>
+                      : isSubmitted
+                      ? <><Clock className="h-3 w-3" /> In Review</>
+                      : isActive
+                      ? <><Clock className="h-3 w-3" /> Upload Docs</>
+                      : <><Lock className="h-3 w-3" /> Locked</>
+                    }
+                  </span>
+                  {isCompleted && approval?.attachmentUrl && (
+                    <a href={approval.attachmentUrl} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline flex items-center gap-1">
+                      📄 View Signed Receipt
+                    </a>
+                  )}
                 </p>
               </div>
             </div>

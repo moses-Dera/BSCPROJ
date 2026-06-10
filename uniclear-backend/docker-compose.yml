@@ -1,7 +1,6 @@
 services:
   postgres:
     image: postgres:16-alpine
-    restart: unless-stopped
     environment:
       POSTGRES_USER: uniclear
       POSTGRES_PASSWORD: uniclear
@@ -13,10 +12,19 @@ services:
 
   mailpit:
     image: axllent/mailpit:latest
-    restart: unless-stopped
     ports:
       - '1025:1025'   # SMTP
       - '8025:8025'   # Web UI → http://localhost:8025
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@uniclear.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - '5050:80'
+    depends_on:
+      - postgres
 
 volumes:
   postgres_data:

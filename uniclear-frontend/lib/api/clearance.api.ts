@@ -11,8 +11,17 @@ export const clearanceApi = {
   submit:      (requestId: string) =>
     apiClient.post(`/clearance/${requestId}/submit`, {}),
 
-  approve:     (requestId: string, remarks?: string) =>
-    apiClient.post(`/clearance/${requestId}/approve`, { remarks }),
+  approve: (requestId: string, remarks?: string, file?: File) => {
+    if (file) {
+      const formData = new FormData()
+      if (remarks) formData.append('remarks', remarks)
+      formData.append('file', file)
+      return apiClient.post(`/clearance/${requestId}/approve`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+    }
+    return apiClient.post(`/clearance/${requestId}/approve`, { remarks })
+  },
 
   reject:      (requestId: string, remarks: string) =>
     apiClient.post(`/clearance/${requestId}/reject`, { remarks }),

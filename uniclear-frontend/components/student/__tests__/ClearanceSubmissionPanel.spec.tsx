@@ -1,12 +1,11 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { ClearanceSubmissionPanel } from '../ClearanceSubmissionPanel'
 import type { ClearanceRequest, Document } from '@/types'
 
-const mockOnUploadDocument = vi.fn()
-const mockOnDeleteDocument = vi.fn()
-const mockOnSubmitStage = vi.fn()
+const mockOnUploadDocument = jest.fn()
+const mockOnDeleteDocument = jest.fn()
+const mockOnSubmitStage = jest.fn()
 
 const baseRequest: ClearanceRequest = {
   id: 'req-1',
@@ -41,7 +40,7 @@ const baseRequest: ClearanceRequest = {
 
 describe('ClearanceSubmissionPanel', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('renders requirements and disables submit if required documents are missing', () => {
@@ -175,7 +174,10 @@ describe('ClearanceSubmissionPanel', () => {
     )
 
     const submitBtn = screen.getByRole('button', { name: /Submit for Review/i })
-    fireEvent.click(submitBtn)
+    
+    await act(async () => {
+      fireEvent.click(submitBtn)
+    })
     
     expect(mockOnSubmitStage).toHaveBeenCalled()
   })

@@ -1,9 +1,11 @@
 import { Router } from 'express'
+import multer from 'multer'
 import { OfficersController } from '@/modules/officers/officers.controller'
 import { authMiddleware } from '@/core/middleware/auth.middleware'
 import { requireRole, requireTenant } from '@/core/middleware/rbac.middleware'
 
 const router = Router()
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } })
 
 router.use(authMiddleware, requireTenant)
 
@@ -15,5 +17,9 @@ router.patch('/:id',                 requireRole('SUPER_ADMIN'),          Office
 router.delete('/:id',                requireRole('SUPER_ADMIN'),          OfficersController.delete)
 router.post('/stage/:stageId/assign',         requireRole('SUPER_ADMIN'), OfficersController.assign)
 router.delete('/assignment/:assignmentId',    requireRole('SUPER_ADMIN'), OfficersController.unassign)
+
+router.get('/stamps',                requireRole('OFFICER'),             OfficersController.getStamps)
+router.post('/stamps',               requireRole('OFFICER'),             upload.single('file'), OfficersController.uploadStamp)
+router.delete('/stamps/:id',         requireRole('OFFICER'),             OfficersController.deleteStamp)
 
 export default router

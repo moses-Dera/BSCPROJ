@@ -14,11 +14,11 @@ export function registerListeners() {
     await AuditService.log({ universityId, actorId: studentId, action: 'STAGE_SUBMITTED', targetId: requestId, targetType: 'ClearanceRequest', metadata: { stageId } })
 
     // Notify officer
-    const stage = await db.clearanceStage.findUnique({ where: { id: stageId }, include: { officers: { include: { user: true } } } })
-    if (stage?.officers) {
+    const stage = await db.clearanceStage.findUnique({ where: { id: stageId }, include: { officerAssignments: { include: { officer: true } } } })
+    if (stage?.officerAssignments) {
       await Promise.all(
-        stage.officers.map(officer =>
-          NotificationsService.send(universityId, officer.userId, 'DOCUMENT_UPLOADED', 'New submission', `A student has submitted documents for ${stage.name}`)
+        stage.officerAssignments.map(assignment =>
+          NotificationsService.send(universityId, assignment.officer.userId, 'DOCUMENT_UPLOADED', 'New submission', `A student has submitted documents for ${stage.name}`)
         )
       )
     }

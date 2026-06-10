@@ -37,7 +37,25 @@ export class ClearanceController {
   static async approve(req: Request, res: Response, next: NextFunction) {
     try {
       const { remarks } = approveStageSchema.parse(req.body)
-      const result = await ClearanceService.approve(param(req.params.requestId), req.user!.sub, req.universityId!, remarks, req.ip)
+      let attachmentUrl = undefined
+      let attachmentKey = undefined
+
+      if (req.file) {
+        const { storage } = await import('@/modules/documents/storage')
+        const fileData = await storage.upload(req.file.buffer, `approvals/${req.universityId}/${req.params.requestId}`, req.file.mimetype)
+        attachmentUrl = fileData.url
+        attachmentKey = fileData.key
+      }
+
+      const result = await ClearanceService.approve(
+        param(req.params.requestId),
+        req.user!.sub,
+        req.universityId!,
+        remarks,
+        attachmentUrl,
+        attachmentKey,
+        req.ip
+      )
       return ApiResponse.success(res, result, 'Stage approved')
     } catch (err) { next(err) }
   }

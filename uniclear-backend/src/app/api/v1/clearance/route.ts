@@ -1,9 +1,11 @@
 import { Router } from 'express'
+import multer from 'multer'
 import { ClearanceController } from '@/modules/clearance/clearance.controller'
 import { authMiddleware } from '@/core/middleware/auth.middleware'
 import { requireRole, requireTenant } from '@/core/middleware/rbac.middleware'
 
 const router = Router()
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } })
 
 router.use(authMiddleware, requireTenant)
 
@@ -12,7 +14,7 @@ router.get('/status',                       requireRole('STUDENT'),             
 router.get('/queue',                        requireRole('OFFICER'),                     ClearanceController.getQueue)
 router.get('/by-student/:studentId',        requireRole('OFFICER', 'SUPER_ADMIN', 'ADMIN'), ClearanceController.getByStudent)
 router.post('/:requestId/submit',           requireRole('STUDENT'),                     ClearanceController.submit)
-router.post('/:requestId/approve',          requireRole('OFFICER'),                     ClearanceController.approve)
+router.post('/:requestId/approve',          requireRole('OFFICER'),                     upload.single('file'), ClearanceController.approve)
 router.post('/:requestId/reject',           requireRole('OFFICER'),                     ClearanceController.reject)
 router.get('/:requestId/history',           requireRole('SUPER_ADMIN', 'ADMIN', 'OFFICER', 'STUDENT'), ClearanceController.getHistory)
 router.get('/:requestId/certificate',       requireRole('STUDENT', 'SUPER_ADMIN', 'ADMIN'), ClearanceController.getCertificate)

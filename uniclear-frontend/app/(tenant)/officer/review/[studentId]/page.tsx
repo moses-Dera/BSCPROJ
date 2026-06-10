@@ -8,6 +8,7 @@ import { RejectDialog } from '@/components/officer/RejectDialog'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { PdfStampViewer } from '@/components/officer/PdfStampViewer'
 import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
 import { ErrorState } from '@/components/shared/EmptyState'
 import { clearanceApi } from '@/lib/api/clearance.api'
@@ -21,6 +22,7 @@ export default function ReviewPage({ params }: { params: Promise<{ studentId: st
   const { studentId } = use(params)
   const [rejectOpen, setRejectOpen] = useState(false)
   const [selectedDocIdx, setSelectedDocIdx] = useState(0)
+  const [stampedFile, setStampedFile] = useState<File | undefined>()
 
   const { data: clearance, isLoading, isError } = useQuery({
     queryKey: ['clearance', 'review', studentId],
@@ -94,11 +96,11 @@ export default function ReviewPage({ params }: { params: Promise<{ studentId: st
               className="w-full"
               loading={approving}
               onClick={() => approve(
-                { requestId: clearance.id },
+                { requestId: clearance.id, file: stampedFile },
                 { onSuccess: () => router.push(ROUTES.officer.queue) }
               )}
             >
-              ✓ Approve Stage
+              ✓ Approve Stage {stampedFile && '(with attachment)'}
             </Button>
             <Button
               variant="danger"
@@ -136,9 +138,12 @@ export default function ReviewPage({ params }: { params: Promise<{ studentId: st
               </div>
 
               {/* Viewer */}
-              <div className="flex-1 bg-[var(--color-bg)] rounded-[var(--radius-sm)] overflow-hidden">
+              <div className="flex-1 rounded-[var(--radius-sm)] overflow-hidden flex flex-col relative">
                 {selectedDoc.mimeType === 'application/pdf' ? (
-                  <iframe src={selectedDoc.fileUrl} className="w-full h-full" title={selectedDoc.documentType.name} />
+                  <PdfStampViewer 
+                    fileUrl={selectedDoc.fileUrl} 
+                    onSaveStampedFile={(file) => setStampedFile(file)} 
+                  />
                 ) : (
                   <Image
                     src={selectedDoc.fileUrl}
