@@ -7,7 +7,8 @@ import { param } from '@/lib/utils/param'
 export class StagesController {
   static async list(req: Request, res: Response, next: NextFunction) {
     try {
-      const stages = await StagesService.list(req.universityId!)
+      const campaignId = req.query.campaignId as string | undefined
+      const stages = await StagesService.list(req.universityId!, campaignId)
       return ApiResponse.success(res, stages)
     } catch (err) { next(err) }
   }

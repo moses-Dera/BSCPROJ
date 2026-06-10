@@ -9,6 +9,8 @@ interface TenantState {
   accentColor: string
   logoUrl: string | null
   loginBgUrl: string | null
+  certificateTemplateUrl: string | null
+  certificateCoordinates: any | null
   setTenant: (data: Partial<Omit<TenantState, 'setTenant' | 'reset'>>) => void
   reset: () => void
 }
@@ -21,6 +23,8 @@ const defaultState = {
   accentColor: '#2980B9',
   logoUrl: null,
   loginBgUrl: null,
+  certificateTemplateUrl: null,
+  certificateCoordinates: null,
 }
 
 export const useTenantStore = create<TenantState>()(

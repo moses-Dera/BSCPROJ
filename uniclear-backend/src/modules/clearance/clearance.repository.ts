@@ -2,9 +2,9 @@ import { db } from '@/lib/db'
 import { ClearanceStatus, StageStatus } from '@prisma/client'
 
 export class ClearanceRepository {
-  static async findActive(studentId: string, universityId: string, sessionId: string) {
+  static async findActive(studentId: string, universityId: string, sessionId: string, campaignId: string) {
     return db.clearanceRequest.findFirst({
-      where: { studentId, universityId, sessionId, status: { not: 'COMPLETED' } },
+      where: { studentId, universityId, sessionId, campaignId, status: { not: 'COMPLETED' } },
     })
   }
 
@@ -12,6 +12,7 @@ export class ClearanceRepository {
     return db.clearanceRequest.findFirst({
       where: { id, universityId },
       include: {
+        campaign: true,
         student: true,
         session: true,
         stageApprovals: { include: { stage: true }, orderBy: { decidedAt: 'desc' } },
@@ -21,9 +22,10 @@ export class ClearanceRepository {
   }
 
   static async findByStudent(studentId: string, universityId: string) {
-    return db.clearanceRequest.findFirst({
+    return db.clearanceRequest.findMany({
       where: { studentId, universityId },
       include: {
+        campaign: true,
         session: true,
         stageApprovals: { include: { stage: true }, orderBy: { decidedAt: 'asc' } },
       },
@@ -31,7 +33,7 @@ export class ClearanceRepository {
     })
   }
 
-  static async create(data: { studentId: string; universityId: string; sessionId: string; currentStageId: string }) {
+  static async create(data: { studentId: string; universityId: string; campaignId: string; sessionId: string; currentStageId: string }) {
     return db.clearanceRequest.create({ data })
   }
 

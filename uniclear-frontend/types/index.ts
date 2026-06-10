@@ -54,9 +54,24 @@ export interface University {
 
 export type ClearanceStatus = 'PENDING' | 'IN_PROGRESS' | 'APPROVED' | 'REJECTED' | 'COMPLETED'
 
+export interface ClearanceCampaign {
+  id: string
+  name: string
+  description: string | null
+  isActive: boolean
+  targetFacultyId: string | null
+  targetDepartmentId: string | null
+  targetLevel: string | null
+  whitelistEnabled: boolean
+  whitelist: string[]
+  createdAt: string
+  updatedAt: string
+}
+
 export interface ClearanceStage {
   id: string
   name: string
+  campaignId: string
   orderIndex: number
   isActive: boolean
   documentRequirements: { id: string; documentTypeId: string; isRequired: boolean; documentType: { id: string; name: string } }[]
@@ -83,6 +98,9 @@ export interface ClearanceRequest {
   studentId: string
   universityId: string
   sessionId: string
+  session?: { id: string; name: string } | null
+  campaignId: string
+  campaign?: ClearanceCampaign | null
   status: ClearanceStatus
   stageStatus: 'PENDING' | 'SUBMITTED' | 'REJECTED'
   currentStageId: string | null
@@ -151,4 +169,22 @@ export interface Notification {
   message: string
   isRead: boolean
   createdAt: string
+}
+
+// ─── Audit Log ────────────────────────────────────────────────────────────────
+
+export interface AuditLog {
+  id: string
+  universityId: string
+  actorId: string
+  action: string
+  targetId: string | null
+  targetType: string | null
+  metadata: any
+  ipAddress: string | null
+  createdAt: string
+  actor: {
+    email: string
+    role: string
+  }
 }

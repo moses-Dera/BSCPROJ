@@ -242,10 +242,10 @@ function SortableStage({ stage, onSelect }: { stage: ClearanceStage; onSelect: (
   )
 }
 
-export function StageBuilder() {
-  const { data: stages, isLoading, isError, refetch } = useStages()
-  const { mutate: reorder } = useReorderStages()
-  const { mutate: createStage, isPending: creating } = useCreateStage()
+export function StageBuilder({ campaignId }: { campaignId: string }) {
+  const { data: stages, isLoading, isError, refetch } = useStages(campaignId)
+  const { mutate: reorder } = useReorderStages(campaignId)
+  const { mutate: createStage, isPending: creating } = useCreateStage(campaignId)
   const [items, setItems] = useState<ClearanceStage[]>([])
   const [selected, setSelected] = useState<ClearanceStage | null>(null)
   const [newStageName, setNewStageName] = useState('')

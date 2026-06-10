@@ -4,8 +4,8 @@ import { NotFoundError, TierLimitError } from '@/core/errors/AppError'
 import { TIER_LIMITS } from '@/lib/constants/tiers'
 
 export class StagesService {
-  static async list(universityId: string) {
-    return StagesRepository.findAll(universityId)
+  static async list(universityId: string, campaignId?: string) {
+    return StagesRepository.findAll(universityId, campaignId)
   }
 
   static async getById(id: string, universityId: string) {
@@ -14,12 +14,12 @@ export class StagesService {
     return stage
   }
 
-  static async create(universityId: string, data: { name: string; description?: string; orderIndex: number; scope?: 'UNIVERSITY' | 'FACULTY' | 'DEPARTMENT' }) {
+  static async create(universityId: string, data: { campaignId: string; name: string; description?: string; orderIndex: number; scope?: 'UNIVERSITY' | 'FACULTY' | 'DEPARTMENT' }) {
     const contract = await db.contractPlan.findUnique({ where: { universityId } })
     const tier = contract?.tier ?? 'TRIAL'
     const limit = TIER_LIMITS[tier].maxStages
-    const count = await StagesRepository.count(universityId)
-    if (count >= limit) throw new TierLimitError(`Stage limit (${limit}) reached for your plan`)
+    const count = await StagesRepository.count(universityId, data.campaignId)
+    if (count >= limit) throw new TierLimitError(`Stage limit (${limit}) reached for this campaign on your plan`)
     return StagesRepository.create({ universityId, ...data })
   }
 

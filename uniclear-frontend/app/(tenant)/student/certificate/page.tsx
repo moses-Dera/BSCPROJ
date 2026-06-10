@@ -90,7 +90,22 @@ export default function CertificatePage() {
           </span>
         </div>
 
-        <Button size="lg" className="w-full mt-2">
+        <Button 
+          size="lg" 
+          className="w-full mt-2"
+          onClick={() => {
+            import('@/lib/utils/pdf').then(({ generateCertificatePDF }) => {
+              generateCertificatePDF({
+                studentName: `${clearance.student?.firstName} ${clearance.student?.lastName}`,
+                jambRegNo: clearance.student?.jambRegNo || 'N/A',
+                universityName: tenant.name || 'University',
+                completedAt: clearance.completedAt ? formatDate(clearance.completedAt) : new Date().toLocaleDateString(),
+                templateUrl: tenant.certificateTemplateUrl,
+                coordinates: tenant.certificateCoordinates,
+              })
+            })
+          }}
+        >
           <Download className="h-4 w-4 mr-2" /> Download PDF Certificate
         </Button>
       </Card>

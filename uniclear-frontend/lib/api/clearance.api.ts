@@ -3,10 +3,10 @@ import type { ClearanceRequest } from '@/types'
 
 export const clearanceApi = {
   getStatus:   () =>
-    apiClient.get<{ success: true; data: ClearanceRequest }>('/clearance/status'),
+    apiClient.get<{ success: true; data: ClearanceRequest[] }>('/clearance/status'),
 
-  start:       (sessionId: string) =>
-    apiClient.post<{ success: true; data: ClearanceRequest }>('/clearance/start', { sessionId }),
+  start:       (sessionId: string, campaignId: string) =>
+    apiClient.post<{ success: true; data: ClearanceRequest }>('/clearance/start', { sessionId, campaignId }),
 
   submit:      (requestId: string) =>
     apiClient.post(`/clearance/${requestId}/submit`, {}),

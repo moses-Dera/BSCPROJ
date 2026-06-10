@@ -13,5 +13,6 @@ router.get('/',                requireRole('SUPER_ADMIN', 'ADMIN'),  BrandingCon
 router.patch('/',              requireRole('SUPER_ADMIN'),            BrandingController.update)
 router.post('/logo',           requireRole('SUPER_ADMIN'), upload.single('file'), BrandingController.uploadLogo)
 router.post('/login-bg',       requireRole('SUPER_ADMIN'), upload.single('file'), BrandingController.uploadLoginBg)
+router.post('/certificate-template', requireRole('SUPER_ADMIN'), upload.single('file'), BrandingController.uploadCertificateTemplate)
 
 export default router

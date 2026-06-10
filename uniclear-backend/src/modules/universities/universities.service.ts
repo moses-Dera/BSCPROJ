@@ -89,11 +89,34 @@ export class UniversitiesService {
   }
 
   static async getPlatformStats() {
-    const [totalStudents, totalClearances, totalOfficers] = await Promise.all([
+    const [totalStudents, totalClearances, totalOfficers, documents, contracts] = await Promise.all([
       db.student.count(),
       db.clearanceRequest.count(),
       db.officer.count(),
+      db.document.aggregate({
+        _count: true,
+        _sum: { fileSizeMB: true }
+      }),
+      db.contractPlan.groupBy({
+        by: ['tier'],
+        _count: true
+      })
     ])
-    return { totalStudents, totalClearances, totalOfficers }
+
+    const tierDistribution = contracts.reduce((acc, curr) => {
+      acc[curr.tier] = curr._count
+      return acc
+    }, {} as Record<string, number>)
+
+    return { 
+      totalStudents, 
+      totalClearances, 
+      totalOfficers,
+      documents: {
+        count: documents._count,
+        totalSizeMB: documents._sum.fileSizeMB ?? 0
+      },
+      tiers: tierDistribution
+    }
   }
 }

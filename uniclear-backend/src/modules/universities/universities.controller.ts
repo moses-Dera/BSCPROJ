@@ -20,6 +20,8 @@ export class UniversitiesController {
         primaryColor: uni.primaryColor,
         accentColor:  uni.accentColor,
         loginBgUrl:   uni.branding?.loginBgUrl ?? null,
+        certificateTemplateUrl: uni.branding?.certificateTemplateUrl ?? null,
+        certificateCoordinates: uni.branding?.certificateCoordinates ?? null,
       })
     } catch (err) { next(err) }
   }

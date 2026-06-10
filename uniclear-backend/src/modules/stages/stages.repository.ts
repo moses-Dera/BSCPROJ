@@ -1,9 +1,9 @@
 import { db } from '@/lib/db'
 
 export class StagesRepository {
-  static async findAll(universityId: string) {
+  static async findAll(universityId: string, campaignId?: string) {
     return db.clearanceStage.findMany({
-      where: { universityId },
+      where: campaignId ? { universityId, campaignId } : { universityId },
       include: {
         officerAssignments: { include: { officer: true, faculty: true, department: true, session: true } },
         documentRequirements: { include: { documentType: true, faculty: true, department: true, session: true } },
@@ -22,21 +22,21 @@ export class StagesRepository {
     })
   }
 
-  static async findFirst(universityId: string) {
+  static async findFirst(campaignId: string) {
     return db.clearanceStage.findFirst({
-      where: { universityId, isActive: true },
+      where: { campaignId, isActive: true },
       orderBy: { orderIndex: 'asc' },
     })
   }
 
-  static async findNext(universityId: string, currentOrderIndex: number) {
+  static async findNext(campaignId: string, currentOrderIndex: number) {
     return db.clearanceStage.findFirst({
-      where: { universityId, isActive: true, orderIndex: { gt: currentOrderIndex } },
+      where: { campaignId, isActive: true, orderIndex: { gt: currentOrderIndex } },
       orderBy: { orderIndex: 'asc' },
     })
   }
 
-  static async create(data: { universityId: string; name: string; description?: string; orderIndex: number; scope?: 'UNIVERSITY' | 'FACULTY' | 'DEPARTMENT' }) {
+  static async create(data: { universityId: string; campaignId: string; name: string; description?: string; orderIndex: number; scope?: 'UNIVERSITY' | 'FACULTY' | 'DEPARTMENT' }) {
     return db.clearanceStage.create({ data })
   }
 
@@ -56,7 +56,7 @@ export class StagesRepository {
     return db.clearanceStage.delete({ where: { id } })
   }
 
-  static async count(universityId: string) {
-    return db.clearanceStage.count({ where: { universityId } })
+  static async count(universityId: string, campaignId?: string) {
+    return db.clearanceStage.count({ where: campaignId ? { universityId, campaignId } : { universityId } })
   }
 }

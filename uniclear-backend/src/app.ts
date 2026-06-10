@@ -25,6 +25,7 @@ import auditRoutes          from '@/app/api/v1/audit/route'
 import reportRoutes         from '@/app/api/v1/reports/route'
 import structureRoutes      from '@/app/api/v1/structure/route'
 import webhookRoutes        from '@/app/api/v1/webhooks/route'
+import campaignRoutes       from '@/app/api/v1/campaigns/route'
 
 const app = express()
 
@@ -49,6 +50,7 @@ app.use('/api/v1/auth',           authRoutes)
 app.use('/api/v1/students',       studentRoutes)
 app.use('/api/v1/officers',       officerRoutes)
 app.use('/api/v1/stages',         stageRoutes)
+app.use('/api/v1/campaigns',      campaignRoutes)
 app.use('/api/v1/document-types', documentTypeRoutes)
 app.use('/api/v1/documents',      documentRoutes)
 app.use('/api/v1/clearance',      clearanceRoutes)

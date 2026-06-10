@@ -9,6 +9,7 @@ import { ErrorState } from '@/components/shared/EmptyState'
 import { ROUTES } from '@/lib/constants'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { Info } from 'lucide-react'
 
 export default function PlatformDashboard() {
   const { data: listData, isLoading: listLoading, isError } = useQuery({
@@ -73,6 +74,75 @@ export default function PlatformDashboard() {
             </Card>
           </>
         )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {statsLoading ? (
+          <><CardSkeleton /><CardSkeleton /></>
+        ) : !isError && statsData ? (
+          <>
+            <Card>
+              <h2 className="text-sm font-semibold text-[var(--color-text)] mb-4">System Volume</h2>
+              <div className="flex justify-between items-center bg-[var(--color-bg-secondary)] p-4 rounded-xl border border-[var(--color-border)]">
+                <div>
+                  <p className="text-xs text-[var(--color-muted)] font-medium mb-1">Total Uploaded Documents</p>
+                  <p className="text-xl font-bold">{statsData.documents.count.toLocaleString()}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-[var(--color-muted)] font-medium mb-1">Total Storage Used</p>
+                  <p className="text-xl font-bold">{(statsData.documents.totalSizeMB / 1024).toFixed(2)} GB</p>
+                </div>
+              </div>
+            </Card>
+
+            <Card>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-semibold text-[var(--color-text)]">Subscription Tiers</h2>
+                <div className="relative group cursor-help">
+                  <div className="flex items-center text-xs text-[var(--color-muted)] hover:text-[var(--color-primary)] transition-colors">
+                    <Info className="h-4 w-4 mr-1" />
+                    <span>View Benefits</span>
+                  </div>
+                  <div className="absolute right-0 top-full mt-2 w-72 p-4 bg-white dark:bg-neutral-800 border border-[var(--color-border)] rounded-xl shadow-2xl z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all pointer-events-none">
+                    <div className="space-y-3">
+                      <div>
+                        <p className="font-bold text-[11px] text-[var(--color-text)] uppercase tracking-wider mb-1">Trial</p>
+                        <p className="text-xs text-[var(--color-muted)]">100 Students, 3 Stages, No Custom Branding, No Imports, 30-day Logs</p>
+                      </div>
+                      <div>
+                        <p className="font-bold text-[11px] text-[var(--color-text)] uppercase tracking-wider mb-1">Standard</p>
+                        <p className="text-xs text-[var(--color-muted)]">5,000 Students, 10 Stages, Custom Branding, CSV Imports, 1yr Logs</p>
+                      </div>
+                      <div>
+                        <p className="font-bold text-[11px] text-[var(--color-text)] uppercase tracking-wider mb-1">Enterprise</p>
+                        <p className="text-xs text-[var(--color-muted)]">Unlimited capacity, API Access, PDF Reports, Infinite Logs</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                {['TRIAL', 'STANDARD', 'ENTERPRISE'].map(tier => {
+                  const count = statsData.tiers[tier] || 0
+                  const total = Math.max(Object.values(statsData.tiers).reduce((a,b)=>a+b,0), 1)
+                  const pct = (count / total) * 100
+                  return (
+                    <div key={tier}>
+                      <div className="flex justify-between text-xs font-medium mb-1">
+                        <span>{tier}</span>
+                        <span className="text-[var(--color-muted)]">{count} Univ{count !== 1 && 's'}</span>
+                      </div>
+                      <div className="h-1.5 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
+                        <div className="h-full bg-[var(--color-primary)] transition-all" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </Card>
+          </>
+        ) : null}
       </div>
 
       {/* Recent universities */}

@@ -7,8 +7,8 @@ import { param } from '@/lib/utils/param'
 export class ClearanceController {
   static async start(req: Request, res: Response, next: NextFunction) {
     try {
-      const { sessionId } = startClearanceSchema.parse(req.body)
-      const result = await ClearanceService.start(req.user!.sub, req.universityId!, sessionId)
+      const { sessionId, campaignId } = startClearanceSchema.parse(req.body)
+      const result = await ClearanceService.start(req.user!.sub, req.universityId!, sessionId, campaignId)
       return ApiResponse.created(res, result)
     } catch (err) { next(err) }
   }

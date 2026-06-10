@@ -47,7 +47,7 @@ export default function OfficerDashboard() {
     <div className="max-w-3xl space-y-4">
       <PageHeader title="Officer Dashboard" subtitle="Your pending review queue" />
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {queueLoading ? (
           <><CardSkeleton /><CardSkeleton /><CardSkeleton /></>
         ) : (
@@ -56,6 +56,11 @@ export default function OfficerDashboard() {
               <p className="text-[11px] text-[var(--color-muted)] uppercase tracking-wide font-medium mb-1">Pending Review</p>
               <p className="text-2xl font-bold text-[var(--color-text)]">{pending}</p>
               <p className="text-xs text-[var(--color-pending)] mt-1 flex items-center gap-1"><Clock className="h-3 w-3" /> Awaiting your action</p>
+            </Card>
+            <Card>
+              <p className="text-[11px] text-[var(--color-muted)] uppercase tracking-wide font-medium mb-1">Today's Velocity</p>
+              <p className="text-2xl font-bold text-emerald-600">{meRes?.todayVelocity ?? 0}</p>
+              <p className="text-xs text-[var(--color-muted)] mt-1 flex items-center gap-1">Approvals today</p>
             </Card>
             <Card>
               <p className="text-[11px] text-[var(--color-muted)] uppercase tracking-wide font-medium mb-1">Your Stage</p>

@@ -29,7 +29,7 @@ export const reportsApi = {
 export const universitiesApi = {
   list: (page = 1, search?: string) =>
     apiClient.get(`/universities?page=${page}${search ? `&search=${search}` : ''}`),
-  getStats: () => apiClient.get<{ data: { totalStudents: number; totalClearances: number; totalOfficers: number } }>('/universities/stats'),
+  getStats: () => apiClient.get<{ data: { totalStudents: number; totalClearances: number; totalOfficers: number; documents: { count: number; totalSizeMB: number }; tiers: Record<string, number> } }>('/universities/stats'),
   create: (data: object) => apiClient.post('/universities', data),
   update: (id: string, data: object) => apiClient.patch(`/universities/${id}`, data),
   suspend: (id: string)  => apiClient.patch(`/universities/${id}/suspend`, {}),
@@ -49,5 +49,9 @@ export const brandingApi = {
   uploadLoginBg: (file: File)         => {
     const form = new FormData(); form.append('file', file)
     return apiClient.post('/branding/login-bg', form, { headers: { 'Content-Type': 'multipart/form-data' } })
+  },
+  uploadCertificateTemplate: (file: File) => {
+    const form = new FormData(); form.append('file', file)
+    return apiClient.post('/branding/certificate-template', form, { headers: { 'Content-Type': 'multipart/form-data' } })
   },
 }

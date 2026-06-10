@@ -9,20 +9,20 @@ import { ConflictError, NotFoundError, ValidationError, ForbiddenError } from '@
 import { db } from '@/lib/db'
 
 export class ClearanceService {
-  static async start(userId: string, universityId: string, sessionId: string) {
+  static async start(userId: string, universityId: string, sessionId: string, campaignId: string) {
     const student = await StudentsRepository.findByUserId(userId, universityId)
     if (!student) throw new NotFoundError('Student profile not found')
 
-    const existing = await ClearanceRepository.findActive(student.id, universityId, sessionId)
-    if (existing) throw new ConflictError('Clearance already in progress for this session')
+    const existing = await ClearanceRepository.findActive(student.id, universityId, sessionId, campaignId)
+    if (existing) throw new ConflictError('Clearance already in progress for this campaign')
 
-    const firstStage = await StagesRepository.findFirst(universityId)
-    if (!firstStage) throw new NotFoundError('No clearance stages configured for this university')
+    const firstStage = await StagesRepository.findFirst(campaignId)
+    if (!firstStage) throw new NotFoundError('No clearance stages configured for this campaign')
 
     const session = await db.academicSession.findFirst({ where: { id: sessionId, universityId } })
     if (!session) throw new NotFoundError('Academic session not found')
 
-    const clearance = await ClearanceRepository.create({ studentId: student.id, universityId, sessionId, currentStageId: firstStage.id })
+    const clearance = await ClearanceRepository.create({ studentId: student.id, universityId, campaignId, sessionId, currentStageId: firstStage.id })
     await ClearanceRepository.updateStage(clearance.id, firstStage.id, 'IN_PROGRESS')
 
     eventBus.emit('clearance.started', { clearanceId: clearance.id, studentId: student.id, universityId })
@@ -30,9 +30,8 @@ export class ClearanceService {
   }
 
   static async getByStudentId(studentId: string, universityId: string) {
-    const clearance = await ClearanceRepository.findByStudent(studentId, universityId)
-    if (!clearance) throw new NotFoundError('No active clearance for this student')
-    return clearance
+    const clearances = await ClearanceRepository.findByStudent(studentId, universityId)
+    return clearances
   }
 
   static async getStatus(userId: string, universityId: string) {
@@ -86,7 +85,7 @@ export class ClearanceService {
     })
 
     const currentStage = await db.clearanceStage.findUnique({ where: { id: clearance.currentStageId } })
-    const nextStage = await StagesRepository.findNext(universityId, currentStage!.orderIndex)
+    const nextStage = await StagesRepository.findNext(clearance.campaignId, currentStage!.orderIndex)
 
     if (nextStage) {
       await ClearanceRepository.updateStage(clearance.id, nextStage.id, 'IN_PROGRESS')

@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 export const createStageSchema = z.object({
+  campaignId:  z.string().uuid(),
   name:        z.string().min(1),
   description: z.string().optional(),
   orderIndex:  z.number().int().min(1),

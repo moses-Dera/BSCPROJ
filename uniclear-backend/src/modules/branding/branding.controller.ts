@@ -9,6 +9,7 @@ const updateBrandingSchema = z.object({
   accentColor:   z.string().optional(),
   bannerMessage: z.string().optional(),
   footerText:    z.string().optional(),
+  certificateCoordinates: z.any().optional(),
 })
 
 export class BrandingController {
@@ -39,6 +40,14 @@ export class BrandingController {
     try {
       if (!req.file) throw new ValidationError('No file uploaded')
       const result = await BrandingService.uploadLoginBg(req.universityId!, req.file)
+      return ApiResponse.success(res, result)
+    } catch (err) { next(err) }
+  }
+
+  static async uploadCertificateTemplate(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.file) throw new ValidationError('No file uploaded')
+      const result = await BrandingService.uploadCertificateTemplate(req.universityId!, req.file)
       return ApiResponse.success(res, result)
     } catch (err) { next(err) }
   }

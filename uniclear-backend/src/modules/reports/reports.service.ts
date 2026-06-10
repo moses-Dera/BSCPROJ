@@ -9,12 +9,49 @@ export class ReportsService {
       db.clearanceRequest.count({ where: { universityId, status: 'IN_PROGRESS' } }),
     ])
 
+    const completedRequests = await db.clearanceRequest.findMany({
+      where: { universityId, status: 'COMPLETED', completedAt: { not: null } },
+      select: { createdAt: true, completedAt: true }
+    })
+    
+    let totalMs = 0
+    completedRequests.forEach(req => {
+      totalMs += req.completedAt!.getTime() - req.createdAt.getTime()
+    })
+    const avgMs = completedRequests.length ? totalMs / completedRequests.length : 0
+    const avgDays = (avgMs / (1000 * 60 * 60 * 24)).toFixed(1)
+
+    const deptClearances = await db.clearanceRequest.findMany({
+      where: { universityId },
+      select: { status: true, student: { select: { department: { select: { id: true, name: true } } } } }
+    })
+
+    const deptStats: Record<string, { name: string, total: number, completed: number }> = {}
+    deptClearances.forEach(req => {
+      const d = req.student?.department
+      if (!d) return
+      if (!deptStats[d.id]) deptStats[d.id] = { name: d.name, total: 0, completed: 0 }
+      deptStats[d.id].total++
+      if (req.status === 'COMPLETED') deptStats[d.id].completed++
+    })
+
+    const departmentRates = Object.values(deptStats)
+      .map(d => ({
+        name: d.name,
+        total: d.total,
+        completed: d.completed,
+        rate: d.total > 0 ? parseFloat(((d.completed / d.total) * 100).toFixed(1)) : 0
+      }))
+      .sort((a, b) => b.rate - a.rate)
+
     return {
       totalStudents,
       totalClearances,
       completed,
       inProgress,
       completionRate: totalClearances > 0 ? ((completed / totalClearances) * 100).toFixed(1) : '0',
+      avgProcessingDays: parseFloat(avgDays),
+      departmentRates
     }
   }
 

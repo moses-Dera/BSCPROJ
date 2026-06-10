@@ -32,6 +32,7 @@ export const ROUTES = {
   },
   admin: {
     dashboard:  '/admin/dashboard',
+    campaigns:  '/admin/campaigns',
     students:   '/admin/students',
     officers:   '/admin/officers',
     stages:     '/admin/stages',
@@ -41,6 +42,7 @@ export const ROUTES = {
     reports:    '/admin/reports',
     developer:  '/admin/developer',
     structure:  '/admin/structure',
+    audit:      '/admin/audit',
   },
   platform: {
     dashboard:    '/platform/dashboard',

@@ -78,6 +78,7 @@ model University {
   stages            ClearanceStage[]
   documentTypes     DocumentType[]
   clearanceRequests ClearanceRequest[]
+  campaigns         ClearanceCampaign[]
   notifications     Notification[]
   sessions          AcademicSession[]
   branding          UniversityBranding?
@@ -97,6 +98,9 @@ model UniversityBranding {
   bannerMessage  String?
   footerText     String?
   loginBgUrl     String?
+  certificateTemplateUrl String?
+  certificateTemplateKey String?
+  certificateCoordinates Json?
   updatedAt      DateTime   @updatedAt
 
   university     University @relation(fields: [universityId], references: [id], onDelete: Cascade)
@@ -176,6 +180,7 @@ model Faculty {
   students            Student[]
   officerAssignments  StageOfficerAssignment[]
   docRequirements     StageDocumentRequirement[]
+  targetedCampaigns   ClearanceCampaign[]
 
   @@index([universityId])
 }
@@ -190,6 +195,7 @@ model Department {
   students            Student[]
   officerAssignments  StageOfficerAssignment[]
   docRequirements     StageDocumentRequirement[]
+  targetedCampaigns   ClearanceCampaign[]
 
   @@index([facultyId])
 }
@@ -249,12 +255,40 @@ model Officer {
 }
 
 // ─────────────────────────────────────────
+// CLEARANCE CAMPAIGNS (V2)
+// ─────────────────────────────────────────
+
+model ClearanceCampaign {
+  id                 String      @id @default(uuid())
+  universityId       String
+  name               String
+  description        String?
+  targetFacultyId    String?
+  targetDepartmentId String?
+  targetLevel        String?     // e.g., '100', '400', 'FINAL_YEAR'
+  whitelistEnabled   Boolean     @default(false)
+  whitelist          String[]    @default([]) // Array of matric numbers
+  isActive           Boolean     @default(true)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  university         University         @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  targetFaculty      Faculty?           @relation(fields: [targetFacultyId], references: [id])
+  targetDepartment   Department?        @relation(fields: [targetDepartmentId], references: [id])
+  stages             ClearanceStage[]
+  clearanceRequests  ClearanceRequest[]
+
+  @@index([universityId])
+}
+
+// ─────────────────────────────────────────
 // CLEARANCE STAGES
 // ─────────────────────────────────────────
 
 model ClearanceStage {
   id           String      @id @default(uuid())
   universityId String
+  campaignId   String
   name         String
   description  String?
   orderIndex   Int
@@ -264,11 +298,12 @@ model ClearanceStage {
   updatedAt    DateTime    @updatedAt
 
   university            University                  @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  campaign              ClearanceCampaign           @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   officerAssignments    StageOfficerAssignment[]
   stageApprovals        StageApproval[]
   documentRequirements  StageDocumentRequirement[]
 
-  @@index([universityId, orderIndex])
+  @@index([universityId, campaignId, orderIndex])
 }
 
 // ─────────────────────────────────────────
@@ -373,6 +408,7 @@ model ClearanceRequest {
   id             String          @id @default(uuid())
   studentId      String
   universityId   String
+  campaignId     String
   sessionId      String
   status         ClearanceStatus @default(PENDING)
   stageStatus    StageStatus     @default(PENDING)
@@ -382,12 +418,13 @@ model ClearanceRequest {
   createdAt      DateTime        @default(now())
 
   university     University      @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  campaign       ClearanceCampaign @relation(fields: [campaignId], references: [id])
   student        Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
   session        AcademicSession @relation(fields: [sessionId], references: [id])
   stageApprovals StageApproval[]
   documents      Document[]
 
-  @@unique([studentId, sessionId])
+  @@unique([studentId, sessionId, campaignId])
   @@index([universityId])
   @@index([studentId])
 }

@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 export const startClearanceSchema = z.object({
   sessionId: z.string().uuid(),
+  campaignId: z.string().uuid(),
 })
 
 export const approveStageSchema = z.object({

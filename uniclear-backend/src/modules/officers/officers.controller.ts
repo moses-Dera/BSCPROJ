@@ -14,7 +14,17 @@ export class OfficersController {
       const officer = await OfficersRepository.findByUserId(req.user!.sub)
       if (!officer) throw new NotFoundError('Officer profile not found')
       const full = await OfficersService.getById(officer.id, req.universityId!)
-      return ApiResponse.success(res, full)
+      
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const todayVelocity = await db.stageApproval.count({
+        where: {
+          officerId: req.user!.sub,
+          decidedAt: { gte: today },
+        }
+      })
+      
+      return ApiResponse.success(res, { ...full, todayVelocity })
     } catch (err) { next(err) }
   }
 
