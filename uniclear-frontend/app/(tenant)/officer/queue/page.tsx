@@ -18,7 +18,7 @@ export default function OfficerQueuePage() {
   const [search, setSearch] = useState('')
   const router = useRouter()
 
-  const { data, isLoading, isError, refetch } = useOfficerQueue(1, search || undefined)
+  const { data, error, isLoading, isError, refetch } = useOfficerQueue(1, search || undefined)
 
   return (
     <div className="space-y-4">
@@ -33,7 +33,7 @@ export default function OfficerQueuePage() {
       />
 
       {isLoading && <LoadingSkeleton rows={5} />}
-      {isError   && <ErrorState onRetry={() => refetch()} />}
+      {isError   && <ErrorState message={(error as any)?.response?.data?.message ?? "We couldn't load your data."} onRetry={() => refetch()} />}
 
       {!isLoading && !isError && (
         <Card padding="sm">

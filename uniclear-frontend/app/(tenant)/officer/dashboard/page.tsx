@@ -16,22 +16,42 @@ import { Eye, Clock, ArrowRight } from 'lucide-react'
 
 export default function OfficerDashboard() {
   const router = useRouter()
-  const { data: queue, isLoading: queueLoading } = useOfficerQueue(1)
+  const { data: queue, error: queueError, isLoading: queueLoading, isError: queueIsError } = useOfficerQueue(1)
   const { data: meRes } = useQuery({
     queryKey: ['officer', 'me'],
     queryFn:  () => officersApi.getMe().then((r: any) => r.data.data),
   })
 
+  if (queueIsError) {
+    const errorMsg = (queueError as any)?.response?.data?.message
+    if (errorMsg === 'You are not assigned to any stage') {
+      return (
+        <div className="max-w-3xl space-y-4">
+          <PageHeader title="Officer Dashboard" subtitle="Welcome to UniClear" />
+          <Card padding="lg" className="text-center py-12">
+            <h3 className="text-lg font-semibold text-[var(--color-text)] mb-2">No Stage Assigned</h3>
+            <p className="text-sm text-[var(--color-muted)] max-w-sm mx-auto">
+              Your account has not been assigned to review any clearance stages yet. Please contact the Super Admin to configure your clearance stage assignment.
+            </p>
+          </Card>
+        </div>
+      )
+    }
+  }
+
   const pending   = queue?.items?.length ?? 0
-  const stageName = meRes?.stage?.name ?? '—'
+  const assignment = meRes?.stageAssignments?.[0]
+  const stageName = assignment?.stage?.name ?? '—'
+  const facultyName = assignment?.faculty?.name ?? 'All Faculties'
+  const deptName = assignment?.department?.name ?? 'All Departments'
 
   return (
     <div className="max-w-3xl space-y-4">
       <PageHeader title="Officer Dashboard" subtitle="Your pending review queue" />
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {queueLoading ? (
-          <><CardSkeleton /><CardSkeleton /></>
+          <><CardSkeleton /><CardSkeleton /><CardSkeleton /></>
         ) : (
           <>
             <Card>
@@ -45,6 +65,13 @@ export default function OfficerDashboard() {
               <Link href={ROUTES.officer.queue} className="mt-3 inline-block">
                 <Button size="sm">View Queue <ArrowRight className="h-3.5 w-3.5" /></Button>
               </Link>
+            </Card>
+            <Card>
+              <p className="text-[11px] text-[var(--color-muted)] uppercase tracking-wide font-medium mb-1">Your Scope</p>
+              <div className="mt-1 space-y-1">
+                <p className="text-xs text-[var(--color-text)]"><span className="text-[var(--color-muted)]">Faculty:</span> {facultyName}</p>
+                <p className="text-xs text-[var(--color-text)]"><span className="text-[var(--color-muted)]">Dept:</span> {deptName}</p>
+              </div>
             </Card>
           </>
         )}

@@ -90,7 +90,7 @@ export function PdfStampViewer({ fileUrl, onSaveStampedFile }: PdfStampViewerPro
 
       // 5. Serialize PDF to bytes (a Uint8Array)
       const pdfBytes = await pdfDoc.save()
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' })
+      const blob = new Blob([pdfBytes as unknown as BlobPart], { type: 'application/pdf' })
       const file = new File([blob], 'signed_document.pdf', { type: 'application/pdf' })
 
       toast.success('Document successfully stamped!', { id: 'stamp' })

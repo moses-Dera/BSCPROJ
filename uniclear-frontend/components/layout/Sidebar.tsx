@@ -23,6 +23,7 @@ const adminNav: NavItem[] = [
   { label: 'Stages',    href: ROUTES.admin.stages,     icon: Settings },
   { label: 'Documents', href: ROUTES.admin.documents,  icon: FileText },
   { label: 'Sessions',  href: ROUTES.admin.sessions,   icon: CalendarDays },
+  { label: 'Structure', href: ROUTES.admin.structure,  icon: University },
   { label: 'Reports',   href: ROUTES.admin.reports,    icon: BarChart2 },
   { label: 'Branding',  href: ROUTES.admin.branding,   icon: Paintbrush },
   { label: 'Developer', href: ROUTES.admin.developer,  icon: Terminal },

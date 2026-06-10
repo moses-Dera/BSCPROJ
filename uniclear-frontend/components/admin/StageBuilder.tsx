@@ -11,7 +11,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useQuery } from '@tanstack/react-query'
-import { useStages, useReorderStages, useUpdateStage, useAssignDocumentToStage, useRemoveDocumentFromStage, useAssignOfficerToStage, useUnassignOfficerFromStage } from '@/features/stages/hooks/useStages'
+import { useStages, useReorderStages, useCreateStage, useUpdateStage, useAssignDocumentToStage, useRemoveDocumentFromStage, useAssignOfficerToStage, useUnassignOfficerFromStage } from '@/features/stages/hooks/useStages'
 import { apiClient } from '@/lib/api/client'
 import { structureApi, sessionsApi } from '@/lib/api/misc.api'
 import { Button } from '@/components/ui/button'
@@ -245,8 +245,10 @@ function SortableStage({ stage, onSelect }: { stage: ClearanceStage; onSelect: (
 export function StageBuilder() {
   const { data: stages, isLoading, isError, refetch } = useStages()
   const { mutate: reorder } = useReorderStages()
+  const { mutate: createStage, isPending: creating } = useCreateStage()
   const [items, setItems] = useState<ClearanceStage[]>([])
   const [selected, setSelected] = useState<ClearanceStage | null>(null)
+  const [newStageName, setNewStageName] = useState('')
 
   const synced = items.length ? items : (stages ?? [])
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
@@ -261,6 +263,16 @@ export function StageBuilder() {
     reorder(reordered.map(s => s.id))
   }
 
+  const handleCreate = () => {
+    if (!newStageName.trim()) return
+    createStage({ name: newStageName }, {
+      onSuccess: () => {
+        setNewStageName('')
+        setItems([]) // Force resync with server data
+      }
+    })
+  }
+
   if (isLoading) return <LoadingSkeleton rows={4} />
   if (isError)   return <ErrorState onRetry={() => refetch()} />
 
@@ -269,6 +281,20 @@ export function StageBuilder() {
 
   return (
     <>
+      <div className="flex gap-2 mb-4">
+        <input 
+          type="text" 
+          placeholder="New stage name (e.g. Department Review)" 
+          className="flex-1 px-3 py-2 text-sm border border-[var(--color-border)] rounded-[var(--radius-md)] bg-[var(--color-surface)]"
+          value={newStageName}
+          onChange={e => setNewStageName(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleCreate()}
+        />
+        <Button onClick={handleCreate} disabled={!newStageName.trim()} loading={creating}>
+          <Plus className="h-4 w-4 mr-2" /> Add Stage
+        </Button>
+      </div>
+
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={synced.map(s => s.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-2">

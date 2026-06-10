@@ -40,6 +40,7 @@ export const ROUTES = {
     sessions:   '/admin/sessions',
     reports:    '/admin/reports',
     developer:  '/admin/developer',
+    structure:  '/admin/structure',
   },
   platform: {
     dashboard:    '/platform/dashboard',

@@ -26,6 +26,18 @@ export function useReorderStages() {
   })
 }
 
+export function useCreateStage() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: { name: string; description?: string }) => stagesApi.create(data),
+    onSuccess:  () => {
+      toast.success('Stage created')
+      qc.invalidateQueries({ queryKey: stageKeys.all() })
+    },
+    onError: (e: any) => toast.error(e.response?.data?.message ?? 'Failed to create stage'),
+  })
+}
+
 export function useUpdateStage() {
   const qc = useQueryClient()
   return useMutation({

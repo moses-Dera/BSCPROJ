@@ -11,8 +11,12 @@ export async function tenantMiddleware(req: Request, res: Response, next: NextFu
     if (req.query.tenant) {
       slug = req.query.tenant as string
     } else {
-      const parts = host.split('.')
-      if (parts.length >= 3) slug = parts[0]
+      // Basic check to prevent IP addresses (like 127.0.0.1) from being treated as subdomains
+      const isIp = /^(\d{1,3}\.){3}\d{1,3}$/.test(host)
+      if (!isIp) {
+        const parts = host.split('.')
+        if (parts.length >= 3) slug = parts[0]
+      }
     }
 
     if (slug && slug !== 'www') {

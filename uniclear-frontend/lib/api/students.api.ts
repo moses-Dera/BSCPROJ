@@ -13,6 +13,7 @@ export const studentsApi = {
   update: (id: string, data: { jambRegNo?: string; firstName?: string; lastName?: string }) =>
     apiClient.patch(`/students/${id}`, data),
   delete: (id: string) => apiClient.delete(`/students/${id}`),
+  getClearanceProgress: (id: string) => apiClient.get<{ success: true; data: any }>(`/students/${id}/clearance`),
 }
 
 export const notificationsApi = {

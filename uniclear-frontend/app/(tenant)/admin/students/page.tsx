@@ -16,6 +16,8 @@ import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
 import { EmptyState, ErrorState } from '@/components/shared/EmptyState'
 import { Users, Search, Trash2, Hash } from 'lucide-react'
 import { toast } from 'sonner'
+import Link from 'next/link'
+import { ROUTES } from '@/lib/constants'
 
 const addSchema = z.object({
   firstName:  z.string().min(1, 'Required'),
@@ -162,9 +164,16 @@ export default function AdminStudentsPage() {
                         <td className="py-3 px-3 text-[var(--color-muted)]">{s.department?.name ?? '—'}</td>
                         <td className="py-3 px-3 text-[var(--color-muted)]">{s.faculty?.name ?? '—'}</td>
                         <td className="py-3 px-3">
-                          <button onClick={() => setDeleteTarget(s)} className="p-1.5 rounded hover:bg-red-50 text-[var(--color-muted)] hover:text-[var(--color-rejected)] transition-colors">
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                          <div className="flex justify-end items-center gap-2">
+                            <Link href={`${ROUTES.admin.students}/${s.id}`}>
+                              <Button variant="secondary" size="sm">
+                                View Profile
+                              </Button>
+                            </Link>
+                            <Button variant="ghost" size="sm" className="text-[var(--color-rejected)] hover:text-red-700 hover:bg-red-50" onClick={() => setDeleteTarget(s)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}

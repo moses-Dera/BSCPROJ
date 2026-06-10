@@ -128,8 +128,9 @@ export class ClearanceService {
     const assignment = officer.stageAssignments[0]
     const stageId    = assignment.stageId
     const facultyId  = assignment.facultyId ?? undefined
+    const departmentId = assignment.departmentId ?? undefined
 
-    return ClearanceRepository.findOfficerQueue(universityId, stageId, facultyId, opts)
+    return ClearanceRepository.findOfficerQueue(universityId, stageId, facultyId, departmentId, opts)
   }
 
   static async getHistory(requestId: string, universityId: string) {

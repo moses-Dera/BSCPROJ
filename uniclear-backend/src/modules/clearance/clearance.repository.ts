@@ -46,7 +46,7 @@ export class ClearanceRepository {
     return db.clearanceRequest.update({ where: { id }, data: { stageStatus } })
   }
 
-  static async findOfficerQueue(universityId: string, stageId: string, facultyId: string | undefined, opts: { page: number; limit: number; search?: string }) {
+  static async findOfficerQueue(universityId: string, stageId: string, facultyId: string | undefined, departmentId: string | undefined, opts: { page: number; limit: number; search?: string }) {
     const { page, limit, search } = opts
     const skip = (page - 1) * limit
     const where: any = {
@@ -56,8 +56,12 @@ export class ClearanceRepository {
       stageStatus: 'SUBMITTED',
       stageApprovals: { none: { stageId, status: { in: ['APPROVED', 'REJECTED'] as StageStatus[] }, decidedAt: { gte: new Date(Date.now() - 1000) } } },
     }
-    // Scope to faculty if officer has a faculty assignment
-    if (facultyId) where.student = { ...(where.student ?? {}), facultyId }
+    // Scope to faculty or department if officer has specific assignments
+    if (facultyId || departmentId) {
+      where.student = { ...(where.student ?? {}) }
+      if (facultyId) where.student.facultyId = facultyId
+      if (departmentId) where.student.departmentId = departmentId
+    }
     if (search) {
       where.student = {
         ...(where.student ?? {}),
