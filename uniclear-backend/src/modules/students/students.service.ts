@@ -92,7 +92,7 @@ export class StudentsService {
             where: { universityId, name: { equals: sessionName, mode: 'insensitive' } } 
           })
           if (!session) {
-            session = await db.academicSession.create({ data: { universityId, name: sessionName, startDate: new Date(), endDate: new Date(), isActive: true } })
+            throw new Error(`Session '${sessionName}' not found. Please create it first.`)
           }
           data.entrySessionId = session.id
         }
@@ -104,7 +104,7 @@ export class StudentsService {
             where: { universityId, name: { equals: facultyName, mode: 'insensitive' } } 
           })
           if (!faculty) {
-            faculty = await db.faculty.create({ data: { universityId, name: facultyName } })
+            throw new Error(`Faculty '${facultyName}' not found. Please create it first.`)
           }
           data.facultyId = faculty.id
         }
@@ -116,7 +116,7 @@ export class StudentsService {
             where: { facultyId: data.facultyId, name: { equals: departmentName, mode: 'insensitive' } } 
           })
           if (!dept) {
-            dept = await db.department.create({ data: { facultyId: data.facultyId, name: departmentName } })
+            throw new Error(`Department '${departmentName}' not found in this faculty. Please create it first.`)
           }
           data.departmentId = dept.id
         }

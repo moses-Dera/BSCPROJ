@@ -217,7 +217,7 @@ export default function AdminStudentsPage() {
           <p className="text-sm text-[var(--color-muted)]">
             Upload a CSV file containing at minimum: <span className="font-mono">First Name, Last Name, JAMB Reg No</span>. 
             <br/><br/>
-            Optional: <span className="font-mono">Email, Faculty, Department, Session, Level</span>. If Faculty/Dept/Session don't exist, they will be created automatically.
+            Optional: <span className="font-mono">Email, Faculty, Department, Session, Level</span>. If Faculty, Dept, or Session are provided, they <strong>must</strong> exactly match an existing structure in the system or the row will fail.
           </p>
           <div className="border-2 border-dashed border-[var(--color-border)] rounded-xl p-6 text-center">
             <input type="file" id="csv" name="csv" accept=".csv" className="text-sm text-[var(--color-text)] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[var(--color-primary)] file:bg-opacity-10 file:text-[var(--color-primary)] hover:file:bg-opacity-20 transition-all cursor-pointer" />
