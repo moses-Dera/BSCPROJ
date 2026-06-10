@@ -16,10 +16,11 @@ export function ClearanceStepper({ stages, request }: ClearanceStepperProps) {
       {/* Desktop horizontal */}
       <div className="hidden md:flex items-center gap-0">
         {stages.map((stage, i) => {
-          const approval = request.stages.find(a => a.stageId === stage.id)
+          const approval = request.stageApprovals?.find(a => a.stageId === stage.id)
           const isActive    = request.currentStageId === stage.id
           const isCompleted = approval?.status === 'APPROVED'
           const isRejected  = approval?.status === 'REJECTED'
+          const isSubmitted = isActive && approval?.status === 'SUBMITTED'
           const isLocked    = !isActive && !isCompleted && !isRejected
 
           return (
@@ -28,7 +29,8 @@ export function ClearanceStepper({ stages, request }: ClearanceStepperProps) {
                 <div className={cn(
                   'h-8 w-8 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all',
                   isCompleted && 'bg-[var(--color-approved)] border-[var(--color-approved)] text-white',
-                  isActive    && 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white animate-pulse',
+                  isActive    && !isSubmitted && 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white animate-pulse',
+                  isSubmitted && 'bg-amber-500 border-amber-500 text-white',
                   isRejected  && 'bg-[var(--color-rejected)] border-[var(--color-rejected)] text-white',
                   isLocked    && 'bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-muted)]',
                 )}>
@@ -38,7 +40,7 @@ export function ClearanceStepper({ stages, request }: ClearanceStepperProps) {
                   {stage.name}
                 </span>
                 <span className={cn('text-[10px] mt-0.5', isCompleted ? 'text-[var(--color-approved)]' : isRejected ? 'text-[var(--color-rejected)]' : isActive ? 'text-[var(--color-primary)]' : 'text-[var(--color-muted)]')}>
-                  {isCompleted ? 'Done' : isRejected ? 'Rejected' : isActive ? 'In Review' : 'Locked'}
+                  {isCompleted ? 'Done' : isRejected ? 'Rejected' : isSubmitted ? 'In Review' : isActive ? 'Upload Docs' : 'Locked'}
                 </span>
               </div>
               {i < stages.length - 1 && (
@@ -52,10 +54,11 @@ export function ClearanceStepper({ stages, request }: ClearanceStepperProps) {
       {/* Mobile vertical */}
       <div className="flex flex-col gap-0 md:hidden">
         {stages.map((stage, i) => {
-          const approval    = request.stages.find(a => a.stageId === stage.id)
+          const approval    = request.stageApprovals?.find(a => a.stageId === stage.id)
           const isActive    = request.currentStageId === stage.id
           const isCompleted = approval?.status === 'APPROVED'
           const isRejected  = approval?.status === 'REJECTED'
+          const isSubmitted = isActive && approval?.status === 'SUBMITTED'
           const isLocked    = !isActive && !isCompleted && !isRejected
 
           return (
@@ -64,7 +67,8 @@ export function ClearanceStepper({ stages, request }: ClearanceStepperProps) {
                 <div className={cn(
                   'h-8 w-8 rounded-full flex items-center justify-center text-sm font-semibold border-2 shrink-0',
                   isCompleted && 'bg-[var(--color-approved)] border-[var(--color-approved)] text-white',
-                  isActive    && 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white',
+                  isActive    && !isSubmitted && 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white',
+                  isSubmitted && 'bg-amber-500 border-amber-500 text-white',
                   isRejected  && 'bg-[var(--color-rejected)] border-[var(--color-rejected)] text-white',
                   isLocked    && 'bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-muted)]',
                 )}>
@@ -79,8 +83,10 @@ export function ClearanceStepper({ stages, request }: ClearanceStepperProps) {
                     ? <><Check className="h-3 w-3" /> Approved {approval?.createdAt ? formatDate(approval.createdAt) : ''}</>
                     : isRejected
                     ? <><X className="h-3 w-3" /> Rejected</>
+                    : isSubmitted
+                    ? <><Clock className="h-3 w-3" /> In Review</>
                     : isActive
-                    ? <><Clock className="h-3 w-3" /> Pending review</>
+                    ? <><Clock className="h-3 w-3" /> Upload Docs</>
                     : <><Lock className="h-3 w-3" /> Locked</>
                   }
                 </p>

@@ -90,4 +90,18 @@ export class UniversitiesController {
       return ApiResponse.success(res, contract)
     } catch (err) { next(err) }
   }
+
+  static async getApiKey(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await UniversitiesService.getApiKey(req.universityId!)
+      return ApiResponse.success(res, data)
+    } catch (err) { next(err) }
+  }
+
+  static async generateApiKey(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await UniversitiesService.generateApiKey(req.universityId!)
+      return ApiResponse.success(res, data, 'API Key generated successfully')
+    } catch (err) { next(err) }
+  }
 }

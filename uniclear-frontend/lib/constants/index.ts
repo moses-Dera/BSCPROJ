@@ -39,6 +39,7 @@ export const ROUTES = {
     branding:   '/admin/branding',
     sessions:   '/admin/sessions',
     reports:    '/admin/reports',
+    developer:  '/admin/developer',
   },
   platform: {
     dashboard:    '/platform/dashboard',

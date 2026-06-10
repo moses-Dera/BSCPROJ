@@ -15,9 +15,7 @@
     "sourceMap": true,
     "paths": {
       "@/*": ["./src/*"]
-    },
-    "ignoreDeprecations": "6.0",
-    "baseUrl": "."
+    }
   },
   "include": ["src/**/*", "prisma/**/*"],
   "exclude": ["node_modules", "dist"],

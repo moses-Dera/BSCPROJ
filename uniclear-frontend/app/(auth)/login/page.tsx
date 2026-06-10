@@ -82,11 +82,19 @@ export default function LoginPage() {
             <Button type="submit" size="lg" loading={isPending} className="w-full mt-2" style={{ backgroundColor: primaryColor }}>
               Sign in
             </Button>
-            <div className="flex items-center justify-between pt-1">
-              <p className="text-xs text-[var(--color-muted)]">No account? Contact your admin</p>
-              <Link href="/forgot-password" className="text-xs text-[var(--color-primary)] hover:underline">
-                Forgot password?
-              </Link>
+            <div className="flex flex-col gap-2 pt-1">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-[var(--color-muted)]">Newly admitted student?</p>
+                <Link href="/register" className="text-xs text-[var(--color-primary)] hover:underline font-medium">
+                  Claim your admission
+                </Link>
+              </div>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-[var(--color-muted)]">Forgot your password?</p>
+                <Link href="/forgot-password" className="text-xs text-[var(--color-primary)] hover:underline">
+                  Reset it here
+                </Link>
+              </div>
             </div>
           </form>
         </div>

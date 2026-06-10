@@ -6,16 +6,25 @@ import { clearanceApi } from '@/lib/api/clearance.api'
 
 export const clearanceKeys = {
   all:    ()           => ['clearance'] as const,
-  status: (id: string) => ['clearance', 'status', id] as const,
+  status: ()           => ['clearance', 'status'] as const,
   queue:  ()           => ['clearance', 'queue'] as const,
   history:(id: string) => ['clearance', 'history', id] as const,
 }
 
-export function useClearanceStatus(studentId: string) {
+export function useClearanceStatus() {
   return useQuery({
-    queryKey: clearanceKeys.status(studentId),
-    queryFn:  () => clearanceApi.getStatus(studentId).then(r => r.data.data),
-    enabled:  !!studentId,
+    queryKey: clearanceKeys.status(),
+    queryFn:  async () => {
+      try {
+        const res = await clearanceApi.getStatus()
+        return res.data.data
+      } catch (e: any) {
+        if (e.response?.status === 404) return null
+        throw e
+      }
+    },
+    retry:        false,
+    throwOnError: false,
   })
 }
 

@@ -3,13 +3,17 @@ import { StagesRepository } from '@/modules/stages/stages.repository'
 import { DocumentTypesRepository } from '@/modules/document-types/document-types.repository'
 import { DocumentsRepository } from '@/modules/documents/document.repository'
 import { OfficersRepository } from '@/modules/officers/officers.repository'
+import { StudentsRepository } from '@/modules/students/students.repository'
 import { eventBus } from '@/core/events/EventBus'
 import { ConflictError, NotFoundError, ValidationError, ForbiddenError } from '@/core/errors/AppError'
 import { db } from '@/lib/db'
 
 export class ClearanceService {
-  static async start(studentId: string, universityId: string, sessionId: string) {
-    const existing = await ClearanceRepository.findActive(studentId, universityId, sessionId)
+  static async start(userId: string, universityId: string, sessionId: string) {
+    const student = await StudentsRepository.findByUserId(userId, universityId)
+    if (!student) throw new NotFoundError('Student profile not found')
+
+    const existing = await ClearanceRepository.findActive(student.id, universityId, sessionId)
     if (existing) throw new ConflictError('Clearance already in progress for this session')
 
     const firstStage = await StagesRepository.findFirst(universityId)
@@ -18,25 +22,39 @@ export class ClearanceService {
     const session = await db.academicSession.findFirst({ where: { id: sessionId, universityId } })
     if (!session) throw new NotFoundError('Academic session not found')
 
-    const clearance = await ClearanceRepository.create({ studentId, universityId, sessionId, currentStageId: firstStage.id })
+    const clearance = await ClearanceRepository.create({ studentId: student.id, universityId, sessionId, currentStageId: firstStage.id })
     await ClearanceRepository.updateStage(clearance.id, firstStage.id, 'IN_PROGRESS')
 
-    eventBus.emit('clearance.started', { clearanceId: clearance.id, studentId, universityId })
+    eventBus.emit('clearance.started', { clearanceId: clearance.id, studentId: student.id, universityId })
     return clearance
   }
 
-  static async getStatus(studentId: string, universityId: string) {
-    return ClearanceRepository.findByStudent(studentId, universityId)
+  static async getByStudentId(studentId: string, universityId: string) {
+    const clearance = await ClearanceRepository.findByStudent(studentId, universityId)
+    if (!clearance) throw new NotFoundError('No active clearance for this student')
+    return clearance
   }
 
-  static async submit(requestId: string, studentId: string, universityId: string) {
+  static async getStatus(userId: string, universityId: string) {
+    const student = await StudentsRepository.findByUserId(userId, universityId)
+    if (!student) throw new NotFoundError('Student profile not found')
+    return ClearanceRepository.findByStudent(student.id, universityId)
+  }
+
+  static async submit(requestId: string, userId: string, universityId: string) {
     const clearance = await ClearanceRepository.findById(requestId, universityId)
     if (!clearance) throw new NotFoundError('Clearance request not found')
-    if (clearance.student.userId !== studentId) throw new ForbiddenError()
+    if (clearance.student.userId !== userId) throw new ForbiddenError()
     if (!clearance.currentStageId) throw new ValidationError('No active stage to submit')
 
     // Ensure all required docs for this stage are uploaded
-    const requirements = await DocumentTypesRepository.findByStage(clearance.currentStageId, universityId)
+    const student      = await db.student.findUnique({ where: { id: clearance.studentId } })
+    const requirements = await DocumentTypesRepository.findByStage(clearance.currentStageId, universityId, {
+      facultyId:    student?.facultyId    ?? undefined,
+      departmentId: student?.departmentId ?? undefined,
+      sessionId:    clearance.sessionId,
+      level:        student?.level        ?? undefined,
+    })
     const required = requirements.filter(r => r.isRequired)
     const uploaded = await DocumentsRepository.findByStage(requestId, clearance.currentStageId, universityId)
     const uploadedTypeIds = uploaded.map(d => d.documentTypeId)
@@ -46,7 +64,9 @@ export class ClearanceService {
       throw new ValidationError(`Missing required documents: ${missing.map(m => m.documentType.name).join(', ')}`)
     }
 
-    eventBus.emit('stage.submitted', { requestId, stageId: clearance.currentStageId, studentId, universityId })
+    await ClearanceRepository.updateStageStatus(requestId, 'SUBMITTED')
+
+    eventBus.emit('stage.submitted', { requestId, stageId: clearance.currentStageId, studentId: clearance.studentId, universityId })
     return clearance
   }
 
@@ -56,7 +76,9 @@ export class ClearanceService {
     if (!clearance.currentStageId) throw new ValidationError('No active stage')
 
     const officer = await OfficersRepository.findByUserId(officerUserId)
-    if (!officer || officer.stageId !== clearance.currentStageId) throw new ForbiddenError('You are not assigned to this stage')
+    if (!officer || !officer.stageAssignments.some(a => a.stageId === clearance.currentStageId)) {
+      throw new ForbiddenError('You are not assigned to this stage')
+    }
 
     await ClearanceRepository.createStageApproval({
       universityId, requestId, stageId: clearance.currentStageId,
@@ -83,12 +105,16 @@ export class ClearanceService {
     if (!clearance.currentStageId) throw new ValidationError('No active stage')
 
     const officer = await OfficersRepository.findByUserId(officerUserId)
-    if (!officer || officer.stageId !== clearance.currentStageId) throw new ForbiddenError('You are not assigned to this stage')
+    if (!officer || !officer.stageAssignments.some(a => a.stageId === clearance.currentStageId)) {
+      throw new ForbiddenError('You are not assigned to this stage')
+    }
 
     await ClearanceRepository.createStageApproval({
       universityId, requestId, stageId: clearance.currentStageId,
       officerId: officerUserId, status: 'REJECTED', remarks, ipAddress,
     })
+
+    await ClearanceRepository.updateStageStatus(requestId, 'REJECTED')
 
     eventBus.emit('stage.rejected', { requestId, stageId: clearance.currentStageId, officerId: officerUserId, remarks, universityId, studentId: clearance.studentId })
     return clearance
@@ -96,8 +122,14 @@ export class ClearanceService {
 
   static async getQueue(officerUserId: string, universityId: string, opts: { page: number; limit: number; search?: string }) {
     const officer = await OfficersRepository.findByUserId(officerUserId)
-    if (!officer?.stageId) throw new ForbiddenError('You are not assigned to any stage')
-    return ClearanceRepository.findOfficerQueue(universityId, officer.stageId, opts)
+    if (!officer?.stageAssignments?.length) throw new ForbiddenError('You are not assigned to any stage')
+
+    // Find the active assignment for this officer
+    const assignment = officer.stageAssignments[0]
+    const stageId    = assignment.stageId
+    const facultyId  = assignment.facultyId ?? undefined
+
+    return ClearanceRepository.findOfficerQueue(universityId, stageId, facultyId, opts)
   }
 
   static async getHistory(requestId: string, universityId: string) {

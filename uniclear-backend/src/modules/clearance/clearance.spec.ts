@@ -7,13 +7,22 @@ import { DocumentsRepository } from '@/modules/documents/document.repository'
 import { ConflictError, NotFoundError, ValidationError, ForbiddenError } from '@/core/errors/AppError'
 import { db } from '@/lib/db'
 
+import { StudentsRepository } from '@/modules/students/students.repository'
+
 jest.mock('./clearance.repository')
 jest.mock('@/modules/stages/stages.repository')
 jest.mock('@/modules/officers/officers.repository')
 jest.mock('@/modules/document-types/document-types.repository')
 jest.mock('@/modules/documents/document.repository')
+jest.mock('@/modules/students/students.repository')
 jest.mock('@/core/events/EventBus', () => ({ eventBus: { emit: jest.fn() } }))
-jest.mock('@/lib/db', () => ({ db: { clearanceStage: { findUnique: jest.fn() }, academicSession: { findFirst: jest.fn() } } }))
+jest.mock('@/lib/db', () => ({ 
+  db: { 
+    clearanceStage: { findUnique: jest.fn() }, 
+    academicSession: { findFirst: jest.fn() },
+    student: { findUnique: jest.fn(), findFirst: jest.fn() }
+  } 
+}))
 
 const mockClearance = {
   id: 'req-id', universityId: 'uni-id', studentId: 'student-user-id',
@@ -23,10 +32,13 @@ const mockClearance = {
 }
 
 const mockStage = { id: 'stage-id', name: 'Library', orderIndex: 1, isActive: true }
-const mockOfficer = { id: 'officer-id', userId: 'officer-user-id', stageId: 'stage-id', universityId: 'uni-id' }
+const mockOfficer = { id: 'officer-id', userId: 'officer-user-id', stageAssignments: [{ stageId: 'stage-id' }], universityId: 'uni-id' }
 
 describe('ClearanceService', () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => {
+    jest.clearAllMocks()
+    jest.spyOn(StudentsRepository, 'findByUserId').mockResolvedValue({ id: 'student-id' } as any)
+  })
 
   describe('start', () => {
     it('should throw ConflictError when clearance already in progress', async () => {
@@ -59,7 +71,7 @@ describe('ClearanceService', () => {
   describe('approve', () => {
     it('should throw ForbiddenError when officer not assigned to this stage', async () => {
       jest.spyOn(ClearanceRepository, 'findById').mockResolvedValue(mockClearance as any)
-      jest.spyOn(OfficersRepository, 'findByUserId').mockResolvedValue({ ...mockOfficer, stageId: 'different-stage' } as any)
+      jest.spyOn(OfficersRepository, 'findByUserId').mockResolvedValue({ ...mockOfficer, stageAssignments: [{ stageId: 'different-stage' }] } as any)
 
       await expect(ClearanceService.approve('req-id', 'officer-user-id', 'uni-id'))
         .rejects.toThrow(ForbiddenError)
@@ -93,7 +105,7 @@ describe('ClearanceService', () => {
   describe('reject', () => {
     it('should throw ForbiddenError when officer not assigned', async () => {
       jest.spyOn(ClearanceRepository, 'findById').mockResolvedValue(mockClearance as any)
-      jest.spyOn(OfficersRepository, 'findByUserId').mockResolvedValue({ ...mockOfficer, stageId: 'other-stage' } as any)
+      jest.spyOn(OfficersRepository, 'findByUserId').mockResolvedValue({ ...mockOfficer, stageAssignments: [{ stageId: 'other-stage' }] } as any)
 
       await expect(ClearanceService.reject('req-id', 'officer-user-id', 'uni-id', 'Bad documents'))
         .rejects.toThrow(ForbiddenError)

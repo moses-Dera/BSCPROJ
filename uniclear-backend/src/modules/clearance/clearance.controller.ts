@@ -13,6 +13,13 @@ export class ClearanceController {
     } catch (err) { next(err) }
   }
 
+  static async getByStudent(req: Request, res: Response, next: NextFunction) {
+    try {
+      const status = await ClearanceService.getByStudentId(param(req.params.studentId), req.universityId!)
+      return ApiResponse.success(res, status)
+    } catch (err) { next(err) }
+  }
+
   static async getStatus(req: Request, res: Response, next: NextFunction) {
     try {
       const status = await ClearanceService.getStatus(req.user!.sub, req.universityId!)

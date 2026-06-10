@@ -38,6 +38,12 @@ enum Tier {
   ENTERPRISE
 }
 
+enum StageScope {
+  UNIVERSITY
+  FACULTY
+  DEPARTMENT
+}
+
 enum NotificationType {
   STAGE_APPROVED
   STAGE_REJECTED
@@ -61,6 +67,7 @@ model University {
   address      String
   website      String?
   contactEmail String
+  webhookSecret String?  @unique
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -162,9 +169,11 @@ model Faculty {
   name         String
   createdAt    DateTime     @default(now())
 
-  university   University   @relation(fields: [universityId], references: [id], onDelete: Cascade)
-  departments  Department[]
-  students     Student[]
+  university          University                @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  departments         Department[]
+  students            Student[]
+  officerAssignments  StageOfficerAssignment[]
+  docRequirements     StageDocumentRequirement[]
 
   @@index([universityId])
 }
@@ -175,8 +184,10 @@ model Department {
   name      String
   createdAt DateTime  @default(now())
 
-  faculty   Faculty   @relation(fields: [facultyId], references: [id], onDelete: Cascade)
-  students  Student[]
+  faculty             Faculty                   @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  students            Student[]
+  officerAssignments  StageOfficerAssignment[]
+  docRequirements     StageDocumentRequirement[]
 
   @@index([facultyId])
 }
@@ -186,25 +197,30 @@ model Department {
 // ─────────────────────────────────────────
 
 model Student {
-  id           String   @id @default(uuid())
-  universityId String
-  userId       String   @unique
-  matricNo     String
-  firstName    String
-  lastName     String
-  facultyId    String?
-  departmentId String?
-  level        String?
-  phone        String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String   @id @default(uuid())
+  universityId   String
+  userId         String?   @unique
+  jambRegNo      String
+  matricNo       String?
+  firstName      String
+  lastName       String
+  facultyId      String?
+  departmentId   String?
+  level          String?
+  phone          String?
+  entrySessionId String?
+  entryYear      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   university        University         @relation(fields: [universityId], references: [id], onDelete: Cascade)
   faculty           Faculty?           @relation(fields: [facultyId], references: [id])
   department        Department?        @relation(fields: [departmentId], references: [id])
+  entrySession      AcademicSession?   @relation(fields: [entrySessionId], references: [id])
   clearanceRequests ClearanceRequest[]
   documents         Document[]
 
+  @@unique([universityId, jambRegNo])
   @@unique([universityId, matricNo])
   @@index([universityId])
 }
@@ -217,15 +233,14 @@ model Officer {
   id           String          @id @default(uuid())
   universityId String
   userId       String          @unique
-  stageId      String?
   firstName    String
   lastName     String
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
 
-  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  stage        ClearanceStage? @relation(fields: [stageId], references: [id])
-  approvals    StageApproval[]
+  user              User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stageAssignments  StageOfficerAssignment[]
+  approvals         StageApproval[]
 
   @@index([universityId])
 }
@@ -235,21 +250,48 @@ model Officer {
 // ─────────────────────────────────────────
 
 model ClearanceStage {
-  id           String    @id @default(uuid())
+  id           String      @id @default(uuid())
   universityId String
   name         String
   description  String?
   orderIndex   Int
-  isActive     Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  scope        StageScope  @default(UNIVERSITY)
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
   university            University                  @relation(fields: [universityId], references: [id], onDelete: Cascade)
-  officers              Officer[]
+  officerAssignments    StageOfficerAssignment[]
   stageApprovals        StageApproval[]
   documentRequirements  StageDocumentRequirement[]
 
   @@index([universityId, orderIndex])
+}
+
+// ─────────────────────────────────────────
+// STAGE OFFICER ASSIGNMENT
+// ─────────────────────────────────────────
+
+model StageOfficerAssignment {
+  id           String   @id @default(uuid())
+  universityId String
+  stageId      String
+  officerId    String
+  facultyId    String?
+  departmentId String?
+  sessionId    String?
+  createdAt    DateTime @default(now())
+
+  stage        ClearanceStage  @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  officer      Officer         @relation(fields: [officerId], references: [id], onDelete: Cascade)
+  faculty      Faculty?        @relation(fields: [facultyId], references: [id])
+  department   Department?     @relation(fields: [departmentId], references: [id])
+  session      AcademicSession? @relation(fields: [sessionId], references: [id])
+
+  @@unique([stageId, officerId, facultyId, departmentId, sessionId])
+  @@index([universityId])
+  @@index([stageId])
+  @@index([officerId])
 }
 
 // ─────────────────────────────────────────
@@ -277,16 +319,23 @@ model DocumentType {
 }
 
 model StageDocumentRequirement {
-  id             String         @id @default(uuid())
+  id             String   @id @default(uuid())
   universityId   String
   stageId        String
   documentTypeId String
-  isRequired     Boolean        @default(true)
+  isRequired     Boolean  @default(true)
+  facultyId      String?
+  departmentId   String?
+  sessionId      String?
+  level          String?
 
-  stage          ClearanceStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
-  documentType   DocumentType   @relation(fields: [documentTypeId], references: [id], onDelete: Cascade)
+  stage          ClearanceStage  @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  documentType   DocumentType    @relation(fields: [documentTypeId], references: [id], onDelete: Cascade)
+  faculty        Faculty?        @relation(fields: [facultyId], references: [id])
+  department     Department?     @relation(fields: [departmentId], references: [id])
+  session        AcademicSession? @relation(fields: [sessionId], references: [id])
 
-  @@unique([stageId, documentTypeId])
+  @@unique([stageId, documentTypeId, facultyId, departmentId, sessionId, level])
   @@index([universityId])
 }
 
@@ -304,8 +353,11 @@ model AcademicSession {
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
 
-  university        University         @relation(fields: [universityId], references: [id], onDelete: Cascade)
-  clearanceRequests ClearanceRequest[]
+  university          University                @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  clearanceRequests   ClearanceRequest[]
+  entryStudents       Student[]
+  officerAssignments  StageOfficerAssignment[]
+  docRequirements     StageDocumentRequirement[]
 
   @@index([universityId])
 }
@@ -316,14 +368,15 @@ model AcademicSession {
 
 model ClearanceRequest {
   id             String          @id @default(uuid())
-  universityId   String
   studentId      String
+  universityId   String
   sessionId      String
-  currentStageId String?
   status         ClearanceStatus @default(PENDING)
+  stageStatus    StageStatus     @default(PENDING)
+  currentStageId String?
   completedAt    DateTime?
-  createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
+  createdAt      DateTime        @default(now())
 
   university     University      @relation(fields: [universityId], references: [id], onDelete: Cascade)
   student        Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)

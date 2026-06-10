@@ -2,8 +2,8 @@ import { apiClient } from './client'
 import type { ClearanceRequest } from '@/types'
 
 export const clearanceApi = {
-  getStatus:   (studentId: string) =>
-    apiClient.get<{ success: true; data: ClearanceRequest }>(`/clearance?studentId=${studentId}`),
+  getStatus:   () =>
+    apiClient.get<{ success: true; data: ClearanceRequest }>('/clearance/status'),
 
   start:       (sessionId: string) =>
     apiClient.post<{ success: true; data: ClearanceRequest }>('/clearance/start', { sessionId }),
@@ -16,6 +16,9 @@ export const clearanceApi = {
 
   reject:      (requestId: string, remarks: string) =>
     apiClient.post(`/clearance/${requestId}/reject`, { remarks }),
+
+  getByStudent: (studentId: string) =>
+    apiClient.get(`/clearance/by-student/${studentId}`),
 
   getQueue:    (page = 1, limit = 20, search?: string) =>
     apiClient.get(`/clearance/queue?page=${page}&limit=${limit}${search ? `&search=${search}` : ''}`),

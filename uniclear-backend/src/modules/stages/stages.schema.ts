@@ -4,13 +4,13 @@ export const createStageSchema = z.object({
   name:        z.string().min(1),
   description: z.string().optional(),
   orderIndex:  z.number().int().min(1),
-  officerId:   z.string().uuid().optional(),
+  scope:       z.enum(['UNIVERSITY', 'FACULTY', 'DEPARTMENT']).optional(),
 })
 
 export const updateStageSchema = z.object({
   name:        z.string().min(1).optional(),
   description: z.string().optional(),
-  officerId:   z.string().uuid().nullable().optional(),
+  scope:       z.enum(['UNIVERSITY', 'FACULTY', 'DEPARTMENT']).optional(),
 })
 
 export const reorderStagesSchema = z.object({

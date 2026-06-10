@@ -51,9 +51,15 @@ async function doFetch(url: string, req: NextRequest, token: string | undefined)
 async function proxy(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   const cookieStore = await cookies()
   let token = cookieStore.get('access_token')?.value
+  const tenantSlug = cookieStore.get('tenant_slug')?.value
 
   const { path } = await params
-  const url = `${API_URL}/api/v1/${path.join('/')}${req.nextUrl.search}`
+  // Append tenant slug so backend tenantMiddleware can resolve universityId
+  const search = req.nextUrl.search
+  const tenantParam = tenantSlug
+    ? (search ? `${search}&tenant=${tenantSlug}` : `?tenant=${tenantSlug}`)
+    : search
+  const url = `${API_URL}/api/v1/${path.join('/')}${tenantParam}`
 
   let res: Response
   try {

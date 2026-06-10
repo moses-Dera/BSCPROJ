@@ -6,8 +6,12 @@ export const studentsApi = {
     apiClient.get<{ success: true; data: PaginatedData<Student> }>(`/students?page=${page}&limit=${limit}${search ? `&search=${search}` : ''}`),
   getById: (id: string) =>
     apiClient.get<{ success: true; data: Student }>(`/students/${id}`),
-  create: (data: { email: string; firstName: string; lastName: string; matricNo: string; facultyId?: string; departmentId?: string }) =>
+  create: (data: { email: string; firstName: string; lastName: string; jambRegNo: string; facultyId?: string; departmentId?: string }) =>
     apiClient.post<{ success: true; data: Student & { inviteLink: string; tempPassword: string } }>('/students', data),
+  bulkCreate: (data: Array<{ email: string; firstName: string; lastName: string; jambRegNo: string; facultyId?: string; departmentId?: string }>) =>
+    apiClient.post<{ success: true; data: { created: number; errors: any[] } }>('/students/bulk', data),
+  update: (id: string, data: { jambRegNo?: string; firstName?: string; lastName?: string }) =>
+    apiClient.patch(`/students/${id}`, data),
   delete: (id: string) => apiClient.delete(`/students/${id}`),
 }
 

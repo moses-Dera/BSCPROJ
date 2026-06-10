@@ -16,10 +16,19 @@ export class DocumentTypesRepository {
     })
   }
 
-  static async findByStage(stageId: string, universityId: string) {
-    return db.stageDocumentRequirement.findMany({
+  static async findByStage(stageId: string, universityId: string, context?: { facultyId?: string; departmentId?: string; sessionId?: string; level?: string }) {
+    const reqs = await db.stageDocumentRequirement.findMany({
       where: { stageId, universityId },
       include: { documentType: true },
+    })
+    if (!context) return reqs
+    // Return requirements that match the student context or are universal (null = applies to all)
+    return reqs.filter(r => {
+      if (r.facultyId    && r.facultyId    !== context.facultyId)    return false
+      if (r.departmentId && r.departmentId !== context.departmentId) return false
+      if (r.sessionId    && r.sessionId    !== context.sessionId)    return false
+      if (r.level        && r.level        !== context.level)        return false
+      return true
     })
   }
 
@@ -40,15 +49,14 @@ export class DocumentTypesRepository {
   }
 
   static async assignToStage(documentTypeId: string, stageId: string, universityId: string, isRequired: boolean) {
-    return db.stageDocumentRequirement.upsert({
-      where: { stageId_documentTypeId: { stageId, documentTypeId } },
-      create: { universityId, stageId, documentTypeId, isRequired },
-      update: { isRequired },
+    await db.stageDocumentRequirement.deleteMany({ where: { stageId, documentTypeId } })
+    return db.stageDocumentRequirement.create({
+      data: { universityId, stageId, documentTypeId, isRequired },
     })
   }
 
   static async removeFromStage(documentTypeId: string, stageId: string) {
-    return db.stageDocumentRequirement.delete({ where: { stageId_documentTypeId: { stageId, documentTypeId } } })
+    return db.stageDocumentRequirement.deleteMany({ where: { stageId, documentTypeId } })
   }
 
   static async count(universityId: string) {

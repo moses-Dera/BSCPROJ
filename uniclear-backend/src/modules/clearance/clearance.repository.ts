@@ -36,24 +36,35 @@ export class ClearanceRepository {
   }
 
   static async updateStage(id: string, currentStageId: string | null, status: ClearanceStatus) {
-    return db.clearanceRequest.update({ where: { id }, data: { currentStageId, status, completedAt: status === 'COMPLETED' ? new Date() : undefined } })
+    return db.clearanceRequest.update({ 
+      where: { id }, 
+      data: { currentStageId, status, stageStatus: 'PENDING', completedAt: status === 'COMPLETED' ? new Date() : undefined } 
+    })
   }
 
-  static async findOfficerQueue(universityId: string, stageId: string, opts: { page: number; limit: number; search?: string }) {
+  static async updateStageStatus(id: string, stageStatus: StageStatus) {
+    return db.clearanceRequest.update({ where: { id }, data: { stageStatus } })
+  }
+
+  static async findOfficerQueue(universityId: string, stageId: string, facultyId: string | undefined, opts: { page: number; limit: number; search?: string }) {
     const { page, limit, search } = opts
     const skip = (page - 1) * limit
     const where: any = {
       universityId,
       currentStageId: stageId,
       status: 'IN_PROGRESS',
+      stageStatus: 'SUBMITTED',
       stageApprovals: { none: { stageId, status: { in: ['APPROVED', 'REJECTED'] as StageStatus[] }, decidedAt: { gte: new Date(Date.now() - 1000) } } },
     }
+    // Scope to faculty if officer has a faculty assignment
+    if (facultyId) where.student = { ...(where.student ?? {}), facultyId }
     if (search) {
       where.student = {
+        ...(where.student ?? {}),
         OR: [
           { firstName: { contains: search, mode: 'insensitive' } },
-          { lastName: { contains: search, mode: 'insensitive' } },
-          { matricNo: { contains: search, mode: 'insensitive' } },
+          { lastName:  { contains: search, mode: 'insensitive' } },
+          { jambRegNo: { contains: search, mode: 'insensitive' } },
         ],
       }
     }

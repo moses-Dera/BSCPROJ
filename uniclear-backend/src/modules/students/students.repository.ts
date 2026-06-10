@@ -34,7 +34,11 @@ export class StudentsRepository {
     return db.student.findUnique({ where: { universityId_matricNo: { universityId, matricNo } } })
   }
 
-  static async create(universityId: string, userId: string, data: CreateStudentDto) {
+  static async findByJambRegNo(jambRegNo: string, universityId: string) {
+    return db.student.findUnique({ where: { universityId_jambRegNo: { universityId, jambRegNo } } })
+  }
+
+  static async create(universityId: string, userId: string | null, data: CreateStudentDto) {
     return db.student.create({ data: { universityId, userId, ...data } })
   }
 

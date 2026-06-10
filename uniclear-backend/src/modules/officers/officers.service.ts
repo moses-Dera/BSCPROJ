@@ -10,7 +10,7 @@ import { sendInviteEmail } from '@/modules/notifications/channels/email.channel'
 import { env } from '@/core/config/env'
 
 export class OfficersService {
-  static async list(universityId: string, opts: { page: number; limit: number; stageId?: string }) {
+  static async list(universityId: string, opts: { page: number; limit: number }) {
     return OfficersRepository.findAll(universityId, opts)
   }
 
@@ -20,7 +20,7 @@ export class OfficersService {
     return officer
   }
 
-  static async create(universityId: string, data: { email: string; firstName: string; lastName: string; stageId?: string }) {
+  static async create(universityId: string, data: { email: string; firstName: string; lastName: string }) {
     const contract = await db.contractPlan.findUnique({ where: { universityId } })
     const tier = contract?.tier ?? 'TRIAL'
     const limit = TIER_LIMITS[tier].maxOfficers
@@ -50,13 +50,21 @@ export class OfficersService {
     })
 
     logger.info({ email: data.email, inviteLink }, 'Officer invite created')
-    const officer = await OfficersRepository.create(universityId, user.id, { firstName: data.firstName, lastName: data.lastName, stageId: data.stageId })
+    const officer = await OfficersRepository.create(universityId, user.id, { firstName: data.firstName, lastName: data.lastName })
     return { ...officer, inviteLink, tempPassword }
   }
 
-  static async update(id: string, universityId: string, data: { firstName?: string; lastName?: string; stageId?: string | null }) {
+  static async update(id: string, universityId: string, data: { firstName?: string; lastName?: string }) {
     await OfficersService.getById(id, universityId)
     return OfficersRepository.update(id, data)
+  }
+
+  static async assign(stageId: string, universityId: string, officerId: string, facultyId?: string, departmentId?: string, sessionId?: string) {
+    return OfficersRepository.assign(universityId, stageId, officerId, facultyId, departmentId, sessionId)
+  }
+
+  static async unassign(assignmentId: string) {
+    return OfficersRepository.unassign(assignmentId)
   }
 
   static async delete(id: string, universityId: string) {

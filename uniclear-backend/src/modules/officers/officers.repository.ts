@@ -1,31 +1,39 @@
 import { db } from '@/lib/db'
 
 export class OfficersRepository {
-  static async findAll(universityId: string, opts: { page: number; limit: number; stageId?: string }) {
-    const { page, limit, stageId } = opts
+  static async findAll(universityId: string, opts: { page: number; limit: number }) {
+    const { page, limit } = opts
     const skip = (page - 1) * limit
-    const where: any = { universityId }
-    if (stageId) where.stageId = stageId
     const [data, total] = await Promise.all([
-      db.officer.findMany({ where, skip, take: limit, include: { user: { select: { email: true } }, stage: true }, orderBy: { createdAt: 'desc' } }),
-      db.officer.count({ where }),
+      db.officer.findMany({
+        where: { universityId }, skip, take: limit,
+        include: { user: { select: { email: true } }, stageAssignments: { include: { stage: true, faculty: true, department: true, session: true } } },
+        orderBy: { createdAt: 'desc' },
+      }),
+      db.officer.count({ where: { universityId } }),
     ])
     return { data, total }
   }
 
   static async findById(id: string, universityId: string) {
-    return db.officer.findFirst({ where: { id, universityId }, include: { user: { select: { email: true } }, stage: true } })
+    return db.officer.findFirst({
+      where: { id, universityId },
+      include: { user: { select: { email: true } }, stageAssignments: { include: { stage: true, faculty: true, department: true, session: true } } },
+    })
   }
 
   static async findByUserId(userId: string) {
-    return db.officer.findUnique({ where: { userId } })
+    return db.officer.findUnique({
+      where: { userId },
+      include: { stageAssignments: { include: { stage: true, faculty: true } } },
+    })
   }
 
-  static async create(universityId: string, userId: string, data: { firstName: string; lastName: string; stageId?: string }) {
+  static async create(universityId: string, userId: string, data: { firstName: string; lastName: string }) {
     return db.officer.create({ data: { universityId, userId, ...data } })
   }
 
-  static async update(id: string, data: { firstName?: string; lastName?: string; stageId?: string | null }) {
+  static async update(id: string, data: { firstName?: string; lastName?: string }) {
     return db.officer.update({ where: { id }, data })
   }
 
@@ -35,5 +43,15 @@ export class OfficersRepository {
 
   static async count(universityId: string) {
     return db.officer.count({ where: { universityId } })
+  }
+
+  static async assign(universityId: string, stageId: string, officerId: string, facultyId?: string, departmentId?: string, sessionId?: string) {
+    return db.stageOfficerAssignment.create({
+      data: { universityId, stageId, officerId, facultyId, departmentId, sessionId },
+    })
+  }
+
+  static async unassign(id: string) {
+    return db.stageOfficerAssignment.delete({ where: { id } })
   }
 }

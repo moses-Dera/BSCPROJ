@@ -75,4 +75,16 @@ export class UniversitiesService {
     await UniversitiesService.getById(id)
     return UniversitiesRepository.upsertContract(id, data)
   }
+
+  static async getApiKey(id: string) {
+    const uni = await UniversitiesService.getById(id)
+    return { apiKey: uni.webhookSecret }
+  }
+
+  static async generateApiKey(id: string) {
+    await UniversitiesService.getById(id)
+    const newKey = `uc_live_${crypto.randomBytes(32).toString('hex')}`
+    await db.university.update({ where: { id }, data: { webhookSecret: newKey } })
+    return { apiKey: newKey }
+  }
 }

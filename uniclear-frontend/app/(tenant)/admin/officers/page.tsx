@@ -21,14 +21,12 @@ const inviteSchema = z.object({
   firstName: z.string().min(1, 'Required'),
   lastName:  z.string().min(1, 'Required'),
   email:     z.string().email('Invalid email'),
-  stageId:   z.string().optional(),
 })
 type InviteForm = z.infer<typeof inviteSchema>
 
 const editSchema = z.object({
   firstName: z.string().min(1, 'Required'),
   lastName:  z.string().min(1, 'Required'),
-  stageId:   z.string().optional(),
 })
 type EditForm = z.infer<typeof editSchema>
 
@@ -66,7 +64,7 @@ export default function AdminOfficersPage() {
   })
 
   const { mutate: update, isPending: updating } = useMutation({
-    mutationFn: (d: EditForm) => officersApi.update(editTarget.id, { ...d, stageId: d.stageId || null }),
+    mutationFn: (d: EditForm) => officersApi.update(editTarget.id, d),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['officers'] })
       setEditTarget(null)
@@ -83,7 +81,7 @@ export default function AdminOfficersPage() {
 
   const openEdit = (o: any) => {
     setEditTarget(o)
-    editForm.reset({ firstName: o.firstName, lastName: o.lastName, stageId: o.stage?.id ?? '' })
+    editForm.reset({ firstName: o.firstName, lastName: o.lastName })
   }
 
   return (
@@ -107,7 +105,7 @@ export default function AdminOfficersPage() {
                 <tr className="border-b border-[var(--color-border)] text-left">
                   <th className="pb-3 px-3 text-xs font-medium text-[var(--color-muted)] uppercase tracking-wide">Name</th>
                   <th className="pb-3 px-3 text-xs font-medium text-[var(--color-muted)] uppercase tracking-wide">Email</th>
-                  <th className="pb-3 px-3 text-xs font-medium text-[var(--color-muted)] uppercase tracking-wide">Assigned Stage</th>
+                  <th className="pb-3 px-3 text-xs font-medium text-[var(--color-muted)] uppercase tracking-wide">Assignments</th>
                   <th className="pb-3 px-3" />
                 </tr>
               </thead>
@@ -117,8 +115,14 @@ export default function AdminOfficersPage() {
                     <td className="py-3 px-3 font-medium">{o.firstName} {o.lastName}</td>
                     <td className="py-3 px-3 text-[var(--color-muted)]">{o.user?.email}</td>
                     <td className="py-3 px-3">
-                      {o.stage
-                        ? <span className="text-[var(--color-text)]">{o.stage.name}</span>
+                      {o.stageAssignments?.length > 0
+                        ? <span className="text-[var(--color-text)] flex flex-col gap-0.5">
+                            {o.stageAssignments.map((a: any) => (
+                              <span key={a.id} className="text-xs">
+                                • {a.stage.name}{a.faculty ? ` - ${a.faculty.name}` : ''}
+                              </span>
+                            ))}
+                          </span>
                         : <span className="text-[var(--color-pending)] text-xs flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> Unassigned</span>
                       }
                     </td>
@@ -148,13 +152,6 @@ export default function AdminOfficersPage() {
             <Input label="Last Name"  error={inviteForm.formState.errors.lastName?.message}  {...inviteForm.register('lastName')} />
           </div>
           <Input label="Email" type="email" error={inviteForm.formState.errors.email?.message} {...inviteForm.register('email')} />
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-[var(--color-text)]">Assign to Stage (optional)</label>
-            <select {...inviteForm.register('stageId')} className="w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
-              <option value="">— No stage —</option>
-              {stages?.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-          </div>
           <div className="flex gap-2 pt-1">
             <Button type="button" variant="secondary" className="flex-1" onClick={() => setInviteOpen(false)}>Cancel</Button>
             <Button type="submit" className="flex-1" loading={creating}>Send Invite</Button>
@@ -168,13 +165,6 @@ export default function AdminOfficersPage() {
           <div className="grid grid-cols-2 gap-3">
             <Input label="First Name" error={editForm.formState.errors.firstName?.message} {...editForm.register('firstName')} />
             <Input label="Last Name"  error={editForm.formState.errors.lastName?.message}  {...editForm.register('lastName')} />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-[var(--color-text)]">Assigned Stage</label>
-            <select {...editForm.register('stageId')} className="w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
-              <option value="">— No stage —</option>
-              {stages?.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
           </div>
           <div className="flex gap-2 pt-1">
             <Button type="button" variant="secondary" className="flex-1" onClick={() => setEditTarget(null)}>Cancel</Button>

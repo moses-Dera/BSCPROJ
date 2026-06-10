@@ -4,7 +4,10 @@ export class StagesRepository {
   static async findAll(universityId: string) {
     return db.clearanceStage.findMany({
       where: { universityId },
-      include: { officers: { include: { user: { select: { email: true } } } }, documentRequirements: { include: { documentType: true } } },
+      include: {
+        officerAssignments: { include: { officer: true, faculty: true, department: true, session: true } },
+        documentRequirements: { include: { documentType: true, faculty: true, department: true, session: true } },
+      },
       orderBy: { orderIndex: 'asc' },
     })
   }
@@ -12,7 +15,10 @@ export class StagesRepository {
   static async findById(id: string, universityId: string) {
     return db.clearanceStage.findFirst({
       where: { id, universityId },
-      include: { officers: true, documentRequirements: { include: { documentType: true } } },
+      include: {
+        officerAssignments: { include: { officer: true, faculty: true, department: true, session: true } },
+        documentRequirements: { include: { documentType: true, faculty: true, department: true, session: true } },
+      },
     })
   }
 
@@ -30,11 +36,11 @@ export class StagesRepository {
     })
   }
 
-  static async create(data: { universityId: string; name: string; description?: string; orderIndex: number; officerId?: string }) {
+  static async create(data: { universityId: string; name: string; description?: string; orderIndex: number; scope?: 'UNIVERSITY' | 'FACULTY' | 'DEPARTMENT' }) {
     return db.clearanceStage.create({ data })
   }
 
-  static async update(id: string, data: { name?: string; description?: string; officerId?: string | null }) {
+  static async update(id: string, data: { name?: string; description?: string; scope?: 'UNIVERSITY' | 'FACULTY' | 'DEPARTMENT' }) {
     return db.clearanceStage.update({ where: { id }, data })
   }
 

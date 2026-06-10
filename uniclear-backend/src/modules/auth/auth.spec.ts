@@ -22,7 +22,6 @@ describe('AuthService', () => {
 
   describe('login', () => {
     it('should return tokens on valid credentials', async () => {
-      jest.spyOn(AuthRepository, 'findPlatformOwnerByEmail').mockResolvedValue(null)
       jest.spyOn(AuthRepository, 'findUserByEmail').mockResolvedValue(mockUser as any)
       jest.spyOn(AuthRepository, 'saveRefreshToken').mockResolvedValue({} as any)
 
@@ -34,7 +33,6 @@ describe('AuthService', () => {
     })
 
     it('should throw AuthError on invalid password', async () => {
-      jest.spyOn(AuthRepository, 'findPlatformOwnerByEmail').mockResolvedValue(null)
       jest.spyOn(AuthRepository, 'findUserByEmail').mockResolvedValue(mockUser as any)
 
       await expect(AuthService.login('test@unn.edu.ng', 'wrongpassword'))
@@ -42,7 +40,6 @@ describe('AuthService', () => {
     })
 
     it('should throw AuthError when user not found', async () => {
-      jest.spyOn(AuthRepository, 'findPlatformOwnerByEmail').mockResolvedValue(null)
       jest.spyOn(AuthRepository, 'findUserByEmail').mockResolvedValue(null)
 
       await expect(AuthService.login('notfound@unn.edu.ng', 'password123'))
@@ -50,7 +47,6 @@ describe('AuthService', () => {
     })
 
     it('should throw AuthError when account is inactive', async () => {
-      jest.spyOn(AuthRepository, 'findPlatformOwnerByEmail').mockResolvedValue(null)
       jest.spyOn(AuthRepository, 'findUserByEmail').mockResolvedValue({ ...mockUser, isActive: false } as any)
 
       await expect(AuthService.login('test@unn.edu.ng', 'password123'))
@@ -58,7 +54,6 @@ describe('AuthService', () => {
     })
 
     it('should throw AuthError when password not set yet', async () => {
-      jest.spyOn(AuthRepository, 'findPlatformOwnerByEmail').mockResolvedValue(null)
       jest.spyOn(AuthRepository, 'findUserByEmail').mockResolvedValue({ ...mockUser, passwordSetAt: null } as any)
 
       await expect(AuthService.login('test@unn.edu.ng', 'password123'))

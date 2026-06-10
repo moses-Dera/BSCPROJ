@@ -28,6 +28,15 @@ export class StudentsController {
     } catch (err) { next(err) }
   }
 
+  static async bulkCreate(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { bulkCreateStudentSchema } = await import('./students.schema')
+      const data = bulkCreateStudentSchema.parse(req.body)
+      const result = await StudentsService.bulkCreate(req.universityId!, data)
+      return ApiResponse.success(res, result)
+    } catch (err) { next(err) }
+  }
+
   static async update(req: Request, res: Response, next: NextFunction) {
     try {
       const data = updateStudentSchema.parse(req.body)

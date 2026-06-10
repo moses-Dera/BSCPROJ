@@ -5,6 +5,9 @@ export const authApi = {
   login: (email: string, password: string) =>
     apiClient.post<{ success: true; data: AuthUser }>('/auth/login', { email, password }, { baseURL: '/api' }),
 
+  register: (universitySlug: string, jambRegNo: string, email: string, password: string) =>
+    apiClient.post<{ success: true; data: AuthUser }>('/auth/register', { universitySlug, jambRegNo, email, password }, { baseURL: '/api' }),
+
   logout: () =>
     apiClient.post('/auth/logout', {}, { baseURL: '/api' }),
 

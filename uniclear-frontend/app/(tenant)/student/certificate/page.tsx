@@ -1,7 +1,6 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { useAuthStore } from '@/store/useAuthStore'
 import { useTenantStore } from '@/store/useTenantStore'
 import { useClearanceStatus } from '@/features/clearance/hooks/useClearance'
 import { clearanceApi } from '@/lib/api/clearance.api'
@@ -13,13 +12,14 @@ import { ErrorState, EmptyState } from '@/components/shared/EmptyState'
 import { formatDate } from '@/lib/utils/format'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { ROUTES } from '@/lib/constants'
 
 export default function CertificatePage() {
-  const user    = useAuthStore(s => s.user)
   const tenant  = useTenantStore()
 
-  const { data: clearance, isLoading, isError } = useClearanceStatus(user?.id ?? '')
+  const router = useRouter()
+  const { data: clearance, isLoading, isError } = useClearanceStatus()
 
   const { data: _certificate } = useQuery({
     queryKey: ['certificate', clearance?.id],
@@ -35,7 +35,7 @@ export default function CertificatePage() {
         icon={<Lock className="h-10 w-10" />}
         title="Certificate not available"
         description="Your clearance must be fully completed before you can download your certificate."
-        action={{ label: '← Back to Dashboard', onClick: () => window.location.href = ROUTES.student.dashboard }}
+        action={{ label: '← Back to Dashboard', onClick: () => router.push(ROUTES.student.dashboard) }}
       />
     )
   }
@@ -70,7 +70,14 @@ export default function CertificatePage() {
           <p className="text-base font-semibold text-[var(--color-text)]">
             {clearance.student?.firstName} {clearance.student?.lastName}
           </p>
-          <p className="text-xs font-mono text-[var(--color-muted)]">{clearance.student?.matricNo}</p>
+          {clearance.student?.jambRegNo ? (
+            <div className="mt-2 inline-block bg-[var(--color-primary)] text-white px-4 py-1.5 rounded-full">
+              <p className="text-xs font-medium uppercase tracking-wide opacity-80">JAMB Reg Number</p>
+              <p className="text-base font-bold font-mono">{clearance.student.jambRegNo}</p>
+            </div>
+          ) : (
+            <p className="text-xs text-amber-500 mt-1">⏳ JAMB Reg Number not available</p>
+          )}
           <p className="text-sm text-[var(--color-muted)] mt-2">
             has satisfactorily completed all clearance requirements
           </p>

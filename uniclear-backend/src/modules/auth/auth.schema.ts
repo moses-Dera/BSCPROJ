@@ -38,3 +38,10 @@ export const resetPasswordSchema = z.object({
   message: 'Passwords do not match',
   path: ['confirmPassword'],
 })
+
+export const registerSchema = z.object({
+  universitySlug: z.string().min(1),
+  jambRegNo: z.string().min(1),
+  email: z.string().email(),
+  password: z.string().min(8),
+})

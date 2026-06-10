@@ -51,12 +51,23 @@ async function main() {
   })
   console.log('✅ UNN super admin created:', superAdminUser.email)
 
+  // Stable seed UUIDs
+  const IDS = {
+    session:    '00000000-0000-0000-0000-000000000001',
+    stages:     Array.from({ length: 5 }, (_, i) => `00000000-0000-0000-0001-${String(i).padStart(12, '0')}`),
+    docTypes:   Array.from({ length: 4 }, (_, i) => `00000000-0000-0000-0002-${String(i).padStart(12, '0')}`),
+    faculty:    '00000000-0000-0000-0003-000000000000',
+    department: '00000000-0000-0000-0004-000000000000',
+    officer:    '00000000-0000-0000-0005-000000000000',
+    student:    '00000000-0000-0000-0006-000000000000',
+  }
+
   // Academic Session
   const session = await db.academicSession.upsert({
-    where:  { id: 'seed-session-unn-2024' },
+    where:  { id: IDS.session },
     update: {},
     create: {
-      id: 'seed-session-unn-2024', universityId: unn.id,
+      id: IDS.session, universityId: unn.id,
       name: '2024/2025', startDate: new Date('2024-09-01'), endDate: new Date('2025-08-31'), isActive: true,
     },
   })
@@ -66,9 +77,9 @@ async function main() {
   const stageNames = ['Library Clearance', 'Bursary / Finance', 'Medical Centre', 'Hostel', 'Faculty Officer']
   for (let i = 0; i < stageNames.length; i++) {
     await db.clearanceStage.upsert({
-      where:  { id: `seed-stage-unn-${i}` },
+      where:  { id: IDS.stages[i] },
       update: { name: stageNames[i], orderIndex: i + 1 },
-      create: { id: `seed-stage-unn-${i}`, universityId: unn.id, name: stageNames[i], orderIndex: i + 1 },
+      create: { id: IDS.stages[i], universityId: unn.id, name: stageNames[i], orderIndex: i + 1 },
     })
   }
   console.log('✅ UNN stages created')
@@ -82,24 +93,35 @@ async function main() {
   ]
   for (let i = 0; i < docTypes.length; i++) {
     await db.documentType.upsert({
-      where:  { id: `seed-doctype-unn-${i}` },
+      where:  { id: IDS.docTypes[i] },
       update: {},
-      create: { id: `seed-doctype-unn-${i}`, universityId: unn.id, ...docTypes[i], order: i + 1 },
+      create: { id: IDS.docTypes[i], universityId: unn.id, ...docTypes[i], order: i + 1 },
     })
   }
   console.log('✅ UNN document types created')
 
+  // Assign document types to first stage
+  const firstStageSeed = IDS.stages[0]
+  for (let i = 0; i < IDS.docTypes.length; i++) {
+    await db.stageDocumentRequirement.upsert({
+      where:  { stageId_documentTypeId: { stageId: firstStageSeed, documentTypeId: IDS.docTypes[i] } },
+      update: {},
+      create: { universityId: unn.id, stageId: firstStageSeed, documentTypeId: IDS.docTypes[i], isRequired: true },
+    })
+  }
+  console.log('✅ Stage document requirements created')
+
   // Faculty & Department
   const faculty = await db.faculty.upsert({
-    where:  { id: 'seed-faculty-unn-0' },
+    where:  { id: IDS.faculty },
     update: {},
-    create: { id: 'seed-faculty-unn-0', universityId: unn.id, name: 'Faculty of Engineering' },
+    create: { id: IDS.faculty, universityId: unn.id, name: 'Faculty of Engineering' },
   })
 
   const department = await db.department.upsert({
-    where:  { id: 'seed-dept-unn-0' },
+    where:  { id: IDS.department },
     update: {},
-    create: { id: 'seed-dept-unn-0', facultyId: faculty.id, name: 'Computer Engineering' },
+    create: { id: IDS.department, facultyId: faculty.id, name: 'Computer Engineering' },
   })
   console.log('✅ Faculty and department created')
 
@@ -123,7 +145,7 @@ async function main() {
     where:  { userId: officerUser.id },
     update: {},
     create: {
-      id: 'seed-officer-unn-0',
+      id: IDS.officer,
       universityId: unn.id,
       userId: officerUser.id,
       firstName: 'Chukwuemeka',
@@ -147,15 +169,15 @@ async function main() {
     where:  { userId: studentUser.id },
     update: {},
     create: {
-      id:           'seed-student-unn-0',
+      id:           IDS.student,
       universityId: unn.id,
       userId:       studentUser.id,
-      matricNo:     'UNN/2021/001',
+      jambRegNo:    '12345678AB',
       firstName:    'Adaeze',
       lastName:     'Nwosu',
       facultyId:    faculty.id,
       departmentId: department.id,
-      level:        '500',
+      level:        '100',
     },
   })
   console.log('✅ Student created:', studentUser.email)

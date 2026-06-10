@@ -12,6 +12,15 @@ export class AuthController {
     } catch (err) { next(err) }
   }
 
+  static async register(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { registerSchema } = await import('./auth.schema')
+      const data = registerSchema.parse(req.body)
+      const result = await AuthService.register(data)
+      return ApiResponse.success(res, result, 'Registration successful')
+    } catch (err) { next(err) }
+  }
+
   static async refresh(req: Request, res: Response, next: NextFunction) {
     try {
       const { refreshToken } = refreshTokenSchema.parse(req.body)

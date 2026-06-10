@@ -26,6 +26,43 @@ export class AuthService {
     return { accessToken, refreshToken, user: { id: user.id, email: user.email, role: user.role, universityId: user.universityId, universitySlug: user.university?.slug ?? null } }
   }
 
+  static async register(data: { universitySlug: string, jambRegNo: string, email: string, password: string }): Promise<LoginResponse> {
+    const { db } = await import('@/lib/db')
+    const university = await db.university.findUnique({ where: { slug: data.universitySlug } })
+    if (!university) throw new NotFoundError('University not found')
+
+    const studentRecord = await db.student.findUnique({ where: { universityId_jambRegNo: { universityId: university.id, jambRegNo: data.jambRegNo } } })
+    if (!studentRecord) throw new AuthError('You are not on the admission list. Please contact the registry.')
+    if (studentRecord.userId) throw new AuthError('An account has already been claimed for this JAMB Reg No.')
+
+    const existingUser = await db.user.findUnique({ where: { email: data.email } })
+    if (existingUser) throw new AuthError('Email is already in use.')
+
+    const hash = await bcrypt.hash(data.password, 12)
+    const user = await db.user.create({
+      data: {
+        email: data.email,
+        passwordHash: hash,
+        role: 'STUDENT',
+        universityId: university.id,
+        passwordSetAt: new Date(),
+        isActive: true,
+      }
+    })
+
+    await db.student.update({
+      where: { id: studentRecord.id },
+      data: { userId: user.id }
+    })
+
+    const accessToken = signAccessToken({ sub: user.id, universityId: university.id, role: user.role })
+    const refreshToken = signRefreshToken({ sub: user.id })
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    await AuthRepository.saveRefreshToken(user.id, refreshToken, expiresAt)
+
+    return { accessToken, refreshToken, user: { id: user.id, email: user.email, role: user.role, universityId: university.id, universitySlug: university.slug } }
+  }
+
   static async refresh(token: string): Promise<{ accessToken: string; refreshToken: string }> {
     const stored = await AuthRepository.findRefreshToken(token)
     if (!stored || stored.expiresAt < new Date()) throw new AuthError('Invalid or expired refresh token')

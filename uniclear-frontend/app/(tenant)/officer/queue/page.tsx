@@ -25,7 +25,7 @@ export default function OfficerQueuePage() {
       <PageHeader title="Pending Queue" subtitle="Students awaiting your review" />
 
       <Input
-        placeholder="Search by name or matric number..."
+        placeholder="Search by name or JAMB Reg No..."
         value={search}
         onChange={e => setSearch(e.target.value)}
         icon={<Search className="h-4 w-4" />}
@@ -44,7 +44,7 @@ export default function OfficerQueuePage() {
               <table className="w-full text-xs min-w-[480px]">
                 <thead>
                   <tr className="border-b border-[var(--color-border)] text-left">
-                    <th className="pb-2 px-3 text-[11px] font-medium text-[var(--color-muted)] uppercase tracking-wide">Matric No.</th>
+                    <th className="pb-2 px-3 text-[11px] font-medium text-[var(--color-muted)] uppercase tracking-wide">JAMB Reg No.</th>
                     <th className="pb-2 px-3 text-[11px] font-medium text-[var(--color-muted)] uppercase tracking-wide">Name</th>
                     <th className="pb-2 px-3 text-[11px] font-medium text-[var(--color-muted)] uppercase tracking-wide">Submitted</th>
                     <th className="pb-2 px-3 text-[11px] font-medium text-[var(--color-muted)] uppercase tracking-wide">Status</th>
@@ -54,7 +54,7 @@ export default function OfficerQueuePage() {
                 <tbody className="divide-y divide-[var(--color-border)]">
                   {data.items.map((item: any) => (
                     <tr key={item.id} className="hover:bg-[var(--color-bg)] transition-colors">
-                      <td className="py-2.5 px-3 font-mono">{item.student?.matricNo}</td>
+                      <td className="py-2.5 px-3 font-mono">{item.student?.jambRegNo}</td>
                       <td className="py-2.5 px-3 font-medium text-[var(--color-text)]">{item.student?.firstName} {item.student?.lastName}</td>
                       <td className="py-2.5 px-3 text-[var(--color-muted)]">{formatDateTime(item.updatedAt)}</td>
                       <td className="py-2.5 px-3"><StatusBadge status={item.status} /></td>

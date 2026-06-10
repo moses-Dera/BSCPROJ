@@ -23,6 +23,8 @@ import brandingRoutes       from '@/app/api/v1/branding/route'
 import universityRoutes     from '@/app/api/v1/universities/route'
 import auditRoutes          from '@/app/api/v1/audit/route'
 import reportRoutes         from '@/app/api/v1/reports/route'
+import structureRoutes      from '@/app/api/v1/structure/route'
+import webhookRoutes        from '@/app/api/v1/webhooks/route'
 
 const app = express()
 
@@ -35,6 +37,9 @@ app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'))
 
 // ── Static uploads (dev only) ─────────────────────────────────────
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
+
+// ── Webhooks (No tenant resolution needed as API key implies tenant) ──
+app.use('/api/v1/webhooks', webhookRoutes)
 
 // ── Tenant resolution ─────────────────────────────────────────────
 app.use('/api/v1', tenantMiddleware)
@@ -53,6 +58,7 @@ app.use('/api/v1/branding',       brandingRoutes)
 app.use('/api/v1/universities',   universityRoutes)
 app.use('/api/v1/audit',          auditRoutes)
 app.use('/api/v1/reports',        reportRoutes)
+app.use('/api/v1/structure',      structureRoutes)
 
 // ── Swagger docs ─────────────────────────────────────────────────
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))

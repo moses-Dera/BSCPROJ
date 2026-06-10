@@ -3,6 +3,23 @@ import { UniversitiesRepository } from './universities.repository'
 import { ConflictError, NotFoundError } from '@/core/errors/AppError'
 
 jest.mock('./universities.repository')
+jest.mock('@/modules/auth/auth.repository', () => ({
+  AuthRepository: {
+    saveInviteToken: jest.fn().mockResolvedValue({}),
+  },
+}))
+
+jest.mock('@/lib/db', () => ({
+  db: {
+    user: {
+      create: jest.fn().mockResolvedValue({ id: 'user-id' }),
+    },
+    passwordResetToken: {
+      deleteMany: jest.fn(),
+      create: jest.fn(),
+    },
+  },
+}))
 
 const mockUniversity = {
   id: 'uni-id', name: 'University of Nigeria, Nsukka', slug: 'unn',

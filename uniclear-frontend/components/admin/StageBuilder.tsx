@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { GripVertical, AlertTriangle, X, ChevronRight } from 'lucide-react'
+import { GripVertical, AlertTriangle, X, ChevronRight, FileText, Plus, Trash2 } from 'lucide-react'
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
   type DragEndEvent,
@@ -11,8 +11,9 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useQuery } from '@tanstack/react-query'
-import { useStages, useReorderStages, useUpdateStage } from '@/features/stages/hooks/useStages'
+import { useStages, useReorderStages, useUpdateStage, useAssignDocumentToStage, useRemoveDocumentFromStage, useAssignOfficerToStage, useUnassignOfficerFromStage } from '@/features/stages/hooks/useStages'
 import { apiClient } from '@/lib/api/client'
+import { structureApi, sessionsApi } from '@/lib/api/misc.api'
 import { Button } from '@/components/ui/button'
 import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
 import { ErrorState } from '@/components/shared/EmptyState'
@@ -28,7 +29,32 @@ function useOfficers() {
 
 function StagePanel({ stage, onClose }: { stage: ClearanceStage; onClose: () => void }) {
   const { mutate: update, isPending } = useUpdateStage()
+  const { mutate: assignDoc, isPending: assigningDoc } = useAssignDocumentToStage()
+  const { mutate: removeDoc } = useRemoveDocumentFromStage()
+  const { mutate: assignOfficer, isPending: assigningOfficer } = useAssignOfficerToStage()
+  const { mutate: unassignOfficer } = useUnassignOfficerFromStage()
+
   const { data: officers = [] } = useOfficers()
+  const { data: allDocTypes = [] } = useQuery({
+    queryKey: ['document-types'],
+    queryFn:  () => apiClient.get<{ success: true; data: any[] }>('/document-types').then(r => r.data.data),
+  })
+  const { data: faculties = [] } = useQuery({ queryKey: ['faculties'], queryFn: () => structureApi.faculties().then(r => r.data.data) })
+  const { data: departments = [] } = useQuery({ queryKey: ['departments'], queryFn: () => structureApi.departments().then(r => r.data.data) })
+  const { data: sessions = [] } = useQuery({ queryKey: ['sessions'], queryFn: () => sessionsApi.list().then(r => r.data.data) })
+
+  const [assignForm, setAssignForm] = useState({ officerId: '', facultyId: '', departmentId: '', sessionId: '' })
+
+  const handleAssignOfficer = () => {
+    if (!assignForm.officerId) return
+    assignOfficer(
+      { stageId: stage.id, data: { officerId: assignForm.officerId, facultyId: assignForm.facultyId || undefined, departmentId: assignForm.departmentId || undefined, sessionId: assignForm.sessionId || undefined } },
+      { onSuccess: () => setAssignForm({ officerId: '', facultyId: '', departmentId: '', sessionId: '' }) }
+    )
+  }
+
+  const assignedIds = new Set(stage.documentRequirements.map(r => r.documentTypeId))
+  const unassigned  = allDocTypes.filter((d: any) => !assignedIds.has(d.id))
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
@@ -71,38 +97,90 @@ function StagePanel({ stage, onClose }: { stage: ClearanceStage; onClose: () => 
             </div>
           </div>
 
-          {/* Officer assignment */}
+          {/* Officer assignments */}
           <div>
-            <p className="text-xs font-medium text-[var(--color-muted)] uppercase tracking-wide mb-2">Assigned Officer</p>
-            {officers.length === 0 ? (
-              <p className="text-xs text-[var(--color-muted)]">No officers available. Create officers first.</p>
+            <p className="text-xs font-medium text-[var(--color-muted)] uppercase tracking-wide mb-2">Officer Assignments</p>
+            {(!stage.officerAssignments || stage.officerAssignments.length === 0) ? (
+              <p className="text-xs text-[var(--color-muted)] mb-3">No officers assigned.</p>
             ) : (
-              <div className="space-y-2">
-                {/* Unassign option */}
-                <label className="flex items-center gap-3 p-3 rounded-[var(--radius-md)] border border-[var(--color-border)] cursor-pointer hover:bg-[var(--color-bg)]">
-                  <input
-                    type="radio"
-                    name="officer"
-                    checked={!stage.officerId}
-                    onChange={() => update({ id: stage.id, data: { officerId: null } })}
-                    className="accent-[var(--color-primary)]"
-                  />
-                  <span className="text-sm text-[var(--color-muted)]">None</span>
-                </label>
-                {officers.map((o: any) => (
-                  <label key={o.id} className="flex items-center gap-3 p-3 rounded-[var(--radius-md)] border border-[var(--color-border)] cursor-pointer hover:bg-[var(--color-bg)]">
-                    <input
-                      type="radio"
-                      name="officer"
-                      checked={stage.officerId === o.userId}
-                      onChange={() => update({ id: stage.id, data: { officerId: o.userId } })}
-                      className="accent-[var(--color-primary)]"
-                    />
-                    <div>
-                      <p className="text-sm font-medium text-[var(--color-text)]">{o.firstName} {o.lastName}</p>
-                      <p className="text-xs text-[var(--color-muted)]">{o.user?.email}</p>
+              <div className="space-y-2 mb-4">
+                {stage.officerAssignments.map((a: any) => (
+                  <div key={a.id} className="flex flex-col gap-1 p-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)]">
+                    <div className="flex justify-between items-center">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-[var(--color-text)] truncate">{a.officer.firstName} {a.officer.lastName}</p>
+                        <p className="text-xs text-[var(--color-muted)] mt-0.5">
+                          {a.faculty ? `Faculty: ${a.faculty.name}` : 'All Faculties'}
+                          {a.department ? `, Dept: ${a.department.name}` : ''}
+                          {a.session ? `, Session: ${a.session.name}` : ''}
+                        </p>
+                      </div>
+                      <button onClick={() => unassignOfficer(a.id)} className="p-1.5 rounded hover:bg-red-50 text-[var(--color-muted)] hover:text-red-500 transition-colors shrink-0 ml-2">
+                        <X className="h-3.5 w-3.5" />
+                      </button>
                     </div>
-                  </label>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add assignment form */}
+            <div className="border border-[var(--color-border)] p-3 rounded-[var(--radius-md)] space-y-2.5 bg-[var(--color-bg)]/50">
+              <p className="text-xs font-medium text-[var(--color-text)]">New Assignment</p>
+              <select value={assignForm.officerId} onChange={e => setAssignForm(s => ({ ...s, officerId: e.target.value }))} className="w-full text-xs p-2 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)]">
+                <option value="">Select Officer...</option>
+                {officers.map((o: any) => <option key={o.id} value={o.userId}>{o.firstName} {o.lastName}</option>)}
+              </select>
+              <select value={assignForm.facultyId} onChange={e => setAssignForm(s => ({ ...s, facultyId: e.target.value }))} className="w-full text-xs p-2 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)]">
+                <option value="">All Faculties</option>
+                {faculties.map((f: any) => <option key={f.id} value={f.id}>{f.name}</option>)}
+              </select>
+              <select value={assignForm.departmentId} onChange={e => setAssignForm(s => ({ ...s, departmentId: e.target.value }))} className="w-full text-xs p-2 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)]">
+                <option value="">All Departments</option>
+                {departments.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
+              <Button onClick={handleAssignOfficer} disabled={!assignForm.officerId} loading={assigningOfficer} size="sm" className="w-full mt-1">Assign</Button>
+            </div>
+          </div>
+
+          {/* Document requirements */}
+          <div>
+            <p className="text-xs font-medium text-[var(--color-muted)] uppercase tracking-wide mb-2">Required Documents</p>
+
+            {stage.documentRequirements.length === 0 ? (
+              <p className="text-xs text-[var(--color-muted)] mb-3">No documents required for this stage.</p>
+            ) : (
+              <div className="space-y-1 mb-3">
+                {stage.documentRequirements.map(req => (
+                  <div key={req.documentTypeId} className="flex items-center justify-between p-2.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)]">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <FileText className="h-3.5 w-3.5 text-[var(--color-muted)] shrink-0" />
+                      <span className="text-xs font-medium text-[var(--color-text)] truncate">{req.documentType.name}</span>
+                    </div>
+                    <button
+                      onClick={() => removeDoc({ documentTypeId: req.documentTypeId, stageId: stage.id })}
+                      className="p-1 rounded hover:bg-red-50 text-[var(--color-muted)] hover:text-red-500 transition-colors shrink-0 ml-2"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {unassigned.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-[11px] text-[var(--color-muted)] mb-1">Add document type:</p>
+                {unassigned.map((d: any) => (
+                  <button
+                    key={d.id}
+                    disabled={assigningDoc}
+                    onClick={() => assignDoc({ documentTypeId: d.id, stageId: stage.id })}
+                    className="w-full flex items-center gap-2 p-2.5 rounded-[var(--radius-md)] border border-dashed border-[var(--color-border)] hover:border-[var(--color-primary)] hover:bg-[var(--color-bg)] text-left transition-colors disabled:opacity-50"
+                  >
+                    <Plus className="h-3.5 w-3.5 text-[var(--color-primary)] shrink-0" />
+                    <span className="text-xs text-[var(--color-text)] truncate">{d.name}</span>
+                  </button>
                 ))}
               </div>
             )}
@@ -143,7 +221,7 @@ function SortableStage({ stage, onSelect }: { stage: ClearanceStage; onSelect: (
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-[var(--color-text)]">{stage.name}</p>
         <p className="text-xs text-[var(--color-muted)]">
-          {stage.officer ? `Officer: ${stage.officer.firstName} ${stage.officer.lastName}` : (
+          {stage.officerAssignments && stage.officerAssignments.length > 0 ? `${stage.officerAssignments.length} officer(s) assigned` : (
             <span className="text-[var(--color-pending)] flex items-center gap-1">
               <AlertTriangle className="h-3 w-3" /> No officer assigned
             </span>

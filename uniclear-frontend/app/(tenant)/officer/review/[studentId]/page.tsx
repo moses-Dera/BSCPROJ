@@ -24,7 +24,7 @@ export default function ReviewPage({ params }: { params: Promise<{ studentId: st
 
   const { data: clearance, isLoading, isError } = useQuery({
     queryKey: ['clearance', 'review', studentId],
-    queryFn:  () => clearanceApi.getStatus(studentId).then((r: any) => r.data.data),
+    queryFn:  () => clearanceApi.getByStudent(studentId).then((r: any) => r.data.data),
   })
 
   const { data: documents } = useQuery({
@@ -60,7 +60,7 @@ export default function ReviewPage({ params }: { params: Promise<{ studentId: st
             <p className="text-base font-semibold text-[var(--color-text)]">
               {clearance.student?.firstName} {clearance.student?.lastName}
             </p>
-            <p className="text-xs font-mono text-[var(--color-muted)] mt-0.5">{clearance.student?.matricNo}</p>
+            <p className="text-xs font-mono text-[var(--color-muted)] mt-0.5">JAMB Reg No: {clearance.student?.jambRegNo}</p>
             <p className="text-xs text-[var(--color-muted)]">{clearance.student?.department?.name}</p>
           </div>
 

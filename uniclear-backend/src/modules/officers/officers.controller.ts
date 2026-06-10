@@ -3,7 +3,7 @@ import { OfficersService } from './officers.service'
 import { OfficersRepository } from './officers.repository'
 import { ApiResponse } from '@/core/response/ApiResponse'
 import { NotFoundError } from '@/core/errors/AppError'
-import { createOfficerSchema, updateOfficerSchema, listOfficersSchema } from './officers.schema'
+import { createOfficerSchema, updateOfficerSchema, listOfficersSchema, assignOfficerSchema } from './officers.schema'
 import { param } from '@/lib/utils/param'
 
 export class OfficersController {
@@ -44,6 +44,21 @@ export class OfficersController {
       const data = updateOfficerSchema.parse(req.body)
       const officer = await OfficersService.update(param(req.params.id), req.universityId!, data)
       return ApiResponse.success(res, officer)
+    } catch (err) { next(err) }
+  }
+
+  static async assign(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { officerId, facultyId, departmentId, sessionId } = assignOfficerSchema.parse(req.body)
+      const result = await OfficersService.assign(param(req.params.stageId), req.universityId!, officerId, facultyId, departmentId, sessionId)
+      return ApiResponse.created(res, result)
+    } catch (err) { next(err) }
+  }
+
+  static async unassign(req: Request, res: Response, next: NextFunction) {
+    try {
+      await OfficersService.unassign(param(req.params.assignmentId))
+      return ApiResponse.noContent(res)
     } catch (err) { next(err) }
   }
 

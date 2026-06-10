@@ -8,10 +8,14 @@ export const officersApi = {
     ),
   getMe: () =>
     apiClient.get<{ success: true; data: Officer }>('/officers/me'),
-  create: (data: { email: string; firstName: string; lastName: string; stageId?: string }) =>
+  create: (data: { email: string; firstName: string; lastName: string }) =>
     apiClient.post<{ success: true; data: Officer }>('/officers', data),
-  update: (id: string, data: { firstName?: string; lastName?: string; stageId?: string | null }) =>
+  update: (id: string, data: { firstName?: string; lastName?: string }) =>
     apiClient.patch(`/officers/${id}`, data),
   delete: (id: string) =>
     apiClient.delete(`/officers/${id}`),
+  assign: (stageId: string, data: { officerId: string; facultyId?: string; departmentId?: string; sessionId?: string }) =>
+    apiClient.post(`/officers/stage/${stageId}/assign`, data),
+  unassign: (assignmentId: string) =>
+    apiClient.delete(`/officers/assignment/${assignmentId}`),
 }

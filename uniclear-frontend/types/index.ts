@@ -35,9 +35,7 @@ export interface AuthUser {
 // ─── University / Tenant ──────────────────────────────────────────────────────
 
 export interface UniversityBranding {
-  primaryColor: string
-  accentColor: string
-  logoUrl: string | null
+  loginBgUrl: string | null
   bannerMessage: string | null
   footerText: string | null
 }
@@ -46,6 +44,9 @@ export interface University {
   id: string
   name: string
   slug: string
+  primaryColor: string
+  accentColor: string
+  logoUrl: string | null
   branding: UniversityBranding | null
 }
 
@@ -58,7 +59,14 @@ export interface ClearanceStage {
   name: string
   orderIndex: number
   isActive: boolean
-  officer: { id: string; name: string } | null
+  documentRequirements: { id: string; documentTypeId: string; isRequired: boolean; documentType: { id: string; name: string } }[]
+  officerAssignments?: {
+    id: string
+    officer: { id: string; firstName: string; lastName: string }
+    faculty?: { id: string; name: string } | null
+    department?: { id: string; name: string } | null
+    session?: { id: string; name: string } | null
+  }[]
 }
 
 export interface StageApproval {
@@ -75,12 +83,14 @@ export interface ClearanceRequest {
   universityId: string
   sessionId: string
   status: ClearanceStatus
+  stageStatus: 'PENDING' | 'SUBMITTED' | 'REJECTED'
   currentStageId: string | null
-  currentStage?: { name: string } | null
-  student?: { firstName: string; lastName: string; matricNo: string; department?: { name: string } | null } | null
+  currentStage?: { name: string; documentRequirements?: { id: string; documentTypeId: string; isRequired: boolean; documentType: { id: string; name: string } }[] } | null
+  student?: { firstName: string; lastName: string; matricNo: string | null; jambRegNo: string; department?: { name: string } | null } | null
   completedAt?: string | null
   updatedAt: string
-  stages: StageApproval[]
+  stageApprovals: StageApproval[]
+  documents: Document[]
   createdAt: string
 }
 
@@ -114,7 +124,7 @@ export interface Document {
 export interface Student {
   id: string
   userId: string
-  matricNo: string
+  jambRegNo: string
   fullName: string
   department: string
   faculty: string

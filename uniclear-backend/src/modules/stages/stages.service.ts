@@ -14,7 +14,7 @@ export class StagesService {
     return stage
   }
 
-  static async create(universityId: string, data: { name: string; description?: string; orderIndex: number; officerId?: string }) {
+  static async create(universityId: string, data: { name: string; description?: string; orderIndex: number; scope?: 'UNIVERSITY' | 'FACULTY' | 'DEPARTMENT' }) {
     const contract = await db.contractPlan.findUnique({ where: { universityId } })
     const tier = contract?.tier ?? 'TRIAL'
     const limit = TIER_LIMITS[tier].maxStages
@@ -23,7 +23,7 @@ export class StagesService {
     return StagesRepository.create({ universityId, ...data })
   }
 
-  static async update(id: string, universityId: string, data: { name?: string; description?: string; officerId?: string | null }) {
+  static async update(id: string, universityId: string, data: { name?: string; description?: string; scope?: 'UNIVERSITY' | 'FACULTY' | 'DEPARTMENT' }) {
     await StagesService.getById(id, universityId)
     return StagesRepository.update(id, data)
   }

@@ -29,8 +29,14 @@ export class StudentsService {
     const count = await StudentsRepository.count(universityId)
     if (count >= limit) throw new TierLimitError(`Student limit (${limit}) reached for your plan`)
 
-    const existing = await StudentsRepository.findByMatricNo(data.matricNo, universityId)
-    if (existing) throw new ConflictError('Matric number already exists')
+    const existing = await StudentsRepository.findByJambRegNo(data.jambRegNo, universityId)
+    if (existing) throw new ConflictError('JAMB reg number already exists')
+
+    if (!data.email) {
+      // Unclaimed admission record (Whitelist)
+      const student = await StudentsRepository.create(universityId, null, data)
+      return { ...student, inviteLink: null, tempPassword: null }
+    }
 
     const existingUser = await db.user.findUnique({ where: { email: data.email } })
     if (existingUser) throw new ConflictError('Email already in use')
@@ -57,6 +63,62 @@ export class StudentsService {
     logger.info({ email: data.email, inviteLink }, 'Student invite created')
     const student = await StudentsRepository.create(universityId, user.id, data)
     return { ...student, inviteLink, tempPassword }
+  }
+
+  static async bulkCreate(universityId: string, students: any[]) {
+    const contract = await db.contractPlan.findUnique({ where: { universityId } })
+    const tier = contract?.tier ?? 'TRIAL'
+    const limit = TIER_LIMITS[tier].maxStudents
+    const count = await StudentsRepository.count(universityId)
+    if (count + students.length > limit) throw new TierLimitError(`Bulk import exceeds student limit (${limit}) for your plan`)
+
+    const results = []
+    const errors = []
+
+    for (const raw of students) {
+      try {
+        const data: CreateStudentDto = {
+          email: raw.email,
+          jambRegNo: raw.jambRegNo,
+          firstName: raw.firstName,
+          lastName: raw.lastName,
+          level: raw.level,
+        }
+
+        // Map Session
+        if (raw.sessionName) {
+          let session = await db.academicSession.findFirst({ where: { universityId, name: raw.sessionName } })
+          if (!session) {
+            session = await db.academicSession.create({ data: { universityId, name: raw.sessionName, startDate: new Date(), endDate: new Date(), isActive: true } })
+          }
+          data.entrySessionId = session.id
+        }
+
+        // Map Faculty
+        if (raw.facultyName) {
+          let faculty = await db.faculty.findFirst({ where: { universityId, name: raw.facultyName } })
+          if (!faculty) {
+            faculty = await db.faculty.create({ data: { universityId, name: raw.facultyName } })
+          }
+          data.facultyId = faculty.id
+        }
+
+        // Map Department
+        if (raw.departmentName && data.facultyId) {
+          let dept = await db.department.findFirst({ where: { facultyId: data.facultyId, name: raw.departmentName } })
+          if (!dept) {
+            dept = await db.department.create({ data: { facultyId: data.facultyId, name: raw.departmentName } })
+          }
+          data.departmentId = dept.id
+        }
+
+        const student = await this.create(universityId, data)
+        results.push(student)
+      } catch (err: any) {
+        errors.push({ jambRegNo: raw.jambRegNo, error: err.message })
+      }
+    }
+    return { created: results.length, errors }
   }
 
   static async update(id: string, universityId: string, data: UpdateStudentDto) {

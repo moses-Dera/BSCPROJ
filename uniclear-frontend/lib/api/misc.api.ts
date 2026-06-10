@@ -12,7 +12,11 @@ export const sessionsApi = {
   list:     ()                                                         => apiClient.get<{ success: true; data: AcademicSession[] }>('/sessions'),
   create:   (data: { name: string; startDate: string; endDate: string }) => apiClient.post('/sessions', data),
   activate: (id: string)                                               => apiClient.patch(`/sessions/${id}/activate`, {}),
-  delete:   (id: string)                                               => apiClient.delete(`/sessions/${id}`),
+}
+
+export const structureApi = {
+  faculties:   () => apiClient.get('/structure/faculties'),
+  departments: () => apiClient.get('/structure/departments'),
 }
 
 export const reportsApi = {
@@ -30,6 +34,8 @@ export const universitiesApi = {
   suspend: (id: string)  => apiClient.patch(`/universities/${id}/suspend`, {}),
   restore: (id: string)  => apiClient.patch(`/universities/${id}/restore`, {}),
   updateContract: (id: string, data: object) => apiClient.patch(`/universities/${id}/contract`, data),
+  getApiKey: () => apiClient.get<{ success: true, data: { apiKey: string | null } }>('/universities/settings/api-key'),
+  generateApiKey: () => apiClient.post<{ success: true, data: { apiKey: string } }>('/universities/settings/api-key/generate', {}),
 }
 
 export const brandingApi = {

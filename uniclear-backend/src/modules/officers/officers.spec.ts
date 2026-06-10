@@ -8,7 +8,7 @@ jest.mock('@/lib/db', () => ({ db: { user: { findUnique: jest.fn(), create: jest
 
 const mockOfficer = {
   id: 'officer-id', universityId: 'uni-id', userId: 'user-id',
-  firstName: 'Ada', lastName: 'Obi', stageId: 'stage-id',
+  firstName: 'Ada', lastName: 'Obi',
   createdAt: new Date(), updatedAt: new Date(),
 }
 
