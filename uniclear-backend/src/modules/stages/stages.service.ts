@@ -33,7 +33,7 @@ export class StagesService {
     return StagesRepository.create({ universityId, ...data, orderIndex })
   }
 
-  static async update(id: string, universityId: string, data: { name?: string; description?: string; scope?: 'UNIVERSITY' | 'FACULTY' | 'DEPARTMENT' }) {
+  static async update(id: string, universityId: string, data: { name?: string; description?: string; scope?: 'UNIVERSITY' | 'FACULTY' | 'DEPARTMENT'; isActive?: boolean }) {
     await StagesService.getById(id, universityId)
     return StagesRepository.update(id, data)
   }

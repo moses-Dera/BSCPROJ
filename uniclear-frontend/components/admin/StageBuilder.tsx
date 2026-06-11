@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
 import { GripVertical, AlertTriangle, X, ChevronRight, ChevronDown, FileText, Plus, Trash2, Search } from 'lucide-react'
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
@@ -19,6 +19,7 @@ import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
 import { ErrorState } from '@/components/shared/EmptyState'
 import { cn } from '@/lib/utils/cn'
 import type { ClearanceStage } from '@/types'
+import { toast } from 'sonner'
 
 function useOfficers() {
   return useQuery({
@@ -272,7 +273,7 @@ function StagePanel({ stage, campaignId, onClose }: { stage: ClearanceStage; cam
             </div>
 
             {assignForm.sessionId === 'matrix' ? (
-              <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+              <div className="border border-gray-200 rounded-lg overflow-visible bg-white">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
@@ -282,29 +283,63 @@ function StagePanel({ stage, campaignId, onClose }: { stage: ClearanceStage; cam
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {faculties.map((f: any) => {
-                      const assignment = stage.officerAssignments?.find((a: any) => a.faculty?.id === f.id && !a.department)
+                      const facultyAssignment = stage.officerAssignments?.find((a: any) => a.faculty?.id === f.id && !a.department)
+                      const facultyDepts = departments.filter((d: any) => d.facultyId === f.id)
+                      
                       return (
-                        <tr key={f.id} className="hover:bg-gray-50">
-                          <td className="p-2 font-medium text-gray-600">{f.name}</td>
-                          <td className="p-1.5">
-                            <OfficerSearchableSelect
-                              officers={officers}
-                              value={assignment?.officerId || ''}
-                              onChange={async (newOfficerId) => {
-                                if (assignment) {
-                                  await apiClient.delete(`/officers/assignment/${assignment.id}`)
-                                }
-                                if (newOfficerId) {
-                                  await apiClient.post(`/officers/stage/${stage.id}/assign`, {
-                                    officerId: newOfficerId,
-                                    facultyId: f.id
-                                  })
-                                }
-                                qc.invalidateQueries({ queryKey: ['stages'] })
-                              }}
-                            />
-                          </td>
-                        </tr>
+                        <Fragment key={f.id}>
+                          <tr className="bg-gray-50 border-t border-gray-200">
+                            <td className="p-2 font-medium text-gray-700">{f.name} <span className="text-gray-400 font-normal ml-1">(All Departments)</span></td>
+                            <td className="p-1.5">
+                              <OfficerSearchableSelect
+                                officers={officers}
+                                value={facultyAssignment?.officerId || ''}
+                                onChange={async (newOfficerId) => {
+                                  if (facultyAssignment?.officerId === newOfficerId) return
+                                  if (facultyAssignment) await apiClient.delete(`/officers/assignment/${facultyAssignment.id}`)
+                                  if (newOfficerId) {
+                                    await apiClient.post(`/officers/stage/${stage.id}/assign`, {
+                                      officerId: newOfficerId,
+                                      facultyId: f.id
+                                    })
+                                  }
+                                  qc.invalidateQueries({ queryKey: ['stages'] })
+                                }}
+                              />
+                            </td>
+                          </tr>
+                          {facultyDepts.map((d: any) => {
+                            const deptAssignment = stage.officerAssignments?.find((a: any) => a.department?.id === d.id)
+                            return (
+                              <tr key={d.id} className="hover:bg-gray-50 border-t border-gray-100">
+                                <td className="p-2 pl-6 font-medium text-gray-500 text-[11px]">
+                                  <div className="flex items-center">
+                                    <ChevronRight className="h-3 w-3 mr-1 opacity-50" />
+                                    {d.name}
+                                  </div>
+                                </td>
+                                <td className="p-1.5">
+                                  <OfficerSearchableSelect
+                                    officers={officers}
+                                    value={deptAssignment?.officerId || ''}
+                                    onChange={async (newOfficerId) => {
+                                      if (deptAssignment?.officerId === newOfficerId) return
+                                      if (deptAssignment) await apiClient.delete(`/officers/assignment/${deptAssignment.id}`)
+                                      if (newOfficerId) {
+                                        await apiClient.post(`/officers/stage/${stage.id}/assign`, {
+                                          officerId: newOfficerId,
+                                          facultyId: f.id,
+                                          departmentId: d.id
+                                        })
+                                      }
+                                      qc.invalidateQueries({ queryKey: ['stages'] })
+                                    }}
+                                  />
+                                </td>
+                              </tr>
+                            )
+                          })}
+                        </Fragment>
                       )
                     })}
                   </tbody>

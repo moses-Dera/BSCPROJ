@@ -12,6 +12,7 @@ export const updateStageSchema = z.object({
   name:        z.string().min(1).optional(),
   description: z.string().optional(),
   scope:       z.enum(['UNIVERSITY', 'FACULTY', 'DEPARTMENT']).optional(),
+  isActive:    z.boolean().optional(),
 })
 
 export const reorderStagesSchema = z.object({

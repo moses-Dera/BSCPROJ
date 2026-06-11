@@ -91,6 +91,7 @@ export interface ClearanceStage {
   documentRequirements: { id: string; documentTypeId: string; isRequired: boolean; documentType: { id: string; name: string } }[]
   officerAssignments?: {
     id: string
+    officerId: string
     officer: { id: string; firstName: string; lastName: string }
     faculty?: { id: string; name: string } | null
     department?: { id: string; name: string } | null
