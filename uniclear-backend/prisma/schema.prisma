@@ -180,7 +180,7 @@ model Faculty {
   students            Student[]
   officerAssignments  StageOfficerAssignment[]
   docRequirements     StageDocumentRequirement[]
-  targetedCampaigns   ClearanceCampaign[]
+  eligibilityRules    CampaignEligibilityRule[]
 
   @@index([universityId])
 }
@@ -188,14 +188,15 @@ model Faculty {
 model Department {
   id        String    @id @default(uuid())
   facultyId String
-  name      String
-  createdAt DateTime  @default(now())
+  name            String
+  availableLevels String[]
+  createdAt       DateTime  @default(now())
 
   faculty             Faculty                   @relation(fields: [facultyId], references: [id], onDelete: Cascade)
   students            Student[]
   officerAssignments  StageOfficerAssignment[]
   docRequirements     StageDocumentRequirement[]
-  targetedCampaigns   ClearanceCampaign[]
+  eligibilityRules    CampaignEligibilityRule[]
 
   @@index([facultyId])
 }
@@ -263,9 +264,6 @@ model ClearanceCampaign {
   universityId       String
   name               String
   description        String?
-  targetFacultyId    String?
-  targetDepartmentId String?
-  targetLevel        String?     // e.g., '100', '400', 'FINAL_YEAR'
   whitelistEnabled   Boolean     @default(false)
   whitelist          String[]    @default([]) // Array of matric numbers
   isActive           Boolean     @default(true)
@@ -278,12 +276,30 @@ model ClearanceCampaign {
   updatedAt          DateTime    @updatedAt
 
   university         University         @relation(fields: [universityId], references: [id], onDelete: Cascade)
-  targetFaculty      Faculty?           @relation(fields: [targetFacultyId], references: [id])
-  targetDepartment   Department?        @relation(fields: [targetDepartmentId], references: [id])
+  sessionId          String
+  session            AcademicSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  eligibilityRules   CampaignEligibilityRule[]
   stages             ClearanceStage[]
-  clearanceRequests  ClearanceRequest[]
 
   @@index([universityId])
+  @@index([sessionId])
+  clearanceRequests  ClearanceRequest[]
+}
+
+model CampaignEligibilityRule {
+  id           String      @id @default(uuid())
+  campaignId   String
+  facultyId    String?     
+  departmentId String?     
+  level        String?     // e.g., '100', '400', 'FINAL_YEAR'. Null = any level.
+  createdAt    DateTime    @default(now())
+
+  campaign   ClearanceCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  faculty    Faculty?          @relation(fields: [facultyId], references: [id])
+  department Department?       @relation(fields: [departmentId], references: [id])
+
+  @@index([campaignId])
 }
 
 // ─────────────────────────────────────────
@@ -401,6 +417,7 @@ model AcademicSession {
   entryStudents       Student[]
   officerAssignments  StageOfficerAssignment[]
   docRequirements     StageDocumentRequirement[]
+  clearanceCampaigns  ClearanceCampaign[]
 
   @@index([universityId])
 }

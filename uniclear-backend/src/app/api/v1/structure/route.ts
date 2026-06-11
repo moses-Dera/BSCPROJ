@@ -38,7 +38,14 @@ router.get('/departments', async (req, res, next) => {
 
 router.post('/departments', requireRole('SUPER_ADMIN'), async (req, res, next) => {
   try {
-    const data = await db.department.create({ data: { name: req.body.name, facultyId: req.body.facultyId } })
+    const { name, facultyId, availableLevels } = req.body
+    const data = await db.department.create({ 
+      data: { 
+        name, 
+        facultyId,
+        ...(availableLevels && Array.isArray(availableLevels) ? { availableLevels } : {})
+      } 
+    })
     return ApiResponse.success(res, data, 'Created', 201)
   } catch (err) { next(err) }
 })

@@ -59,9 +59,12 @@ export interface ClearanceCampaign {
   name: string
   description: string | null
   isActive: boolean
-  targetFacultyId: string | null
-  targetDepartmentId: string | null
-  targetLevel: string | null
+  eligibilityRules: {
+    id: string
+    facultyId: string | null
+    departmentId: string | null
+    level: string | null
+  }[]
   whitelistEnabled: boolean
   whitelist: string[]
   issuesCertificate: boolean
@@ -71,6 +74,12 @@ export interface ClearanceCampaign {
   customCertificateCoords: any | null
   createdAt: string
   updatedAt: string
+  sessionId: string
+  session?: {
+    id: string
+    name: string
+    isActive: boolean
+  }
 }
 
 export interface ClearanceStage {

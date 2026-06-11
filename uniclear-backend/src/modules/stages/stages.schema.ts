@@ -4,7 +4,7 @@ export const createStageSchema = z.object({
   campaignId:  z.string().uuid(),
   name:        z.string().min(1),
   description: z.string().optional(),
-  orderIndex:  z.number().int().min(1),
+  orderIndex:  z.number().int().min(1).optional(),
   scope:       z.enum(['UNIVERSITY', 'FACULTY', 'DEPARTMENT']).optional(),
 })
 

@@ -14,13 +14,23 @@ export class StagesService {
     return stage
   }
 
-  static async create(universityId: string, data: { campaignId: string; name: string; description?: string; orderIndex: number; scope?: 'UNIVERSITY' | 'FACULTY' | 'DEPARTMENT' }) {
+  static async create(universityId: string, data: { campaignId: string; name: string; description?: string; orderIndex?: number; scope?: 'UNIVERSITY' | 'FACULTY' | 'DEPARTMENT' }) {
     const contract = await db.contractPlan.findUnique({ where: { universityId } })
     const tier = contract?.tier ?? 'TRIAL'
     const limit = TIER_LIMITS[tier].maxStages
     const count = await StagesRepository.count(universityId, data.campaignId)
     if (count >= limit) throw new TierLimitError(`Stage limit (${limit}) reached for this campaign on your plan`)
-    return StagesRepository.create({ universityId, ...data })
+    
+    let orderIndex = data.orderIndex
+    if (!orderIndex) {
+      const maxStage = await db.clearanceStage.findFirst({
+        where: { universityId, campaignId: data.campaignId },
+        orderBy: { orderIndex: 'desc' }
+      })
+      orderIndex = maxStage ? maxStage.orderIndex + 1 : 1
+    }
+    
+    return StagesRepository.create({ universityId, ...data, orderIndex })
   }
 
   static async update(id: string, universityId: string, data: { name?: string; description?: string; scope?: 'UNIVERSITY' | 'FACULTY' | 'DEPARTMENT' }) {

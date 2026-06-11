@@ -29,13 +29,30 @@ export class CampaignsService {
     return campaign
   }
 
-  static async create(universityId: string, data: { name: string; description?: string; targetFacultyId?: string; targetDepartmentId?: string; targetLevel?: string; whitelistEnabled?: boolean; whitelist?: string[]; issuesCertificate?: boolean; issuesClearanceSlip?: boolean; issuedDataFields?: string[] }) {
-    return CampaignsRepository.create({ universityId, ...data })
+  static async create(universityId: string, data: { name: string; description?: string; sessionId: string; eligibilityRules?: { facultyId?: string | null; departmentId?: string | null; level?: string | null }[]; whitelistEnabled?: boolean; whitelist?: string[]; issuesCertificate?: boolean; issuesClearanceSlip?: boolean; issuedDataFields?: string[] }) {
+    const { eligibilityRules, ...rest } = data
+    return CampaignsRepository.create({
+      universityId,
+      ...rest,
+      eligibilityRules: {
+        create: eligibilityRules || []
+      }
+    })
   }
 
   static async update(id: string, universityId: string, data: any) {
     await CampaignsService.getById(id, universityId)
-    return CampaignsRepository.update(id, data)
+    const { eligibilityRules, ...rest } = data
+    const updateData: any = { ...rest }
+    
+    if (eligibilityRules) {
+      updateData.eligibilityRules = {
+        deleteMany: {},
+        create: eligibilityRules
+      }
+    }
+    
+    return CampaignsRepository.update(id, updateData)
   }
 
   static async toggle(id: string, universityId: string) {

@@ -7,6 +7,7 @@ export class CampaignsRepository {
       where: { universityId },
       orderBy: { createdAt: 'desc' },
       include: {
+        eligibilityRules: true,
         stages: {
           orderBy: { orderIndex: 'asc' },
           include: {
@@ -15,34 +16,32 @@ export class CampaignsRepository {
           }
         }
       }
-    })
+    } as any)
   }
 
   static async findActive(universityId: string, filter?: { facultyId?: string, departmentId?: string, level?: string, identifiers?: string[] }) {
-    const baseWhere: Prisma.ClearanceCampaignWhereInput = { universityId, isActive: true }
+    const baseWhere: any = { universityId, isActive: true }
 
     if (filter) {
-      // The campaign targets are satisfied if they are null, OR if they match the student's properties.
-      // Additionally, if whitelistEnabled is true, the student's email must be in the whitelist.
-      const OR: Prisma.ClearanceCampaignWhereInput[] = [
-        { targetFacultyId: null },
-        { targetFacultyId: filter.facultyId }
-      ]
-
-      const deptOR: Prisma.ClearanceCampaignWhereInput[] = [
-        { targetDepartmentId: null },
-        { targetDepartmentId: filter.departmentId }
-      ]
-
-      const levelOR: Prisma.ClearanceCampaignWhereInput[] = [
-        { targetLevel: null },
-        { targetLevel: filter.level }
-      ]
-
       baseWhere.AND = [
-        { OR },
-        { OR: deptOR },
-        { OR: levelOR },
+        {
+          OR: [
+            // If no rules exist, everyone is eligible
+            { eligibilityRules: { none: {} } },
+            // Otherwise, student must match at least one rule
+            {
+              eligibilityRules: {
+                some: {
+                  AND: [
+                    { OR: [{ facultyId: null }, { facultyId: filter.facultyId }] },
+                    { OR: [{ departmentId: null }, { departmentId: filter.departmentId }] },
+                    { OR: [{ level: null }, { level: filter.level }] }
+                  ]
+                }
+              }
+            }
+          ]
+        },
         {
           OR: [
             { whitelistEnabled: false },
@@ -53,15 +52,16 @@ export class CampaignsRepository {
     }
 
     return db.clearanceCampaign.findMany({
-      where: baseWhere,
+      where: baseWhere as any,
       orderBy: { createdAt: 'desc' }
-    })
+    } as any)
   }
 
   static async findById(id: string, universityId: string) {
     return db.clearanceCampaign.findFirst({
       where: { id, universityId },
       include: {
+        eligibilityRules: true,
         stages: {
           orderBy: { orderIndex: 'asc' },
           include: {
@@ -70,14 +70,14 @@ export class CampaignsRepository {
           }
         }
       }
-    })
+    } as any)
   }
 
-  static async create(data: Prisma.ClearanceCampaignUncheckedCreateInput) {
+  static async create(data: any) {
     return db.clearanceCampaign.create({ data })
   }
 
-  static async update(id: string, data: Prisma.ClearanceCampaignUncheckedUpdateInput) {
+  static async update(id: string, data: any) {
     return db.clearanceCampaign.update({ where: { id }, data })
   }
 

@@ -18,7 +18,15 @@ export function AuditLogTable() {
   
   const { data, isLoading } = useQuery({
     queryKey: ['auditLogs', page],
-    queryFn: () => AuditApi.list({ page, limit: 15 }).then(res => res.data.data)
+    queryFn: () => AuditApi.list({ page, limit: 15 }).then(res => {
+      const payload = res.data as any;
+      const actualData = payload.data || payload;
+      return {
+        items: actualData.items || [],
+        total: actualData.pagination?.total || actualData.total || 0,
+        limit: actualData.pagination?.limit || actualData.limit || 15
+      }
+    })
   })
 
   if (isLoading) {
@@ -39,7 +47,7 @@ export function AuditLogTable() {
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--color-border)]">
-            {data?.items.map(log => (
+            {data?.items.map((log: any) => (
               <tr key={log.id} className="hover:bg-gray-50/50 transition-colors">
                 <td className="py-3 px-4 text-[var(--color-muted)]">
                   {new Date(log.createdAt).toLocaleString()}

@@ -20,6 +20,7 @@ export default function AcademicStructurePage() {
   
   const [isAddFacultyOpen, setIsAddFacultyOpen] = useState(false)
   const [isAddDeptOpen, setIsAddDeptOpen] = useState(false)
+  const [deptLevels, setDeptLevels] = useState('100, 200, 300, 400')
 
   const { data: faculties, isLoading: loadingF } = useQuery({
     queryKey: ['faculties'],
@@ -42,11 +43,15 @@ export default function AcademicStructurePage() {
   })
 
   const { mutate: createDept, isPending: addingD } = useMutation({
-    mutationFn: () => structureApi.createDepartment(selectedFacultyId!, deptName),
+    mutationFn: () => {
+      const levelsArray = deptLevels.split(',').map(s => s.trim()).filter(Boolean)
+      return structureApi.createDepartment(selectedFacultyId!, deptName, levelsArray)
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['departments'] })
       setIsAddDeptOpen(false)
       setDeptName('')
+      setDeptLevels('100, 200, 300, 400')
       toast.success('Department added successfully')
     }
   })
@@ -105,7 +110,10 @@ export default function AcademicStructurePage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   {facultyDepts.map((dept: any) => (
                     <div key={dept.id} className="bg-gray-50 border border-gray-200 rounded p-3 flex justify-between items-center group">
-                      <span className="text-sm font-medium text-gray-700">{dept.name}</span>
+                      <div>
+                        <span className="text-sm font-medium text-gray-700 block">{dept.name}</span>
+                        <span className="text-[10px] text-gray-400 mt-0.5 block">Levels: {dept.availableLevels?.join(', ') || 'Default'}</span>
+                      </div>
                       <button onClick={() => deleteDept(dept.id)} className="text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-100 rounded">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -146,9 +154,14 @@ export default function AcademicStructurePage() {
             <label className="text-sm font-medium text-gray-700">Department Name</label>
             <Input value={deptName} onChange={(e) => setDeptName(e.target.value)} placeholder="e.g. Computer Science" className="mt-1" />
           </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700">Available Levels (Comma separated)</label>
+            <Input value={deptLevels} onChange={(e) => setDeptLevels(e.target.value)} placeholder="e.g. 100, 200, 300, 400" className="mt-1" />
+            <p className="text-[10px] text-gray-500 mt-1">Specify exactly which levels exist in this department.</p>
+          </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="secondary" onClick={() => setIsAddDeptOpen(false)}>Cancel</Button>
-            <Button onClick={() => createDept()} disabled={addingD || !deptName}>Save Department</Button>
+            <Button onClick={() => createDept()} disabled={addingD || !deptName || !deptLevels}>Save Department</Button>
           </div>
         </div>
       </Dialog>
