@@ -271,6 +271,7 @@ model ClearanceCampaign {
   isActive           Boolean     @default(true)
   issuesCertificate  Boolean     @default(true)
   issuesClearanceSlip Boolean    @default(false)
+  issuedDataFields   String[]    @default([])
   customCertificateUrl String?
   customCertificateCoords Json?
   createdAt          DateTime    @default(now())
@@ -418,6 +419,8 @@ model ClearanceRequest {
   stageStatus    StageStatus     @default(PENDING)
   currentStageId String?
   completedAt    DateTime?
+  clearanceNumber String?        @unique
+  issuedData     Json?
   updatedAt      DateTime        @updatedAt
   createdAt      DateTime        @default(now())
 

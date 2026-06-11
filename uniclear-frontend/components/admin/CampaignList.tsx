@@ -20,6 +20,7 @@ export function CampaignList() {
   const [description, setDescription] = useState('')
   const [issuesCertificate, setIssuesCertificate] = useState(true)
   const [issuesClearanceSlip, setIssuesClearanceSlip] = useState(false)
+  const [issuedDataFieldsStr, setIssuedDataFieldsStr] = useState('')
 
   const { data: campaigns, isLoading } = useQuery({
     queryKey: ['campaigns'],
@@ -27,7 +28,10 @@ export function CampaignList() {
   })
 
   const { mutate: create, isPending } = useMutation({
-    mutationFn: () => campaignsApi.create({ name, description, issuesCertificate, issuesClearanceSlip }),
+    mutationFn: () => {
+      const issuedDataFields = issuedDataFieldsStr.split(',').map(s => s.trim()).filter(Boolean)
+      return campaignsApi.create({ name, description, issuesCertificate, issuesClearanceSlip, issuedDataFields })
+    },
     onSuccess: () => {
       toast.success('Campaign created')
       qc.invalidateQueries({ queryKey: ['campaigns'] })
@@ -36,6 +40,7 @@ export function CampaignList() {
       setDescription('')
       setIssuesCertificate(true)
       setIssuesClearanceSlip(false)
+      setIssuedDataFieldsStr('')
     },
     onError: (e: any) => toast.error(e.response?.data?.message ?? 'Failed to create campaign'),
   })
@@ -137,6 +142,11 @@ export function CampaignList() {
                 />
                 Issue Clearance Slip
               </label>
+              <div className="mt-4">
+                <label className="text-sm font-medium mb-1 block">Custom Issued Data Fields (Comma Separated)</label>
+                <Input placeholder="e.g. Matric Number, Hostel Room" value={issuedDataFieldsStr} onChange={e => setIssuedDataFieldsStr(e.target.value)} />
+                <p className="text-xs text-[var(--color-muted)] mt-1">Officers will be prompted to provide these when approving the final stage.</p>
+              </div>
             </div>
 
             <div className="flex justify-end pt-4">

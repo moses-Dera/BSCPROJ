@@ -66,6 +66,7 @@ export interface ClearanceCampaign {
   whitelist: string[]
   issuesCertificate: boolean
   issuesClearanceSlip: boolean
+  issuedDataFields: string[]
   customCertificateUrl: string | null
   customCertificateCoords: any | null
   createdAt: string
@@ -111,6 +112,8 @@ export interface ClearanceRequest {
   currentStage?: { name: string; documentRequirements?: { id: string; documentTypeId: string; isRequired: boolean; documentType: { id: string; name: string } }[] } | null
   student?: { firstName: string; lastName: string; matricNo: string | null; jambRegNo: string; department?: { name: string } | null } | null
   completedAt?: string | null
+  clearanceNumber: string | null
+  issuedData: any | null
   updatedAt: string
   stageApprovals: StageApproval[]
   documents: Document[]

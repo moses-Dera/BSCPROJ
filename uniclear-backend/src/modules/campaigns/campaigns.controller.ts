@@ -12,7 +12,8 @@ const createSchema = z.object({
   whitelistEnabled: z.boolean().optional(),
   whitelist: z.array(z.string()).optional(),
   issuesCertificate: z.boolean().optional(),
-  issuesClearanceSlip: z.boolean().optional()
+  issuesClearanceSlip: z.boolean().optional(),
+  issuedDataFields: z.array(z.string()).optional()
 })
 
 const updateSchema = createSchema.partial()

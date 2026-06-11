@@ -29,7 +29,7 @@ export class CampaignsService {
     return campaign
   }
 
-  static async create(universityId: string, data: { name: string; description?: string; targetFacultyId?: string; targetDepartmentId?: string; targetLevel?: string; whitelistEnabled?: boolean; whitelist?: string[]; issuesCertificate?: boolean; issuesClearanceSlip?: boolean }) {
+  static async create(universityId: string, data: { name: string; description?: string; targetFacultyId?: string; targetDepartmentId?: string; targetLevel?: string; whitelistEnabled?: boolean; whitelist?: string[]; issuesCertificate?: boolean; issuesClearanceSlip?: boolean; issuedDataFields?: string[] }) {
     return CampaignsRepository.create({ universityId, ...data })
   }
 

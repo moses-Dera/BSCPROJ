@@ -36,7 +36,12 @@ export class ClearanceController {
 
   static async approve(req: Request, res: Response, next: NextFunction) {
     try {
-      const { remarks } = approveStageSchema.parse(req.body)
+      const { remarks, issuedData } = approveStageSchema.parse(req.body)
+      let parsedIssuedData = undefined
+      if (issuedData) {
+        parsedIssuedData = typeof issuedData === 'string' ? JSON.parse(issuedData) : issuedData
+      }
+
       let attachmentUrl = undefined
       let attachmentKey = undefined
 
@@ -54,7 +59,8 @@ export class ClearanceController {
         remarks,
         attachmentUrl,
         attachmentKey,
-        req.ip
+        req.ip,
+        parsedIssuedData
       )
       return ApiResponse.success(res, result, 'Stage approved')
     } catch (err) { next(err) }

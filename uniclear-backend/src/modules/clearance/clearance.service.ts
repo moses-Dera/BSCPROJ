@@ -69,7 +69,7 @@ export class ClearanceService {
     return clearance
   }
 
-  static async approve(requestId: string, officerUserId: string, universityId: string, remarks?: string, attachmentUrl?: string, attachmentKey?: string, ipAddress?: string) {
+  static async approve(requestId: string, officerUserId: string, universityId: string, remarks?: string, attachmentUrl?: string, attachmentKey?: string, ipAddress?: string, issuedData?: any) {
     const clearance = await ClearanceRepository.findById(requestId, universityId)
     if (!clearance) throw new NotFoundError('Clearance request not found')
     if (!clearance.currentStageId) throw new ValidationError('No active stage')
@@ -79,18 +79,39 @@ export class ClearanceService {
       throw new ForbiddenError('You are not assigned to this stage')
     }
 
+    const currentStage = await db.clearanceStage.findUnique({ where: { id: clearance.currentStageId } })
+    const nextStage = await StagesRepository.findNext(clearance.campaignId, currentStage!.orderIndex)
+
+    if (!nextStage) {
+      // Validate issuedData
+      const requiredFields = (clearance.campaign as any).issuedDataFields || []
+      const providedFields = issuedData ? Object.keys(issuedData) : []
+      const missing = requiredFields.filter((f: string) => !providedFields.includes(f) || !issuedData[f])
+      if (missing.length > 0) {
+        throw new ValidationError(`Missing required issued data fields: ${missing.join(', ')}`)
+      }
+    }
+
     await ClearanceRepository.createStageApproval({
       universityId, requestId, stageId: clearance.currentStageId,
       officerId: officerUserId, status: 'APPROVED', remarks, attachmentUrl, attachmentKey, ipAddress,
     })
 
-    const currentStage = await db.clearanceStage.findUnique({ where: { id: clearance.currentStageId } })
-    const nextStage = await StagesRepository.findNext(clearance.campaignId, currentStage!.orderIndex)
-
     if (nextStage) {
       await ClearanceRepository.updateStage(clearance.id, nextStage.id, 'IN_PROGRESS')
     } else {
-      await ClearanceRepository.updateStage(clearance.id, null, 'COMPLETED')
+      const clearanceNumber = `CLR-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`
+      await db.clearanceRequest.update({
+        where: { id: clearance.id },
+        data: {
+          status: 'COMPLETED',
+          currentStageId: null,
+          stageStatus: 'PENDING',
+          completedAt: new Date(),
+          clearanceNumber,
+          issuedData
+        }
+      })
       eventBus.emit('clearance.complete', { requestId, studentId: clearance.studentId, universityId })
     }
 

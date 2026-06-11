@@ -66,7 +66,9 @@ export default function StudentDashboard() {
                           jambRegNo: clearance.student?.jambRegNo || 'N/A',
                           universityName: clearance.universityId || 'University', // In a real app we might get the exact name from store
                           campaignName: clearance.campaign?.name || 'Clearance',
-                          completedAt: clearance.completedAt ? new Date(clearance.completedAt).toLocaleDateString() : new Date().toLocaleDateString()
+                          completedAt: clearance.completedAt ? new Date(clearance.completedAt).toLocaleDateString() : new Date().toLocaleDateString(),
+                          clearanceNumber: clearance.clearanceNumber,
+                          issuedData: clearance.issuedData
                         })
                       })
                     }}>

@@ -91,9 +91,11 @@ export async function generateClearanceSlipPDF(data: {
   universityName: string
   campaignName: string
   completedAt: string
+  clearanceNumber?: string | null
+  issuedData?: any | null
 }) {
   const pdfDoc = await PDFDocument.create()
-  const page = pdfDoc.addPage([500, 300])
+  const page = pdfDoc.addPage([500, 350]) // Slightly taller to accommodate more data
   const { width, height } = page.getSize()
 
   const hBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
@@ -109,11 +111,25 @@ export async function generateClearanceSlipPDF(data: {
   
   page.drawText(`Campaign: ${data.campaignName}`, { x: width / 2 - (hFont.widthOfTextAtSize(`Campaign: ${data.campaignName}`, 12) / 2), y: height - 65, size: 12, font: hFont, color: rgb(0.3, 0.3, 0.3) })
 
+  if (data.clearanceNumber) {
+    page.drawText(`No: ${data.clearanceNumber}`, { x: width - 150, y: height - 40, size: 10, font: hBold, color: rgb(0.6, 0.1, 0.1) })
+  }
+
   // Details
-  page.drawText(`Student Name: ${data.studentName}`, { x: 40, y: height - 120, size: 12, font: hFont, color: rgb(0, 0, 0) })
-  page.drawText(`JAMB Reg No: ${data.jambRegNo}`, { x: 40, y: height - 145, size: 12, font: hFont, color: rgb(0, 0, 0) })
-  page.drawText(`Status: CLEARED`, { x: 40, y: height - 170, size: 12, font: hBold, color: rgb(0.1, 0.6, 0.1) })
-  page.drawText(`Date: ${data.completedAt}`, { x: 40, y: height - 195, size: 12, font: hFont, color: rgb(0.4, 0.4, 0.4) })
+  page.drawText(`Student Name: ${data.studentName}`, { x: 40, y: height - 110, size: 12, font: hFont, color: rgb(0, 0, 0) })
+  page.drawText(`JAMB Reg No: ${data.jambRegNo}`, { x: 40, y: height - 135, size: 12, font: hFont, color: rgb(0, 0, 0) })
+  page.drawText(`Status: CLEARED`, { x: 40, y: height - 160, size: 12, font: hBold, color: rgb(0.1, 0.6, 0.1) })
+  page.drawText(`Date: ${data.completedAt}`, { x: 40, y: height - 185, size: 12, font: hFont, color: rgb(0.4, 0.4, 0.4) })
+
+  // Custom Issued Data
+  if (data.issuedData && Object.keys(data.issuedData).length > 0) {
+    page.drawText(`Issued Details:`, { x: width / 2 + 20, y: height - 110, size: 12, font: hBold, color: rgb(0, 0, 0) })
+    let currentY = height - 135
+    for (const [key, value] of Object.entries(data.issuedData)) {
+      page.drawText(`${key}: ${value}`, { x: width / 2 + 20, y: currentY, size: 12, font: hFont, color: rgb(0.2, 0.2, 0.2) })
+      currentY -= 25
+    }
+  }
 
   // Footer note
   const footer = 'This slip is computer generated and serves as proof of clearance.'

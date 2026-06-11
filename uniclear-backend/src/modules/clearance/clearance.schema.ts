@@ -7,6 +7,7 @@ export const startClearanceSchema = z.object({
 
 export const approveStageSchema = z.object({
   remarks: z.string().optional(),
+  issuedData: z.union([z.string(), z.record(z.any())]).optional(),
 })
 
 export const rejectStageSchema = z.object({
