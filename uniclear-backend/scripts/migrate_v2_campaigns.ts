@@ -29,7 +29,7 @@ async function main() {
     const stagesUpdate = await prisma.clearanceStage.updateMany({
       where: {
         universityId: uni.id,
-        campaignId: null
+        campaignId: null as any
       },
       data: {
         campaignId: defaultCampaign.id
@@ -41,7 +41,7 @@ async function main() {
     const requestsUpdate = await prisma.clearanceRequest.updateMany({
       where: {
         universityId: uni.id,
-        campaignId: null
+        campaignId: null as any
       },
       data: {
         campaignId: defaultCampaign.id
@@ -56,6 +56,7 @@ async function main() {
 main()
   .catch(e => {
     console.error(e)
+    // @ts-ignore
     process.exit(1)
   })
   .finally(async () => {

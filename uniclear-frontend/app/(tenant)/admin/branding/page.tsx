@@ -18,6 +18,7 @@ const brandingSchema = z.object({
   accentColor:   z.string().optional(),
   bannerMessage: z.string().optional(),
   footerText:    z.string().optional(),
+  certificateCoordinates: z.any().optional(),
 })
 type BrandingForm = z.infer<typeof brandingSchema>
 

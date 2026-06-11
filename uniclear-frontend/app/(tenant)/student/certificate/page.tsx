@@ -19,7 +19,8 @@ export default function CertificatePage() {
   const tenant  = useTenantStore()
 
   const router = useRouter()
-  const { data: clearance, isLoading, isError } = useClearanceStatus()
+  const { data: clearances, isLoading, isError } = useClearanceStatus()
+  const clearance = clearances?.find(c => c.status === 'COMPLETED')
 
   const { data: _certificate } = useQuery({
     queryKey: ['certificate', clearance?.id],

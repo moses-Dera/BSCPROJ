@@ -12,6 +12,7 @@
 
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
+// @ts-ignore
 import bcrypt from 'bcryptjs'
 import readline from 'readline'
 import 'dotenv/config'
@@ -61,7 +62,7 @@ async function main() {
   console.log('══════════════════════════════════════\n')
 
   // Refuse if platform owner already exists
-  const existing = await db.platformOwner.findFirst()
+  const existing = await db.user.findFirst({ where: { role: 'PLATFORM_OWNER' } })
   if (existing) {
     // Allow adding another if SETUP_SECRET is provided and --force flag is passed
     const force = process.argv.includes('--force')
@@ -87,7 +88,7 @@ async function main() {
     console.log('\n⚠ Adding additional platform owner account...')
   }
 
-  const name     = await prompt('Full name:  ')
+  const name     = await prompt('Full name:  ') // Note: User model does not store name directly right now, kept for prompt compatibility
   const email    = await prompt('Email:      ')
   const password = await prompt('Password:   ', true)
   const confirm  = await prompt('Confirm:    ', true)
@@ -114,8 +115,14 @@ async function main() {
 
   const passwordHash = await bcrypt.hash(password, 12)
 
-  await db.platformOwner.create({
-    data: { name, email, passwordHash },
+  await db.user.create({
+    data: { 
+      email, 
+      passwordHash,
+      role: 'PLATFORM_OWNER',
+      passwordSetAt: new Date(),
+      isActive: true
+    },
   })
 
   console.log('\n✓ Platform owner account created successfully.')

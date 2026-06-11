@@ -81,7 +81,7 @@ export function AuditLogTable() {
           </div>
           <div className="flex gap-2">
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               disabled={page === 1}
               onClick={() => setPage(p => p - 1)}
@@ -89,7 +89,7 @@ export function AuditLogTable() {
               Previous
             </Button>
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               disabled={page * data.limit >= data.total}
               onClick={() => setPage(p => p + 1)}

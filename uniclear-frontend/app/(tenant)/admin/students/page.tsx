@@ -41,8 +41,8 @@ export default function AdminStudentsPage() {
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['students', page, search],
     queryFn:  () => studentsApi.list(page, 20, search || undefined).then(r => ({
-      items: r.data.data,
-      total: r.data.pagination.total
+      items: r.data.data.items,
+      total: r.data.data.total
     })),
   })
 

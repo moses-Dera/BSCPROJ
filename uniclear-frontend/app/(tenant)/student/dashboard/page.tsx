@@ -53,7 +53,7 @@ export default function StudentDashboard() {
               <div key={clearance.id} className="flex items-center justify-between p-3 bg-[var(--color-bg)] rounded-md">
                 <span>{clearance.campaign?.name ?? 'Clearance'}</span>
                 <Link href={ROUTES.student.certificate}>
-                  <Button size="sm" variant="outline"><Download className="h-3.5 w-3.5 mr-1" /> Certificate</Button>
+                  <Button size="sm" variant="secondary"><Download className="h-3.5 w-3.5 mr-1" /> Certificate</Button>
                 </Link>
               </div>
             ))}

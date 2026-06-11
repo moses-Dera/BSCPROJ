@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { campaignsApi } from '@/lib/api/campaigns.api'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
 import Link from 'next/link'
@@ -77,12 +77,12 @@ export function CampaignList() {
             
             <div className="flex items-center gap-2 mt-4 pt-4 border-t border-[var(--color-border)]">
               <Link href={`${ROUTES.admin.stages}?campaignId=${campaign.id}`} className="flex-1">
-                <Button variant="outline" className="w-full"><Settings className="h-4 w-4 mr-2" /> Stages</Button>
+                <Button variant="secondary" className="w-full"><Settings className="h-4 w-4 mr-2" /> Stages</Button>
               </Link>
-              <Button variant="outline" size="icon" onClick={() => toggle(campaign.id)} title={campaign.isActive ? 'Deactivate' : 'Activate'}>
+              <Button variant="secondary" size="sm" onClick={() => toggle(campaign.id)} title={campaign.isActive ? 'Deactivate' : 'Activate'}>
                 <Power className={`h-4 w-4 ${campaign.isActive ? 'text-amber-500' : 'text-emerald-500'}`} />
               </Button>
-              <Button variant="destructive" size="icon" onClick={() => {
+              <Button variant="danger" size="sm" onClick={() => {
                 if (window.confirm('Are you sure you want to delete this campaign?')) remove(campaign.id)
               }}>
                 <Trash2 className="h-4 w-4" />
@@ -97,11 +97,7 @@ export function CampaignList() {
         )}
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create Clearance Campaign</DialogTitle>
-          </DialogHeader>
+      <Dialog open={open} onClose={() => setOpen(false)} title="Create Clearance Campaign">
           <div className="space-y-4 pt-4">
             <div>
               <label className="text-sm font-medium mb-1 block">Campaign Name</label>
@@ -115,7 +111,6 @@ export function CampaignList() {
               <Button loading={isPending} onClick={() => create()} disabled={!name}>Create Campaign</Button>
             </div>
           </div>
-        </DialogContent>
       </Dialog>
     </div>
   )

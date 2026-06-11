@@ -133,7 +133,7 @@ export default function AcademicStructurePage() {
             <Input value={facultyName} onChange={(e) => setFacultyName(e.target.value)} placeholder="e.g. Faculty of Engineering" className="mt-1" />
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => setIsAddFacultyOpen(false)}>Cancel</Button>
+            <Button variant="secondary" onClick={() => setIsAddFacultyOpen(false)}>Cancel</Button>
             <Button onClick={() => createFaculty()} disabled={addingF || !facultyName}>Save Faculty</Button>
           </div>
         </div>
@@ -147,7 +147,7 @@ export default function AcademicStructurePage() {
             <Input value={deptName} onChange={(e) => setDeptName(e.target.value)} placeholder="e.g. Computer Science" className="mt-1" />
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => setIsAddDeptOpen(false)}>Cancel</Button>
+            <Button variant="secondary" onClick={() => setIsAddDeptOpen(false)}>Cancel</Button>
             <Button onClick={() => createDept()} disabled={addingD || !deptName}>Save Department</Button>
           </div>
         </div>
