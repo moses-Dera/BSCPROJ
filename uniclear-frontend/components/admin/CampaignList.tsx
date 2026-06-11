@@ -18,6 +18,8 @@ export function CampaignList() {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+  const [issuesCertificate, setIssuesCertificate] = useState(true)
+  const [issuesClearanceSlip, setIssuesClearanceSlip] = useState(false)
 
   const { data: campaigns, isLoading } = useQuery({
     queryKey: ['campaigns'],
@@ -25,13 +27,15 @@ export function CampaignList() {
   })
 
   const { mutate: create, isPending } = useMutation({
-    mutationFn: () => campaignsApi.create({ name, description }),
+    mutationFn: () => campaignsApi.create({ name, description, issuesCertificate, issuesClearanceSlip }),
     onSuccess: () => {
       toast.success('Campaign created')
       qc.invalidateQueries({ queryKey: ['campaigns'] })
       setOpen(false)
       setName('')
       setDescription('')
+      setIssuesCertificate(true)
+      setIssuesClearanceSlip(false)
     },
     onError: (e: any) => toast.error(e.response?.data?.message ?? 'Failed to create campaign'),
   })
@@ -73,6 +77,11 @@ export function CampaignList() {
                 </span>
               </div>
               <p className="text-sm text-[var(--color-muted)] mb-4">{campaign.description || 'No description provided.'}</p>
+              
+              <div className="flex gap-2 mb-2">
+                {campaign.issuesCertificate && <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">Issues Certificate</span>}
+                {campaign.issuesClearanceSlip && <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded">Issues Slip</span>}
+              </div>
             </div>
             
             <div className="flex items-center gap-2 mt-4 pt-4 border-t border-[var(--color-border)]">
@@ -107,6 +116,29 @@ export function CampaignList() {
               <label className="text-sm font-medium mb-1 block">Description</label>
               <Input placeholder="Optional details..." value={description} onChange={e => setDescription(e.target.value)} />
             </div>
+            
+            <div className="space-y-2 border-t border-b border-[var(--color-border)] py-4 my-2">
+              <p className="text-sm font-semibold">Upon Completion Outputs</p>
+              <label className="flex items-center gap-2 text-sm text-[var(--color-text)]">
+                <input 
+                  type="checkbox" 
+                  checked={issuesCertificate} 
+                  onChange={e => setIssuesCertificate(e.target.checked)}
+                  className="rounded border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                />
+                Issue Certificate
+              </label>
+              <label className="flex items-center gap-2 text-sm text-[var(--color-text)]">
+                <input 
+                  type="checkbox" 
+                  checked={issuesClearanceSlip} 
+                  onChange={e => setIssuesClearanceSlip(e.target.checked)}
+                  className="rounded border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                />
+                Issue Clearance Slip
+              </label>
+            </div>
+
             <div className="flex justify-end pt-4">
               <Button loading={isPending} onClick={() => create()} disabled={!name}>Create Campaign</Button>
             </div>

@@ -10,7 +10,9 @@ const createSchema = z.object({
   targetDepartmentId: z.string().uuid().optional().nullable(),
   targetLevel: z.string().optional().nullable(),
   whitelistEnabled: z.boolean().optional(),
-  whitelist: z.array(z.string()).optional()
+  whitelist: z.array(z.string()).optional(),
+  issuesCertificate: z.boolean().optional(),
+  issuesClearanceSlip: z.boolean().optional()
 })
 
 const updateSchema = createSchema.partial()

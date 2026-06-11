@@ -84,3 +84,45 @@ export async function generateCertificatePDF(data: {
   link.download = `Clearance_Certificate_${data.jambRegNo}.pdf`
   link.click()
 }
+
+export async function generateClearanceSlipPDF(data: {
+  studentName: string
+  jambRegNo: string
+  universityName: string
+  campaignName: string
+  completedAt: string
+}) {
+  const pdfDoc = await PDFDocument.create()
+  const page = pdfDoc.addPage([500, 300])
+  const { width, height } = page.getSize()
+
+  const hBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+  const hFont = await pdfDoc.embedFont(StandardFonts.Helvetica)
+  const primaryColor = rgb(0.2, 0.2, 0.2)
+
+  // Border
+  page.drawRectangle({ x: 15, y: 15, width: width - 30, height: height - 30, borderColor: primaryColor, borderWidth: 2 })
+
+  // Header
+  const title = `${data.universityName} - Clearance Slip`
+  page.drawText(title, { x: width / 2 - (hBold.widthOfTextAtSize(title, 16) / 2), y: height - 40, size: 16, font: hBold, color: rgb(0, 0, 0) })
+  
+  page.drawText(`Campaign: ${data.campaignName}`, { x: width / 2 - (hFont.widthOfTextAtSize(`Campaign: ${data.campaignName}`, 12) / 2), y: height - 65, size: 12, font: hFont, color: rgb(0.3, 0.3, 0.3) })
+
+  // Details
+  page.drawText(`Student Name: ${data.studentName}`, { x: 40, y: height - 120, size: 12, font: hFont, color: rgb(0, 0, 0) })
+  page.drawText(`JAMB Reg No: ${data.jambRegNo}`, { x: 40, y: height - 145, size: 12, font: hFont, color: rgb(0, 0, 0) })
+  page.drawText(`Status: CLEARED`, { x: 40, y: height - 170, size: 12, font: hBold, color: rgb(0.1, 0.6, 0.1) })
+  page.drawText(`Date: ${data.completedAt}`, { x: 40, y: height - 195, size: 12, font: hFont, color: rgb(0.4, 0.4, 0.4) })
+
+  // Footer note
+  const footer = 'This slip is computer generated and serves as proof of clearance.'
+  page.drawText(footer, { x: width / 2 - (hFont.widthOfTextAtSize(footer, 10) / 2), y: 30, size: 10, font: hFont, color: rgb(0.5, 0.5, 0.5) })
+
+  const pdfBytes = await pdfDoc.save()
+  const blob = new Blob([pdfBytes as unknown as BlobPart], { type: 'application/pdf' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.download = `Clearance_Slip_${data.jambRegNo}.pdf`
+  link.click()
+}

@@ -269,6 +269,10 @@ model ClearanceCampaign {
   whitelistEnabled   Boolean     @default(false)
   whitelist          String[]    @default([]) // Array of matric numbers
   isActive           Boolean     @default(true)
+  issuesCertificate  Boolean     @default(true)
+  issuesClearanceSlip Boolean    @default(false)
+  customCertificateUrl String?
+  customCertificateCoords Json?
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt
 

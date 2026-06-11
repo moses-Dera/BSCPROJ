@@ -64,6 +64,10 @@ export interface ClearanceCampaign {
   targetLevel: string | null
   whitelistEnabled: boolean
   whitelist: string[]
+  issuesCertificate: boolean
+  issuesClearanceSlip: boolean
+  customCertificateUrl: string | null
+  customCertificateCoords: any | null
   createdAt: string
   updatedAt: string
 }

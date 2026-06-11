@@ -47,14 +47,33 @@ export default function StudentDashboard() {
 
       {completedClearances.length > 0 && (
         <Card className="border-l-4 border-l-[var(--color-primary)]">
-          <h3 className="text-sm font-semibold text-[var(--color-text)] mb-3">Completed Certificates</h3>
+          <h3 className="text-sm font-semibold text-[var(--color-text)] mb-3">Completed Clearances</h3>
           <div className="space-y-2">
             {completedClearances.map(clearance => (
-              <div key={clearance.id} className="flex items-center justify-between p-3 bg-[var(--color-bg)] rounded-md">
+              <div key={clearance.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-[var(--color-bg)] rounded-md gap-3">
                 <span>{clearance.campaign?.name ?? 'Clearance'}</span>
-                <Link href={ROUTES.student.certificate}>
-                  <Button size="sm" variant="secondary"><Download className="h-3.5 w-3.5 mr-1" /> Certificate</Button>
-                </Link>
+                <div className="flex items-center gap-2">
+                  {clearance.campaign?.issuesCertificate !== false && (
+                    <Link href={ROUTES.student.certificate}>
+                      <Button size="sm" variant="secondary"><Download className="h-3.5 w-3.5 mr-1" /> Certificate</Button>
+                    </Link>
+                  )}
+                  {clearance.campaign?.issuesClearanceSlip === true && (
+                    <Button size="sm" variant="secondary" onClick={() => {
+                      import('@/lib/utils/pdf').then(({ generateClearanceSlipPDF }) => {
+                        generateClearanceSlipPDF({
+                          studentName: `${clearance.student?.firstName} ${clearance.student?.lastName}`,
+                          jambRegNo: clearance.student?.jambRegNo || 'N/A',
+                          universityName: clearance.universityId || 'University', // In a real app we might get the exact name from store
+                          campaignName: clearance.campaign?.name || 'Clearance',
+                          completedAt: clearance.completedAt ? new Date(clearance.completedAt).toLocaleDateString() : new Date().toLocaleDateString()
+                        })
+                      })
+                    }}>
+                      <Download className="h-3.5 w-3.5 mr-1" /> Slip
+                    </Button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
