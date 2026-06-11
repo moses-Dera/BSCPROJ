@@ -20,39 +20,32 @@ import 'dotenv/config'
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const db = new PrismaClient({ adapter })
 
+import { Writable } from 'stream'
+
 function prompt(question: string, hidden = false): Promise<string> {
   return new Promise(resolve => {
-    const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
-
-    if (hidden) {
-      process.stdout.write(question)
-      process.stdin.setRawMode(true)
-      process.stdin.resume()
-
-      let input = ''
-      process.stdin.on('data', (char: Buffer) => {
-        const c = char.toString()
-        if (c === '\n' || c === '\r') {
-          process.stdin.setRawMode(false)
-          process.stdin.pause()
-          process.stdout.write('\n')
-          rl.close()
-          resolve(input)
-        } else if (c === '\u0003') {
-          process.exit()
-        } else if (c === '\u007f') {
-          input = input.slice(0, -1)
-        } else {
-          input += c
-          process.stdout.write('*')
+    const mutableStdout = new Writable({
+      write(chunk, encoding, callback) {
+        if (!hidden) {
+          process.stdout.write(chunk, encoding)
         }
-      })
-    } else {
-      rl.question(question, answer => {
-        rl.close()
-        resolve(answer.trim())
-      })
-    }
+        callback()
+      }
+    })
+
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: mutableStdout,
+      terminal: true
+    })
+
+    process.stdout.write(question)
+
+    rl.question('', answer => {
+      rl.close()
+      if (hidden) process.stdout.write('\n')
+      resolve(answer.trim())
+    })
   })
 }
 

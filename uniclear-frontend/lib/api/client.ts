@@ -27,6 +27,14 @@ apiClient.interceptors.response.use(
         if (typeof window !== 'undefined') window.location.href = '/login'
       }
     }
+
+    // Extract backend error message globally so UI components get friendly messages
+    if (error.response?.data?.message) {
+      error.message = error.response.data.message
+    } else if (error.response?.status === 500) {
+      error.message = 'An unexpected server error occurred. Please try again later.'
+    }
+
     return Promise.reject(error)
   }
 )

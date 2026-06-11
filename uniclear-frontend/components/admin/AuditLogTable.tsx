@@ -18,7 +18,7 @@ export function AuditLogTable() {
   
   const { data, isLoading } = useQuery({
     queryKey: ['auditLogs', page],
-    queryFn: () => AuditApi.list({ page, limit: 15 }).then(res => res.data)
+    queryFn: () => AuditApi.list({ page, limit: 15 }).then(res => res.data.data)
   })
 
   if (isLoading) {
