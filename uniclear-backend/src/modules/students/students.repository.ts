@@ -16,14 +16,14 @@ export class StudentsRepository {
       ]
     }
     const [data, total] = await Promise.all([
-      db.student.findMany({ where, skip, take: limit, include: { faculty: true, department: true }, orderBy: { createdAt: 'desc' } }),
+      db.student.findMany({ where, skip, take: limit, include: { faculty: true, department: true }, orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }] }),
       db.student.count({ where }),
     ])
     return { data, total }
   }
 
   static async findById(id: string, universityId: string) {
-    return db.student.findFirst({ where: { id, universityId }, include: { faculty: true, department: true } })
+    return db.student.findFirst({ where: { id, universityId }, include: { faculty: true, department: true, user: { select: { email: true } } } })
   }
 
   static async findByUserId(userId: string, universityId: string) {

@@ -10,9 +10,7 @@ export const documentsApi = {
     form.append('file', file)
     form.append('requestId', requestId)
     form.append('documentTypeId', documentTypeId)
-    return apiClient.post<{ success: true; data: Document }>('/documents/upload', form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    return apiClient.post<{ success: true; data: Document }>('/documents/upload', form)
   },
 
   delete:       (id: string) => apiClient.delete(`/documents/${id}`),

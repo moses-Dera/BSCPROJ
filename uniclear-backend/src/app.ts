@@ -30,14 +30,20 @@ import campaignRoutes       from '@/app/api/v1/campaigns/route'
 const app = express()
 
 // ── Security & Parsing ────────────────────────────────────────────
-app.use(helmet())
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
 app.use(cors({ origin: env.CLIENT_URL, credentials: true }))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'))
 
 // ── Static uploads (dev only) ─────────────────────────────────────
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
+app.use('/uploads', (req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*')
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+  if (req.method === 'OPTIONS') return res.sendStatus(200)
+  next()
+}, express.static(path.join(process.cwd(), 'uploads')))
 
 // ── Webhooks (No tenant resolution needed as API key implies tenant) ──
 app.use('/api/v1/webhooks', webhookRoutes)

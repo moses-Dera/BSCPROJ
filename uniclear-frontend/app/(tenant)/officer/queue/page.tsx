@@ -1,7 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { useOfficerQueue } from '@/features/clearance/hooks/useClearance'
 import { StatusBadge } from '@/components/shared/StatusBadge'
@@ -16,17 +15,26 @@ import { Card } from '@/components/ui/card'
 import { ROUTES } from '@/lib/constants'
 
 export default function OfficerQueuePage() {
-  const [search, setSearch] = useState('')
-  const [sessionId, setSessionId] = useState<string | null>(null)
-  const [campaignId, setCampaignId] = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const pathname = usePathname()
+
+  const search = searchParams.get('search') || ''
+  const sessionId = searchParams.get('sessionId')
+  const campaignId = searchParams.get('campaignId') || ''
+
+  const setQueryParam = (key: string, value: string | null) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (value) params.set(key, value)
+    else params.delete(key)
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
+  }
 
   const { data: sessionsRes } = useQuery({
     queryKey: ['sessions'],
     queryFn: () => import('@/lib/api/misc.api').then(m => m.sessionsApi.list()).then(r => {
-      const active = r.data.find((s: any) => s.isActive)
-      if (active && sessionId === null) setSessionId(active.id)
-      else if (sessionId === null) setSessionId('')
+      const active = r.data.data.find((s: any) => s.isActive)
+      if (active && sessionId === null && !searchParams.has('sessionId')) setQueryParam('sessionId', active.id)
       return r.data
     })
   })
@@ -45,8 +53,9 @@ export default function OfficerQueuePage() {
       <div className="flex flex-col sm:flex-row gap-3 items-center mb-4">
         <Input
           placeholder="Search by name or JAMB Reg No..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
+          defaultValue={search}
+          onBlur={e => setQueryParam('search', e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && setQueryParam('search', e.currentTarget.value)}
           icon={<Search className="h-4 w-4" />}
           className="max-w-sm flex-1"
         />
@@ -54,7 +63,7 @@ export default function OfficerQueuePage() {
         <select
           className="text-sm border border-[var(--color-border)] bg-[var(--color-bg)] rounded-md px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--color-primary)] w-full sm:w-auto"
           value={sessionId || ''}
-          onChange={(e) => setSessionId(e.target.value)}
+          onChange={(e) => setQueryParam('sessionId', e.target.value)}
         >
           <option value="">All Sessions</option>
           {sessionsRes?.data?.map(s => (
@@ -65,7 +74,7 @@ export default function OfficerQueuePage() {
         <select
           className="text-sm border border-[var(--color-border)] bg-[var(--color-bg)] rounded-md px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--color-primary)] w-full sm:w-auto"
           value={campaignId}
-          onChange={(e) => setCampaignId(e.target.value)}
+          onChange={(e) => setQueryParam('campaignId', e.target.value)}
         >
           <option value="">All Campaigns</option>
           {campaignsRes?.data?.filter(c => !sessionId || c.sessionId === sessionId).map(c => (
@@ -75,9 +84,15 @@ export default function OfficerQueuePage() {
       </div>
 
       {isLoading && <LoadingSkeleton rows={5} />}
-      {isError   && <ErrorState message={(error as any)?.response?.data?.message ?? "We couldn't load your data."} onRetry={() => refetch()} />}
+      {isError && (error as any)?.response?.status === 403 ? (
+        <Card padding="sm">
+          <EmptyState icon={<CheckCircle className="h-10 w-10 text-amber-500" />} title="No assigned stages" description="You have not been assigned to clear students for any stage yet. Please contact your administrator." />
+        </Card>
+      ) : isError ? (
+        <ErrorState message={(error as any)?.response?.data?.message ?? "We couldn't load your data."} onRetry={() => refetch()} />
+      ) : null}
 
-      {!isLoading && !isError && (
+      {!isLoading && !isError && data && (
         <Card padding="sm">
           {!data?.items?.length ? (
             <EmptyState icon={<CheckCircle className="h-10 w-10" />} title="Queue is empty" description="No students pending review at this stage." />

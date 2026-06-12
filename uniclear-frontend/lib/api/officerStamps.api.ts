@@ -14,9 +14,7 @@ export const officerStampsApi = {
     const formData = new FormData()
     formData.append('name', name)
     formData.append('file', file)
-    return apiClient.post<{ success: true; data: OfficerStamp }>('/officers/stamps', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    return apiClient.post<{ success: true; data: OfficerStamp }>('/officers/stamps', formData)
   },
 
   delete: (id: string) => apiClient.delete(`/officers/stamps/${id}`)

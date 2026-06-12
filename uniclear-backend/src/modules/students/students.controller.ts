@@ -40,7 +40,7 @@ export class StudentsController {
   static async update(req: Request, res: Response, next: NextFunction) {
     try {
       const data = updateStudentSchema.parse(req.body)
-      const student = await StudentsService.update(param(req.params.id), req.universityId!, data)
+      const student = await StudentsService.update(param(req.params.id), req.universityId!, req.user!.sub, data)
       return ApiResponse.success(res, student)
     } catch (err) { next(err) }
   }

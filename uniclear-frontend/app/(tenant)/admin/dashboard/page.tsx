@@ -6,29 +6,51 @@ import { DashboardSessionFilter } from '@/components/admin/DashboardSessionFilte
 import Link from 'next/link'
 
 async function getSummary(sessionId?: string) {
-  return serverFetch<{
-    totalStudents: number
-    totalClearances: number
-    completed: number
-    inProgress: number
-    completionRate: string
-    avgProcessingDays: number
-    departmentRates: { name: string; total: number; completed: number; rate: number }[]
-  }>(`/reports/summary${sessionId ? `?sessionId=${sessionId}` : ''}`)
+  try {
+    return await serverFetch<{
+      totalStudents: number
+      totalClearances: number
+      completed: number
+      inProgress: number
+      completionRate: string
+      avgProcessingDays: number
+      departmentRates: { name: string; total: number; completed: number; rate: number }[]
+    }>(`/reports/summary${sessionId ? `?sessionId=${sessionId}` : ''}`)
+  } catch (err) {
+    if (err instanceof Error && err.message === 'NEXT_REDIRECT') throw err
+    console.error('Dashboard summary fetch error:', err)
+    return { totalStudents: 0, totalClearances: 0, completed: 0, inProgress: 0, completionRate: '0', avgProcessingDays: 0, departmentRates: [] }
+  }
 }
 
 async function getStageBreakdown(campaignId?: string) {
-  return serverFetch<{ stage: { name: string }; pending: number; approved: number; rejected: number }[]>(`/reports/by-stage${campaignId ? `?campaignId=${campaignId}` : ''}`)
+  try {
+    return await serverFetch<{ stage: { name: string }; pending: number; approved: number; rejected: number }[]>(`/reports/by-stage${campaignId ? `?campaignId=${campaignId}` : ''}`)
+  } catch (err) {
+    if (err instanceof Error && err.message === 'NEXT_REDIRECT') throw err
+    return []
+  }
 }
 
 async function getCampaigns(sessionId?: string) {
-  const res = await serverFetch<any>(`/campaigns${sessionId ? `?sessionId=${sessionId}` : ''}`)
-  return Array.isArray(res) ? res : res.data || []
+  try {
+    const res = await serverFetch<any>(`/campaigns${sessionId ? `?sessionId=${sessionId}` : ''}`)
+    return Array.isArray(res) ? res : res.data || []
+  } catch (err) {
+    if (err instanceof Error && err.message === 'NEXT_REDIRECT') throw err
+    return []
+  }
 }
 
 async function getSessions() {
-  const res = await serverFetch<any>('/sessions')
-  return Array.isArray(res) ? res : res.data || []
+  try {
+    const res = await serverFetch<any>('/sessions')
+    return Array.isArray(res) ? res : res.data || []
+  } catch (err) {
+    if (err instanceof Error && err.message === 'NEXT_REDIRECT') throw err
+    console.error('Dashboard sessions fetch error:', err)
+    return []
+  }
 }
 
 export default async function AdminDashboard({ searchParams }: { searchParams: { sessionId?: string } }) {

@@ -7,7 +7,14 @@ import { Button } from '@/components/ui/button'
 import { Download } from 'lucide-react'
 
 export default async function AdminReportsPage({ searchParams }: { searchParams: { sessionId?: string } }) {
-  const sessions = await serverFetch<any>('/sessions').then(res => Array.isArray(res) ? res : res.data || [])
+  let sessions: any[] = []
+  try {
+    sessions = await serverFetch<any>('/sessions').then(res => Array.isArray(res) ? res : res.data || [])
+  } catch (err) {
+    if (err instanceof Error && err.message === 'NEXT_REDIRECT') throw err
+    console.error('Failed to fetch sessions for reports:', err)
+  }
+  
   const activeSessionId = sessions.find((s: any) => s.isActive)?.id
 
   let sessionId = searchParams.sessionId
@@ -17,10 +24,20 @@ export default async function AdminReportsPage({ searchParams }: { searchParams:
     sessionId = undefined
   }
 
-  const [summary, campaigns] = await Promise.all([
-    serverFetch<any>(`/reports/summary${sessionId ? `?sessionId=${sessionId}` : ''}`),
-    serverFetch<any>(`/campaigns${sessionId ? `?sessionId=${sessionId}` : ''}`).then(res => Array.isArray(res) ? res : res.data || [])
-  ])
+  let summary = { totalStudents: 0, totalClearances: 0, completed: 0, completionRate: 0 }
+  let campaigns: any[] = []
+  
+  try {
+    const [fetchedSummary, fetchedCampaigns] = await Promise.all([
+      serverFetch<any>(`/reports/summary${sessionId ? `?sessionId=${sessionId}` : ''}`),
+      serverFetch<any>(`/campaigns${sessionId ? `?sessionId=${sessionId}` : ''}`).then(res => Array.isArray(res) ? res : res.data || [])
+    ])
+    summary = fetchedSummary || summary
+    campaigns = fetchedCampaigns || campaigns
+  } catch (err) {
+    if (err instanceof Error && err.message === 'NEXT_REDIRECT') throw err
+    console.error('Failed to fetch report data:', err)
+  }
 
   return (
     <div className="space-y-6">

@@ -20,7 +20,8 @@ const createSchema = z.object({
 })
 
 const updateSchema = createSchema.partial().extend({
-  customCertificateCoords: z.any().optional()
+  customCertificateCoords: z.any().optional(),
+  customCertificateUrl: z.string().nullable().optional()
 })
 
 export class CampaignsController {

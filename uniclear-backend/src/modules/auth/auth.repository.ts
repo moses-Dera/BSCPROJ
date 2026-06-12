@@ -11,9 +11,20 @@ export class AuthRepository {
   static async findUserById(id: string) {
     return db.user.findUnique({
       where: { id },
-      select: { id: true, email: true, role: true, universityId: true, isActive: true, passwordSetAt: true },
+      select: { 
+        id: true, 
+        email: true, 
+        role: true, 
+        universityId: true, 
+        isActive: true, 
+        passwordSetAt: true,
+        student: { select: { firstName: true, lastName: true } },
+        officer: { select: { firstName: true, lastName: true } }
+      },
     })
   }
+
+
 
   static async updatePassword(userId: string, passwordHash: string) {
     return db.user.update({

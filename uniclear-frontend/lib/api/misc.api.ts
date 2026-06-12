@@ -44,10 +44,10 @@ export const brandingApi = {
   update:        (data: object)       => apiClient.patch('/branding', data),
   uploadLogo:    (file: File)         => {
     const form = new FormData(); form.append('file', file)
-    return apiClient.post('/branding/logo', form, { headers: { 'Content-Type': 'multipart/form-data' } })
+    return apiClient.post('/branding/logo', form)
   },
   uploadLoginBg: (file: File)         => {
     const form = new FormData(); form.append('file', file)
-    return apiClient.post('/branding/login-bg', form, { headers: { 'Content-Type': 'multipart/form-data' } })
+    return apiClient.post('/branding/login-bg', form)
   },
 }

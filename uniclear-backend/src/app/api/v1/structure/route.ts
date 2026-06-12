@@ -10,7 +10,10 @@ router.use(authMiddleware, requireTenant)
 
 router.get('/faculties', async (req, res, next) => {
   try {
-    const data = await db.faculty.findMany({ where: { universityId: req.universityId } })
+    const data = await db.faculty.findMany({ 
+      where: { universityId: req.universityId },
+      orderBy: { name: 'asc' }
+    })
     return ApiResponse.success(res, data)
   } catch (err) { next(err) }
 })
@@ -31,7 +34,10 @@ router.delete('/faculties/:id', requireRole('SUPER_ADMIN'), async (req, res, nex
 
 router.get('/departments', async (req, res, next) => {
   try {
-    const data = await db.department.findMany({ where: { faculty: { universityId: req.universityId } } })
+    const data = await db.department.findMany({ 
+      where: { faculty: { universityId: req.universityId } },
+      orderBy: { name: 'asc' }
+    })
     return ApiResponse.success(res, data)
   } catch (err) { next(err) }
 })

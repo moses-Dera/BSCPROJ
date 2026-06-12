@@ -1,7 +1,7 @@
 import { apiClient } from './client'
-import { AuditLog, PaginatedData } from '@/types'
+import { AuditLog, PaginatedResponse } from '@/types'
 
 export const AuditApi = {
   list: (params?: { page?: number; limit?: number; actorId?: string; targetId?: string }) =>
-    apiClient.get<PaginatedData<AuditLog>>('/audit', { params }),
+    apiClient.get<PaginatedResponse<AuditLog>>('/audit', { params }),
 }

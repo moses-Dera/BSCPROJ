@@ -21,21 +21,27 @@ async function attemptRefresh(): Promise<string | null> {
   const isProd = process.env.NODE_ENV === 'production'
   const maxAge = 60 * 15
 
-  cookieStore.set('access_token', json.data.accessToken, {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: 'lax',
-    path: '/',
-    maxAge,
-  })
+  try {
+    cookieStore.set('access_token', json.data.accessToken, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'lax',
+      path: '/',
+      maxAge,
+    })
 
-  cookieStore.set('refresh_token', json.data.refreshToken, {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 60 * 24 * 7,
-  })
+    cookieStore.set('refresh_token', json.data.refreshToken, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7,
+    })
+  } catch (error) {
+    // Next.js throws an error if cookies are modified within a Server Component.
+    // We swallow the error and return the new token so the current request can complete.
+    // Client-side requests will automatically refresh the cookie via axios interceptors.
+  }
 
   return json.data.accessToken
 }

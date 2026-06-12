@@ -7,7 +7,7 @@ const router = Router()
 
 router.use(authMiddleware, requireTenant)
 
-router.get('/',                 requireRole('SUPER_ADMIN', 'ADMIN', 'STUDENT'), SessionsController.list)
+router.get('/',                 requireRole('SUPER_ADMIN', 'ADMIN', 'STUDENT', 'OFFICER'), SessionsController.list)
 router.get('/:id',              requireRole('SUPER_ADMIN', 'ADMIN'),            SessionsController.getById)
 router.post('/',                requireRole('SUPER_ADMIN'),                     SessionsController.create)
 router.patch('/:id',            requireRole('SUPER_ADMIN'),                     SessionsController.update)

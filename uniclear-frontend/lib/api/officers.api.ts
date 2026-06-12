@@ -1,9 +1,9 @@
 import { apiClient } from './client'
-import type { Officer, PaginatedData } from '@/types'
+import type { Officer, PaginatedResponse } from '@/types'
 
 export const officersApi = {
   list: (page = 1, limit = 20, stageId?: string) =>
-    apiClient.get<{ success: true; data: PaginatedData<Officer> }>(
+    apiClient.get<PaginatedResponse<Officer>>(
       `/officers?page=${page}&limit=${limit}${stageId ? `&stageId=${stageId}` : ''}`
     ),
   getMe: () =>

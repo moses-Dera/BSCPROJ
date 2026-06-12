@@ -141,6 +141,7 @@ model User {
 
   university     University?      @relation(fields: [universityId], references: [id], onDelete: Cascade)
   officer        Officer?
+  student        Student?
   stageApprovals StageApproval[]
   notifications  Notification[]
   auditLogs      AuditLog[]       @relation("ActorLogs")
@@ -223,6 +224,7 @@ model Student {
   updatedAt      DateTime @updatedAt
 
   university        University         @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  user              User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
   faculty           Faculty?           @relation(fields: [facultyId], references: [id])
   department        Department?        @relation(fields: [departmentId], references: [id])
   entrySession      AcademicSession?   @relation(fields: [entrySessionId], references: [id])

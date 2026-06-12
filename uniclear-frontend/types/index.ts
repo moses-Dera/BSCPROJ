@@ -16,11 +16,15 @@ export interface ApiError {
 
 export type ApiResponse<T> = ApiSuccess<T> | ApiError
 
-export interface PaginatedData<T> {
-  items: T[]
-  total: number
-  page: number
-  limit: number
+export interface PaginatedResponse<T> {
+  success: true
+  data: T[]
+  pagination: {
+    total: number
+    page: number
+    limit: number
+    pages: number
+  }
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
@@ -30,6 +34,8 @@ export interface AuthUser {
   email: string
   role: Role
   universityId: string | null
+  student?: { firstName: string; lastName: string } | null
+  officer?: { firstName: string; lastName: string } | null
 }
 
 // ─── University / Tenant ──────────────────────────────────────────────────────
@@ -120,7 +126,7 @@ export interface ClearanceRequest {
   stageStatus: 'PENDING' | 'SUBMITTED' | 'REJECTED'
   currentStageId: string | null
   currentStage?: { name: string; documentRequirements?: { id: string; documentTypeId: string; isRequired: boolean; documentType: { id: string; name: string } }[] } | null
-  student?: { firstName: string; lastName: string; matricNo: string | null; jambRegNo: string; department?: { name: string } | null } | null
+  student?: { firstName: string; lastName: string; matricNo: string | null; jambRegNo: string; department?: { name: string } | null; faculty?: { name: string } | null } | null
   completedAt?: string | null
   clearanceNumber: string | null
   issuedData: any | null
@@ -159,12 +165,16 @@ export interface Document {
 
 export interface Student {
   id: string
-  userId: string
+  userId: string | null
+  user?: { email: string }
   jambRegNo: string
-  fullName: string
-  department: string
-  faculty: string
+  matricNo: string | null
+  firstName: string
+  lastName: string
+  department?: { id: string, name: string } | null
+  faculty?: { id: string, name: string } | null
   universityId: string
+  entrySessionId?: string | null
 }
 
 // ─── Officer ─────────────────────────────────────────────────────────────────

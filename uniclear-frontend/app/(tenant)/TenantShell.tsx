@@ -41,7 +41,7 @@ export function TenantShell({ university, children }: TenantShellProps) {
         accentColor:  university.accentColor  ?? '#2980B9',
         logoUrl:      university.logoUrl       ?? null,
       })
-    } else {
+    } else if (user?.role === 'PLATFORM_OWNER') {
       setTenant({
         universityId: null,
         name:         'UniClear Platform',
@@ -51,7 +51,7 @@ export function TenantShell({ university, children }: TenantShellProps) {
         logoUrl:      null,
       })
     }
-  }, [university, setTenant])
+  }, [university, setTenant, user?.role])
 
   const isAuthorised = rehydrated && !!user && (
     (user.role === 'STUDENT'                                    && pathname.startsWith('/student')) ||

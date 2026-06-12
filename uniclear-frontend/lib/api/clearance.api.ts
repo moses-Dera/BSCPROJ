@@ -17,9 +17,7 @@ export const clearanceApi = {
       if (remarks) formData.append('remarks', remarks)
       if (issuedData) formData.append('issuedData', JSON.stringify(issuedData))
       formData.append('file', file)
-      return apiClient.post(`/clearance/${requestId}/approve`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
+      return apiClient.post(`/clearance/${requestId}/approve`, formData)
     }
     return apiClient.post(`/clearance/${requestId}/approve`, { remarks, issuedData })
   },

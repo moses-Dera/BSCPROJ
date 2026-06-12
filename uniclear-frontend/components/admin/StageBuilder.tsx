@@ -23,63 +23,67 @@ import { toast } from 'sonner'
 
 function useOfficers() {
   return useQuery({
-    queryKey: ['officers'],
-    queryFn:  () => apiClient.get<{ success: true; data: any[] }>('/officers').then(r => r.data.data),
+    queryKey: ['officers', 'dropdown'],
+    queryFn:  () => apiClient.get<{ success: true; data: any[] }>('/officers?limit=100').then(r => r.data.data),
   })
 }
 
-function OfficerSearchableSelect({ officers, value, onChange }: { officers: any[], value: string, onChange: (val: string) => void }) {
+function SearchableSelect({ 
+  options, value, onChange, placeholder = "Search...", className = "" 
+}: { 
+  options: { label: string, value: string }[], value: string, onChange: (val: string) => void, placeholder?: string, className?: string 
+}) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
-  const selected = officers.find(o => o.id === value)
+  const selected = options.find(o => o.value === value)
   
-  const filtered = officers.filter(o => 
-    `${o.firstName} ${o.lastName}`.toLowerCase().includes(search.toLowerCase())
+  const filtered = options.filter(o => 
+    o.label.toLowerCase().includes(search.toLowerCase())
   )
 
   return (
-    <div className="relative">
+    <div className={cn("relative inline-block", className)}>
       <button 
         type="button"
-        className="w-full text-left text-xs p-1.5 rounded border border-gray-200 bg-white hover:border-blue-500 focus:border-blue-500 outline-none flex justify-between items-center transition-colors"
+        className="w-full text-left text-[13px] px-2 py-1 rounded border border-gray-200 bg-white hover:border-blue-500 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none flex justify-between items-center transition-all font-medium text-gray-900"
         onClick={() => { setOpen(!open); setSearch('') }}
       >
-        <span className="truncate pr-2 font-medium">{selected ? `${selected.firstName} ${selected.lastName}` : <span className="text-gray-400">Search officer...</span>}</span>
+        <span className="truncate pr-4">{selected ? selected.label : <span className="text-gray-400 font-normal">{placeholder}</span>}</span>
         <ChevronDown className="h-3 w-3 text-gray-400 shrink-0" />
       </button>
       
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute z-50 top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded shadow-xl max-h-56 flex flex-col overflow-hidden">
+          <div className="absolute z-50 top-full left-0 w-full min-w-[200px] mt-1 bg-white border border-gray-200 rounded-md shadow-xl max-h-56 flex flex-col overflow-hidden">
             <div className="flex items-center px-2 py-1.5 border-b border-gray-100 bg-gray-50/50">
               <Search className="h-3 w-3 text-gray-400 mr-2 shrink-0" />
               <input 
                 type="text" 
                 autoFocus
-                className="text-xs bg-transparent outline-none w-full placeholder:text-gray-400"
-                placeholder="Type name..."
+                className="text-[13px] bg-transparent outline-none w-full placeholder:text-gray-400 font-normal"
+                placeholder="Type to search..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
               />
             </div>
-            <div className="overflow-y-auto flex-1 p-1">
+            <div className="overflow-y-auto flex-1 p-1 custom-scrollbar">
               <button 
-                className={cn("w-full text-left px-2 py-1.5 text-xs rounded transition-colors", !value ? "bg-blue-50 text-blue-700 font-medium" : "hover:bg-gray-50 text-gray-700")}
+                className={cn("w-full text-left px-2 py-1.5 text-[13px] rounded transition-colors", !value ? "bg-blue-50 text-blue-700 font-medium" : "hover:bg-gray-50 text-gray-700 font-normal")}
                 onClick={() => { onChange(''); setOpen(false) }}
               >
-                Unassigned
+                {placeholder}
               </button>
               {filtered.length === 0 ? (
-                <p className="text-[11px] text-gray-400 p-2 text-center">No officers found</p>
+                <p className="text-[12px] text-gray-400 p-2 text-center">No results found</p>
               ) : (
                 filtered.map(o => (
                   <button 
-                    key={o.id}
-                    className={cn("w-full text-left px-2 py-1.5 text-xs rounded truncate transition-colors", value === o.id ? "bg-blue-50 text-blue-700 font-medium" : "hover:bg-gray-50 text-gray-700")}
-                    onClick={() => { onChange(o.id); setOpen(false) }}
+                    key={o.value}
+                    className={cn("w-full text-left px-2 py-1.5 text-[13px] rounded truncate transition-colors", value === o.value ? "bg-blue-50 text-blue-700 font-medium" : "hover:bg-gray-50 text-gray-700 font-normal")}
+                    onClick={() => { onChange(o.value); setOpen(false) }}
                   >
-                    {o.firstName} {o.lastName}
+                    {o.label}
                   </button>
                 ))
               )}
@@ -144,6 +148,7 @@ function StagePanel({ stage, campaignId, onClose }: { stage: ClearanceStage; cam
   const [newDocName, setNewDocName] = useState('')
   const [isCreatingDoc, setIsCreatingDoc] = useState(false)
   const [docSearch, setDocSearch] = useState('')
+  const [assignmentSearch, setAssignmentSearch] = useState('')
 
   const { mutate: createDoc } = useMutation({
     mutationFn: (name: string) => apiClient.post('/document-types', {
@@ -236,24 +241,62 @@ function StagePanel({ stage, campaignId, onClose }: { stage: ClearanceStage; cam
               {(!stage.officerAssignments || stage.officerAssignments.length === 0) ? (
                 <p className="text-xs text-[var(--color-muted)] mb-3">No officers assigned. Students will be stuck at this stage.</p>
               ) : (
-                <div className="space-y-2 mb-4">
-                  {stage.officerAssignments.map((a: any) => (
-                    <div key={a.id} className="flex flex-col gap-1 p-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)]">
-                      <div className="flex justify-between items-center">
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-[var(--color-text)] truncate">{a.officer.firstName} {a.officer.lastName}</p>
-                          <p className="text-xs text-[var(--color-muted)] mt-0.5">
-                            {a.faculty ? `Faculty: ${a.faculty.name}` : 'All Faculties'}
-                            {a.department ? `, Dept: ${a.department.name}` : ''}
-                          </p>
-                        </div>
-                        <button onClick={() => unassignOfficer(a.id)} className="p-1.5 rounded hover:bg-red-50 text-[var(--color-muted)] hover:text-red-500 transition-colors shrink-0 ml-2">
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
+                <>
+                  {stage.officerAssignments.length > 5 && (
+                    <div className="relative mb-2">
+                      <Search className="absolute left-2.5 top-1.5 h-3.5 w-3.5 text-gray-400" />
+                      <input 
+                        type="text" 
+                        value={assignmentSearch}
+                        onChange={e => setAssignmentSearch(e.target.value)}
+                        placeholder="Filter assignments by name, email, faculty, or department..." 
+                        className="w-full text-xs pl-8 pr-3 py-1.5 border border-gray-200 rounded focus:outline-none focus:border-blue-400 bg-gray-50/50"
+                      />
                     </div>
-                  ))}
-                </div>
+                  )}
+                  <div className="space-y-2 mb-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-1">
+                    {stage.officerAssignments
+                      .filter((a: any) => {
+                        if (!assignmentSearch) return true
+                        const q = assignmentSearch.toLowerCase()
+                        const email = officers.find((o: any) => o.id === a.officerId)?.user?.email || ''
+                        return (
+                          a.officer.firstName.toLowerCase().includes(q) ||
+                          a.officer.lastName.toLowerCase().includes(q) ||
+                          email.toLowerCase().includes(q) ||
+                          a.faculty?.name.toLowerCase().includes(q) ||
+                          a.department?.name.toLowerCase().includes(q)
+                        )
+                      })
+                      .map((a: any) => {
+                        const officerEmail = officers.find((o: any) => o.id === a.officerId)?.user?.email
+                        return (
+                          <div key={a.id} className="flex flex-col gap-1 p-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)]">
+                            <div className="flex justify-between items-center">
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium text-[var(--color-text)] truncate">{a.officer.firstName} {a.officer.lastName}</p>
+                                {officerEmail && <p className="text-xs text-[var(--color-muted)] truncate">{officerEmail}</p>}
+                                <p className="text-xs text-[var(--color-muted)] mt-1">
+                                  {a.faculty ? `Faculty: ${a.faculty.name}` : 'All Faculties'}
+                                  {a.department ? `, Dept: ${a.department.name}` : ''}
+                                </p>
+                              </div>
+                              <button onClick={() => unassignOfficer(a.id)} className="p-1.5 rounded hover:bg-red-50 text-[var(--color-muted)] hover:text-red-500 transition-colors shrink-0 ml-2">
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    {assignmentSearch && stage.officerAssignments.length > 0 && stage.officerAssignments.filter((a: any) => {
+                        const q = assignmentSearch.toLowerCase()
+                        const email = officers.find((o: any) => o.id === a.officerId)?.user?.email || ''
+                        return a.officer.firstName.toLowerCase().includes(q) || a.officer.lastName.toLowerCase().includes(q) || email.toLowerCase().includes(q) || a.faculty?.name.toLowerCase().includes(q) || a.department?.name.toLowerCase().includes(q)
+                    }).length === 0 && (
+                      <p className="text-xs text-center text-gray-400 py-4">No assignments match your search.</p>
+                    )}
+                  </div>
+                </>
               )}
 
             {/* Toggle Views */}
@@ -291,8 +334,10 @@ function StagePanel({ stage, campaignId, onClose }: { stage: ClearanceStage; cam
                           <tr className="bg-gray-50 border-t border-gray-200">
                             <td className="p-2 font-medium text-gray-700">{f.name} <span className="text-gray-400 font-normal ml-1">(All Departments)</span></td>
                             <td className="p-1.5">
-                              <OfficerSearchableSelect
-                                officers={officers}
+                              <SearchableSelect
+                                options={officers.map((o: any) => ({ label: `${o.firstName} ${o.lastName} ${o.user?.email ? `(${o.user.email})` : ''}`, value: o.id }))}
+                                placeholder="Search officer..."
+                                className="w-full"
                                 value={facultyAssignment?.officerId || ''}
                                 onChange={async (newOfficerId) => {
                                   if (facultyAssignment?.officerId === newOfficerId) return
@@ -319,8 +364,10 @@ function StagePanel({ stage, campaignId, onClose }: { stage: ClearanceStage; cam
                                   </div>
                                 </td>
                                 <td className="p-1.5">
-                                  <OfficerSearchableSelect
-                                    officers={officers}
+                                  <SearchableSelect
+                                    options={officers.map((o: any) => ({ label: `${o.firstName} ${o.lastName} ${o.user?.email ? `(${o.user.email})` : ''}`, value: o.id }))}
+                                    placeholder="Search officer..."
+                                    className="w-full"
                                     value={deptAssignment?.officerId || ''}
                                     onChange={async (newOfficerId) => {
                                       if (deptAssignment?.officerId === newOfficerId) return
@@ -352,28 +399,44 @@ function StagePanel({ stage, campaignId, onClose }: { stage: ClearanceStage; cam
                 
                 <div className="flex flex-wrap items-center gap-2 text-[13px] text-gray-700 leading-loose">
                   <span>Assign</span>
-                  <select value={assignForm.officerId} onChange={e => setAssignForm(s => ({ ...s, officerId: e.target.value }))} className="px-2 py-1 rounded border border-gray-200 bg-white font-medium text-gray-900 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 min-w-[160px]">
-                    <option value="">Select Officer...</option>
-                    {officers.map((o: any) => <option key={o.id} value={o.id}>{o.firstName} {o.lastName}</option>)}
-                  </select>
+                  <SearchableSelect
+                    value={assignForm.officerId}
+                    onChange={val => setAssignForm(s => ({ ...s, officerId: val }))}
+                    placeholder="Select Officer..."
+                    options={officers.map((o: any) => ({ label: `${o.firstName} ${o.lastName} ${o.user?.email ? `(${o.user.email})` : ''}`, value: o.id }))}
+                    className="min-w-[160px]"
+                  />
                   
                   <span>to handle clearance for</span>
-                  <select value={assignForm.facultyId} onChange={e => setAssignForm(s => ({ ...s, facultyId: e.target.value, departmentId: '' }))} className="px-2 py-1 rounded border border-gray-200 bg-white font-medium text-gray-900 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400">
-                    <option value="">Everyone (All Faculties)</option>
-                    {faculties.map((f: any) => <option key={f.id} value={f.id}>{f.name}</option>)}
-                  </select>
+                  <SearchableSelect
+                    value={assignForm.facultyId}
+                    onChange={val => setAssignForm(s => ({ ...s, facultyId: val, departmentId: '' }))}
+                    placeholder="Everyone (All Faculties)"
+                    options={faculties.map((f: any) => ({ label: f.name, value: f.id }))}
+                    className="min-w-[160px]"
+                  />
 
                   {assignForm.facultyId && (
                     <>
                       <span className="text-gray-500">specifically in</span>
-                      <select value={assignForm.departmentId} onChange={e => setAssignForm(s => ({ ...s, departmentId: e.target.value }))} className="px-2 py-1 rounded border border-gray-200 bg-white font-medium text-gray-900 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400">
-                        <option value="">All Departments</option>
-                        {departments
-                          .filter((d: any) => d.facultyId === assignForm.facultyId)
-                          .map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                      </select>
+                      <SearchableSelect
+                        value={assignForm.departmentId}
+                        onChange={val => setAssignForm(s => ({ ...s, departmentId: val }))}
+                        placeholder="All Departments"
+                        options={departments.filter((d: any) => d.facultyId === assignForm.facultyId).map((d: any) => ({ label: d.name, value: d.id }))}
+                        className="min-w-[160px]"
+                      />
                     </>
                   )}
+                  
+                  <span className="text-gray-500 pl-1">for session</span>
+                  <SearchableSelect
+                    value={assignForm.sessionId !== 'matrix' ? assignForm.sessionId : ''}
+                    onChange={val => setAssignForm(s => ({ ...s, sessionId: val }))}
+                    placeholder="All Sessions"
+                    options={sessions.map((sess: any) => ({ label: sess.name, value: sess.id }))}
+                    className="min-w-[160px]"
+                  />
                 </div>
 
                 <Button onClick={handleAssignOfficer} disabled={!assignForm.officerId} loading={assigningOfficer} size="sm" className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white">

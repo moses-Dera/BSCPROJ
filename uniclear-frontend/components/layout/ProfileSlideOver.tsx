@@ -58,9 +58,17 @@ export function ProfileSlideOver({ open, onClose }: ProfileSlideOverProps) {
         <div className="flex-1 overflow-y-auto p-6 space-y-8">
           <div className="flex flex-col items-center text-center">
             <div className="h-20 w-20 rounded-full bg-[var(--color-primary)] text-white text-3xl font-bold flex items-center justify-center shadow-lg mb-4">
-              {user ? getInitials(user.email) : '?'}
+              {user ? getInitials(
+                user.student ? `${user.student.firstName} ${user.student.lastName}` : 
+                user.officer ? `${user.officer.firstName} ${user.officer.lastName}` : 
+                user.email
+              ) : '?'}
             </div>
-            <h3 className="text-lg font-bold text-[var(--color-text)]">{user?.email?.split('@')[0] || 'User'}</h3>
+            <h3 className="text-lg font-bold text-[var(--color-text)]">
+              {user?.student ? `${user.student.firstName} ${user.student.lastName}` : 
+               user?.officer ? `${user.officer.firstName} ${user.officer.lastName}` : 
+               user?.email?.split('@')[0] || 'User'}
+            </h3>
             <p className="text-sm text-[var(--color-muted)] mt-1">{user?.role.replace('_', ' ')}</p>
           </div>
 

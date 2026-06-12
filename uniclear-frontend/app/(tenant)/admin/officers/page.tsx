@@ -16,6 +16,7 @@ import { InviteResultDialog } from '@/components/shared/InviteResultDialog'
 import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
 import { EmptyState, ErrorState } from '@/components/shared/EmptyState'
 import { UserCircle, AlertTriangle, Pencil, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 const inviteSchema = z.object({
   firstName: z.string().min(1, 'Required'),
@@ -42,8 +43,8 @@ export default function AdminOfficersPage() {
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['officers'],
     queryFn:  () => officersApi.list().then(r => ({
-      items: r.data.data.items,
-      total: r.data.data.total
+      items: r.data.data,
+      total: r.data.pagination.total
     })),
   })
 
@@ -64,6 +65,7 @@ export default function AdminOfficersPage() {
       const d = res.data.data as any
       setInviteResult({ email: d.user?.email ?? '', tempPassword: d.tempPassword, inviteLink: d.inviteLink })
     },
+    onError: (e: any) => toast.error(e.response?.data?.message || e.message || 'Failed to invite officer')
   })
 
   const { mutate: update, isPending: updating } = useMutation({
@@ -72,6 +74,7 @@ export default function AdminOfficersPage() {
       qc.invalidateQueries({ queryKey: ['officers'] })
       setEditTarget(null)
     },
+    onError: (e: any) => toast.error(e.response?.data?.message || e.message || 'Failed to update officer')
   })
 
   const { mutate: remove, isPending: deleting } = useMutation({
@@ -80,6 +83,7 @@ export default function AdminOfficersPage() {
       qc.invalidateQueries({ queryKey: ['officers'] })
       setDeleteTarget(null)
     },
+    onError: (e: any) => toast.error(e.response?.data?.message || e.message || 'Failed to remove officer')
   })
 
   const openEdit = (o: any) => {

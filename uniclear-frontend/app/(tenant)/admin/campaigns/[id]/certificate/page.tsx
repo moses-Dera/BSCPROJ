@@ -6,12 +6,19 @@ import Link from 'next/link'
 import { CertificateBuilder } from '@/components/admin/CertificateBuilder'
 
 async function getCampaign(campaignId: string) {
-  const res = await serverFetch<{ data: any[] }>('/campaigns')
-  const campaign = res.data?.find((c: any) => c.id === campaignId)
-  return campaign || null
+  try {
+    const res = await serverFetch<any>('/campaigns')
+    const campaigns = Array.isArray(res) ? res : res.data || []
+    return campaigns.find((c: any) => c.id === campaignId) || null
+  } catch (err) {
+    if (err instanceof Error && err.message === 'NEXT_REDIRECT') throw err
+    console.error('Failed to fetch campaign:', err)
+    return null
+  }
 }
 
-export default async function CampaignCertificatePage({ params }: { params: { id: string } }) {
+export default async function CampaignCertificatePage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
   const campaign = await getCampaign(params.id)
 
   if (!campaign) {

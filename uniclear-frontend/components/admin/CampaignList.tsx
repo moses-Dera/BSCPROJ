@@ -75,7 +75,7 @@ function MultiSelectPill({ options, selectedIds, onChange, placeholder }: { opti
   )
 }
 
-export function CampaignList() {
+export function CampaignList({ initialSessions = [] }: { initialSessions?: any[] }) {
   const qc = useQueryClient()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
@@ -87,13 +87,18 @@ export function CampaignList() {
   
   const [targetGroups, setTargetGroups] = useState<{ id: string, faculties: string[], departments: string[], levels: string[] }[]>([])
 
-  const { data: sessions = [] } = useQuery({ queryKey: ['sessions'], queryFn: () => sessionsApi.list().then(r => r.data.data) })
+  const { data: sessions = [] } = useQuery({ 
+    queryKey: ['sessions'], 
+    queryFn: () => sessionsApi.list().then(r => r.data.data),
+    initialData: initialSessions.length > 0 ? initialSessions : undefined
+  })
   
   // Default to active session
   useEffect(() => {
     if (sessions.length > 0 && !sessionId) {
       const active = sessions.find((s: any) => s.isActive)
       if (active) setSessionId(active.id)
+      else setSessionId(sessions[0].id) // Fallback to the first session if none is active
     }
   }, [sessions, sessionId])
 
@@ -258,16 +263,22 @@ export function CampaignList() {
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-700">Academic Session <span className="text-red-500">*</span></label>
-                <select
-                  value={sessionId}
-                  onChange={e => setSessionId(e.target.value)}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
-                >
-                  <option value="">Select an academic session</option>
-                  {sessions.map((s: any) => (
-                    <option key={s.id} value={s.id}>{s.name} {s.isActive ? '(Current)' : ''}</option>
-                  ))}
-                </select>
+                {sessions.length === 0 ? (
+                  <div className="mt-1 p-2 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md">
+                    No academic sessions found. Please create one in the <Link href="/admin/sessions" className="font-semibold underline">Sessions</Link> tab first.
+                  </div>
+                ) : (
+                  <select
+                    value={sessionId}
+                    onChange={e => setSessionId(e.target.value)}
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                  >
+                    <option value="">Select an academic session</option>
+                    {sessions.map((s: any) => (
+                      <option key={s.id} value={s.id}>{s.name} {s.isActive ? '(Current)' : ''}</option>
+                    ))}
+                  </select>
+                )}
               </div>
             </div>
             

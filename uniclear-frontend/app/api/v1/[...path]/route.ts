@@ -29,21 +29,15 @@ async function refreshAccessToken(): Promise<string | null> {
   return json.data.accessToken
 }
 
-async function doFetch(url: string, req: NextRequest, token: string | undefined): Promise<Response> {
-  const isMultipart = req.headers.get('content-type')?.includes('multipart/form-data')
-
-  const headers: HeadersInit = isMultipart
-    ? { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
-    : {
-        'Content-Type': req.headers.get('content-type') ?? 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      }
+async function doFetch(url: string, method: string, headers: Headers, body: any, token: string | undefined): Promise<Response> {
+  const reqHeaders = new Headers(headers)
+  if (token) reqHeaders.set('Authorization', `Bearer ${token}`)
 
   return fetch(url, {
-    method: req.method,
-    headers,
-    body: ['GET', 'HEAD'].includes(req.method) ? undefined : (isMultipart ? req.body : await req.text()),
-    // @ts-expect-error — duplex required for streaming body in Node 18+
+    method,
+    headers: reqHeaders,
+    body,
+    // @ts-expect-error
     duplex: 'half',
   })
 }
@@ -61,9 +55,23 @@ async function proxy(req: NextRequest, { params }: { params: Promise<{ path: str
     : search
   const url = `${API_URL}/api/v1/${path.join('/')}${tenantParam}`
 
+  const contentType = req.headers.get('content-type') || ''
+  const isMultipart = contentType.includes('multipart/form-data')
+  const headers = new Headers()
+  
+  let body: any
+  if (!['GET', 'HEAD'].includes(req.method)) {
+    if (isMultipart) {
+      body = await req.formData()
+    } else {
+      headers.set('Content-Type', contentType || 'application/json')
+      body = await req.text()
+    }
+  }
+
   let res: Response
   try {
-    res = await doFetch(url, req, token)
+    res = await doFetch(url, req.method, headers, body, token)
   } catch {
     return NextResponse.json({ success: false, message: 'Cannot reach server. Please try again later.' }, { status: 503 })
   }
@@ -73,16 +81,16 @@ async function proxy(req: NextRequest, { params }: { params: Promise<{ path: str
     const newToken = await refreshAccessToken()
     if (newToken) {
       try {
-        res = await doFetch(url, req, newToken)
+        res = await doFetch(url, req.method, headers, body, newToken)
       } catch {
         return NextResponse.json({ success: false, message: 'Cannot reach server. Please try again later.' }, { status: 503 })
       }
     }
   }
 
-  const contentType = res.headers.get('content-type') ?? ''
-  const body = contentType.includes('application/json') ? await res.json() : await res.text()
-  return NextResponse.json(body, { status: res.status })
+  const resContentType = res.headers.get('content-type') ?? ''
+  const resBody = resContentType.includes('application/json') ? await res.json() : await res.text()
+  return NextResponse.json(resBody, { status: res.status })
 }
 
 export const GET    = proxy

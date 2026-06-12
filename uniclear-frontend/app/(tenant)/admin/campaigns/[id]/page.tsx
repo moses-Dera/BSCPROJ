@@ -7,28 +7,41 @@ import { Button } from '@/components/ui/button'
 import { ROUTES } from '@/lib/constants'
 
 async function getSummary(campaignId: string) {
-  return serverFetch<{
-    totalStudents: number
-    totalClearances: number
-    completed: number
-    inProgress: number
-    completionRate: string
-    avgProcessingDays: number
-    departmentRates: { name: string; total: number; completed: number; rate: number }[]
-  }>(`/reports/summary?campaignId=${campaignId}`)
+  try {
+    return await serverFetch<{
+      totalStudents: number
+      totalClearances: number
+      completed: number
+      inProgress: number
+      completionRate: string
+      avgProcessingDays: number
+      departmentRates: { name: string; total: number; completed: number; rate: number }[]
+    }>(`/reports/summary?campaignId=${campaignId}`)
+  } catch (err) {
+    if (err instanceof Error && err.message === 'NEXT_REDIRECT') throw err
+    return { totalStudents: 0, totalClearances: 0, completed: 0, inProgress: 0, completionRate: '0', avgProcessingDays: 0, departmentRates: [] }
+  }
 }
 
 async function getStageBreakdown(campaignId: string) {
-  return serverFetch<{ stage: { name: string }; pending: number; approved: number; rejected: number }[]>(`/reports/by-stage?campaignId=${campaignId}`)
+  try {
+    return await serverFetch<{ stage: { name: string }; pending: number; approved: number; rejected: number }[]>(`/reports/by-stage?campaignId=${campaignId}`)
+  } catch (err) {
+    if (err instanceof Error && err.message === 'NEXT_REDIRECT') throw err
+    return []
+  }
 }
 
 async function getCampaign(campaignId: string) {
-  // We can fetch campaigns and find the current one, or just assume we have the name
-  // For simplicity, we just fetch all and find it since the backend doesn't seem to expose a simple GET /campaigns/:id public route,
-  // but let's check.
-  const res = await serverFetch<{ data: { id: string; name: string }[] }>('/campaigns')
-  const campaign = res.data?.find((c: any) => c.id === campaignId)
-  return campaign || { id: campaignId, name: 'Campaign Details' }
+  try {
+    const res = await serverFetch<any>('/campaigns')
+    const campaigns = Array.isArray(res) ? res : res.data || []
+    const campaign = campaigns.find((c: any) => c.id === campaignId)
+    return campaign || { id: campaignId, name: 'Campaign Details' }
+  } catch (err) {
+    if (err instanceof Error && err.message === 'NEXT_REDIRECT') throw err
+    return { id: campaignId, name: 'Campaign Details' }
+  }
 }
 
 export default async function CampaignDetailsPage({ params }: { params: { id: string } }) {

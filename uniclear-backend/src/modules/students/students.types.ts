@@ -1,6 +1,7 @@
 export interface CreateStudentDto {
   email?:       string
   jambRegNo:    string
+  matricNo?:    string
   firstName:    string
   lastName:     string
   facultyId?:   string
@@ -13,6 +14,7 @@ export interface CreateStudentDto {
 export interface UpdateStudentDto {
   firstName?:   string
   lastName?:    string
+  jambRegNo?:   string
   matricNo?:    string
   facultyId?:   string
   departmentId?: string

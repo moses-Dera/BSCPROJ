@@ -1,29 +1,70 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { studentsApi } from '@/lib/api/students.api'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
-import { FileText, Eye, ArrowLeft, Download } from 'lucide-react'
+import { FileText, Eye, ArrowLeft, Download, Pencil } from 'lucide-react'
 import Link from 'next/link'
 import { ROUTES } from '@/lib/constants'
-import { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { useState, useEffect, use } from 'react'
+import { Dialog } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { toast } from 'sonner'
 
-export default function AdminStudentProfile({ params }: { params: { id: string } }) {
+const editSchema = z.object({
+  firstName: z.string().min(1, 'Required'),
+  lastName:  z.string().min(1, 'Required'),
+  jambRegNo: z.string().min(1, 'Required'),
+  matricNo:  z.string().optional(),
+})
+type EditForm = z.infer<typeof editSchema>
+
+export default function AdminStudentProfile({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
+  const qc = useQueryClient()
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [editOpen, setEditOpen] = useState(false)
+  
+  const form = useForm<EditForm>({ resolver: zodResolver(editSchema) })
 
   const { data: student, isLoading: loadingStudent } = useQuery({
-    queryKey: ['student', params.id],
-    queryFn: () => studentsApi.getById(params.id).then(r => r.data.data),
+    queryKey: ['student', id],
+    queryFn: () => studentsApi.getById(id).then(r => r.data.data),
   })
 
   const { data: clearance, isLoading: loadingClearance } = useQuery({
-    queryKey: ['student-clearance', params.id],
-    queryFn: () => studentsApi.getClearanceProgress(params.id).then(r => r.data.data),
+    queryKey: ['student-clearance', id],
+    queryFn: () => studentsApi.getClearanceProgress(id).then(r => r.data.data),
+  })
+
+  useEffect(() => {
+    if (student && editOpen) {
+      form.reset({
+        firstName: student.firstName,
+        lastName: student.lastName,
+        jambRegNo: student.jambRegNo,
+        matricNo: student.matricNo || '',
+      })
+    }
+  }, [student, editOpen, form])
+
+  const { mutate: updateStudent, isPending: updating } = useMutation({
+    mutationFn: (data: EditForm) => studentsApi.update(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['student', id] })
+      toast.success('Student profile updated securely')
+      setEditOpen(false)
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to update student')
+    }
   })
 
   if (loadingStudent || loadingClearance) return <LoadingSkeleton />
@@ -41,8 +82,17 @@ export default function AdminStudentProfile({ params }: { params: { id: string }
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="col-span-1" padding="lg">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)] mb-4">Profile Details</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)]">Profile Details</h3>
+            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setEditOpen(true)}>
+              <Pencil className="w-3 h-3 mr-1" /> Edit
+            </Button>
+          </div>
           <div className="space-y-4 text-sm">
+            <div>
+              <p className="text-[var(--color-muted)] mb-1">Matric Number</p>
+              <p className="font-medium text-[var(--color-primary)]">{student.matricNo || <span className="text-gray-400 italic">Pending Clearance</span>}</p>
+            </div>
             <div>
               <p className="text-[var(--color-muted)] mb-1">Email</p>
               <p className="font-medium">{student.user?.email}</p>
@@ -90,11 +140,11 @@ export default function AdminStudentProfile({ params }: { params: { id: string }
                           <Button variant="secondary" size="sm" onClick={() => setPreviewUrl(approval.attachmentUrl)}>
                             <Eye className="w-4 h-4 mr-1" /> View Signed Doc
                           </Button>
-                          <Button variant="outline" size="sm" asChild>
-                            <a href={approval.attachmentUrl} target="_blank" download>
+                          <a href={approval.attachmentUrl} target="_blank" download>
+                            <Button variant="secondary" size="sm" type="button">
                               <Download className="w-4 h-4" />
-                            </a>
-                          </Button>
+                            </Button>
+                          </a>
                         </div>
                       )}
                     </div>
@@ -107,21 +157,35 @@ export default function AdminStudentProfile({ params }: { params: { id: string }
       </div>
 
       {/* Document Preview Modal */}
-      <Dialog open={!!previewUrl} onOpenChange={(open) => !open && setPreviewUrl(null)}>
-        <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0 overflow-hidden">
-          <DialogHeader className="p-4 border-b shrink-0 bg-gray-50">
-            <DialogTitle>Signed Document Preview</DialogTitle>
-          </DialogHeader>
-          <div className="flex-1 w-full bg-gray-200">
-            {previewUrl && (
-              <iframe 
-                src={previewUrl} 
-                className="w-full h-full border-0" 
-                title="Document Preview"
-              />
-            )}
+      <Dialog open={!!previewUrl} onClose={() => setPreviewUrl(null)} title="Signed Document Preview">
+        <div className="w-full h-[80vh] bg-gray-200 mt-4 rounded-md overflow-hidden">
+          {previewUrl && (
+            <iframe 
+              src={previewUrl} 
+              className="w-full h-full border-0" 
+              title="Document Preview"
+            />
+          )}
+        </div>
+      </Dialog>
+
+      {/* Edit Profile Modal */}
+      <Dialog open={editOpen} onClose={() => setEditOpen(false)} title="Edit Student Profile">
+        <form onSubmit={form.handleSubmit(d => updateStudent(d))} className="space-y-4 pt-2">
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="First Name" error={form.formState.errors.firstName?.message} {...form.register('firstName')} />
+            <Input label="Last Name"  error={form.formState.errors.lastName?.message}  {...form.register('lastName')} />
           </div>
-        </DialogContent>
+          <Input label="JAMB Reg Number" error={form.formState.errors.jambRegNo?.message} {...form.register('jambRegNo')} />
+          <Input label="Matriculation Number" placeholder="Leave empty if pending" error={form.formState.errors.matricNo?.message} {...form.register('matricNo')} />
+          <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-100">
+            Note: Changes to primary identifiers are securely logged to the Global Audit Trail.
+          </p>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="secondary" onClick={() => setEditOpen(false)}>Cancel</Button>
+            <Button type="submit" loading={updating}>Save Changes</Button>
+          </div>
+        </form>
       </Dialog>
     </div>
   )

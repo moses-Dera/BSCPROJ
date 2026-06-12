@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { studentsApi } from '@/lib/api/students.api'
+import { structureApi } from '@/lib/api/structure.api'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
@@ -24,6 +25,9 @@ const addSchema = z.object({
   lastName:   z.string().min(1, 'Required'),
   email:      z.string().email('Invalid email'),
   jambRegNo:  z.string().min(1, 'Required'),
+  matricNo:   z.string().optional(),
+  facultyId:  z.string().optional(),
+  departmentId: z.string().optional(),
 })
 type AddForm = z.infer<typeof addSchema>
 
@@ -41,12 +45,24 @@ export default function AdminStudentsPage() {
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['students', page, search],
     queryFn:  () => studentsApi.list(page, 20, search || undefined).then(r => ({
-      items: r.data.data.items,
-      total: r.data.data.total
+      items: r.data.data,
+      total: r.data.pagination.total
     })),
   })
 
+  const { data: faculties } = useQuery({
+    queryKey: ['faculties'],
+    queryFn: () => structureApi.getFaculties().then(r => r.data.data),
+  })
+
+  const { data: departments } = useQuery({
+    queryKey: ['departments'],
+    queryFn: () => structureApi.getDepartments().then(r => r.data.data),
+  })
+
   const form = useForm<AddForm>({ resolver: zodResolver(addSchema) })
+  const selectedFacultyId = form.watch('facultyId')
+  const filteredDepartments = departments?.filter(d => d.facultyId === selectedFacultyId) || []
 
   const { mutate: create, isPending: creating } = useMutation({
     mutationFn: (d: AddForm) => studentsApi.create(d),
@@ -55,7 +71,7 @@ export default function AdminStudentsPage() {
       setAddOpen(false)
       form.reset()
       const d = res.data.data as any
-      setInviteResult({ email: d.user?.email ?? '', tempPassword: d.tempPassword, inviteLink: d.inviteLink })
+      setInviteResult({ email: d.email ?? '', tempPassword: d.tempPassword, inviteLink: d.inviteLink })
     },
   })
 
@@ -101,6 +117,7 @@ export default function AdminStudentsPage() {
         const obj: any = {}
         headers.forEach((h, i) => {
           if (h.includes('jamb') || h.includes('reg')) obj.jambRegNo = cols[i]
+          else if (h.includes('matric')) obj.matricNo = cols[i]
           else if (h.includes('first')) obj.firstName = cols[i]
           else if (h.includes('last')) obj.lastName = cols[i]
           else if (h.includes('email')) obj.email = cols[i]
@@ -203,7 +220,33 @@ export default function AdminStudentsPage() {
             <Input label="Last Name"  error={form.formState.errors.lastName?.message}  {...form.register('lastName')} />
           </div>
           <Input label="Email" type="email" error={form.formState.errors.email?.message} {...form.register('email')} />
-          <Input label="JAMB Reg Number" placeholder="e.g. 12345678AB" error={form.formState.errors.jambRegNo?.message} {...form.register('jambRegNo')} />
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="JAMB Reg Number" placeholder="e.g. 12345678AB" error={form.formState.errors.jambRegNo?.message} {...form.register('jambRegNo')} />
+            <Input label="Matric Number (Optional)" placeholder="e.g. EDU/2021/001" error={form.formState.errors.matricNo?.message} {...form.register('matricNo')} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-[var(--color-text)]">Faculty (Optional)</label>
+              <select 
+                className="w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] shadow-[var(--shadow-sm)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                {...form.register('facultyId')}
+              >
+                <option value="">Select Faculty...</option>
+                {faculties?.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-[var(--color-text)]">Department (Optional)</label>
+              <select 
+                disabled={!selectedFacultyId}
+                className="w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] shadow-[var(--shadow-sm)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-50"
+                {...form.register('departmentId')}
+              >
+                <option value="">Select Department...</option>
+                {filteredDepartments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
+            </div>
+          </div>
           <div className="flex gap-2 pt-1">
             <Button type="button" variant="secondary" className="flex-1" onClick={() => setAddOpen(false)}>Cancel</Button>
             <Button type="submit" className="flex-1" loading={creating}>Add & Invite</Button>

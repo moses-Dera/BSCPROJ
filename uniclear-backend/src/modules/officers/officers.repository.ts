@@ -8,7 +8,7 @@ export class OfficersRepository {
       db.officer.findMany({
         where: { universityId }, skip, take: limit,
         include: { user: { select: { email: true } }, stageAssignments: { include: { stage: true, faculty: true, department: true, session: true } } },
-        orderBy: { createdAt: 'desc' },
+        orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
       }),
       db.officer.count({ where: { universityId } }),
     ])

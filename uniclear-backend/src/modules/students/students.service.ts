@@ -9,6 +9,7 @@ import { AuthRepository } from '@/modules/auth/auth.repository'
 import { logger } from '@/core/logger/logger'
 import { sendInviteEmail } from '@/modules/notifications/channels/email.channel'
 import { env } from '@/core/config/env'
+import { AuditService } from '@/modules/audit/audit.service'
 
 export class StudentsService {
   static async list(universityId: string, opts: { page: number; limit: number; search?: string; facultyId?: string; departmentId?: string }) {
@@ -61,8 +62,9 @@ export class StudentsService {
     })
 
     logger.info({ email: data.email, inviteLink }, 'Student invite created')
-    const student = await StudentsRepository.create(universityId, user.id, data)
-    return { ...student, inviteLink, tempPassword }
+    const { email, ...studentData } = data
+    const student = await StudentsRepository.create(universityId, user.id, studentData)
+    return { ...student, inviteLink, tempPassword, email }
   }
 
   static async bulkCreate(universityId: string, students: any[]) {
@@ -121,8 +123,24 @@ export class StudentsService {
           data.departmentId = dept.id
         }
 
-        const student = await this.create(universityId, data)
-        results.push(student)
+        // Check if student exists by JAMB Reg No, if so, we can just update them instead of throwing a conflict!
+        const existing = await db.student.findFirst({ where: { jambRegNo: raw.jambRegNo, universityId } })
+        if (existing) {
+          // Update existing student with new data (like matricNo)
+          const updateData: any = {}
+          if (raw.matricNo) updateData.matricNo = raw.matricNo
+          if (data.facultyId) updateData.facultyId = data.facultyId
+          if (data.departmentId) updateData.departmentId = data.departmentId
+          
+          if (Object.keys(updateData).length > 0) {
+            await db.student.update({ where: { id: existing.id }, data: updateData })
+          }
+          results.push({ ...existing, ...updateData })
+        } else {
+          // Create new student
+          const student = await this.create(universityId, { ...data, matricNo: raw.matricNo } as any)
+          results.push(student)
+        }
       } catch (err: any) {
         errors.push({ jambRegNo: raw.jambRegNo, error: err.message })
       }
@@ -130,9 +148,28 @@ export class StudentsService {
     return { created: results.length, errors }
   }
 
-  static async update(id: string, universityId: string, data: UpdateStudentDto) {
-    await StudentsService.getById(id, universityId)
-    return StudentsRepository.update(id, universityId, data)
+  static async update(id: string, universityId: string, actorId: string, data: UpdateStudentDto) {
+    const oldStudent = await StudentsService.getById(id, universityId)
+    const updated = await StudentsRepository.update(id, universityId, data)
+    
+    const changes: any = {}
+    if (data.matricNo && oldStudent.matricNo !== data.matricNo) changes.matricNo = { old: oldStudent.matricNo, new: data.matricNo }
+    if (data.jambRegNo && oldStudent.jambRegNo !== data.jambRegNo) changes.jambRegNo = { old: oldStudent.jambRegNo, new: data.jambRegNo }
+    if (data.firstName && oldStudent.firstName !== data.firstName) changes.firstName = { old: oldStudent.firstName, new: data.firstName }
+    if (data.lastName && oldStudent.lastName !== data.lastName) changes.lastName = { old: oldStudent.lastName, new: data.lastName }
+    
+    if (Object.keys(changes).length > 0) {
+      await AuditService.log({
+        universityId,
+        actorId,
+        action: 'UPDATE_STUDENT_PROFILE',
+        targetId: id,
+        targetType: 'STUDENT',
+        metadata: { changes }
+      })
+    }
+    
+    return updated
   }
 
   static async delete(id: string, universityId: string) {

@@ -98,11 +98,17 @@ export default function CertificatePage() {
             import('@/lib/utils/pdf').then(({ generateCertificatePDF }) => {
               generateCertificatePDF({
                 studentName: `${clearance.student?.firstName} ${clearance.student?.lastName}`,
-                jambRegNo: clearance.student?.jambRegNo || 'N/A',
-                universityName: tenant.name || 'University',
-                completedAt: clearance.completedAt ? formatDate(clearance.completedAt) : new Date().toLocaleDateString(),
+                jambRegNo: clearance.student?.jambRegNo ?? 'N/A',
+                matricNo: clearance.student?.matricNo ?? 'N/A',
+                faculty: clearance.student?.faculty?.name ?? 'N/A',
+                department: clearance.student?.department?.name ?? 'N/A',
+                universityName: tenant.name,
+                primaryColor: tenant.primaryColor,
+                campaignName: clearance.campaign?.name ?? 'Clearance Campaign',
+                completedAt: clearance.completedAt ? formatDate(clearance.completedAt) : 'N/A',
+                clearanceNumber: clearance.clearanceNumber,
                 templateUrl: clearance.campaign?.customCertificateUrl || tenant.certificateTemplateUrl,
-                coordinates: clearance.campaign?.customCertificateCoords || tenant.certificateCoordinates,
+                coordinates: (clearance.campaign?.customCertificateCoords || tenant.certificateCoordinates) as any
               })
             })
           }}

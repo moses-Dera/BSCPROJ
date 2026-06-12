@@ -10,6 +10,6 @@ export const campaignsApi = {
   delete:     (id: string) => apiClient.delete(`/campaigns/${id}`),
   uploadCertificateTemplate: (id: string, file: File) => {
     const form = new FormData(); form.append('file', file)
-    return apiClient.post(`/campaigns/${id}/certificate`, form, { headers: { 'Content-Type': 'multipart/form-data' } })
+    return apiClient.post(`/campaigns/${id}/certificate`, form)
   },
 }

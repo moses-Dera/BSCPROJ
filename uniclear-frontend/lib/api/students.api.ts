@@ -1,12 +1,12 @@
 import { apiClient } from './client'
-import type { Student, Notification, PaginatedData } from '@/types'
+import type { Student, Notification, PaginatedResponse } from '@/types'
 
 export const studentsApi = {
   list:   (page = 1, limit = 20, search?: string) =>
-    apiClient.get<{ success: true; data: PaginatedData<Student> }>(`/students?page=${page}&limit=${limit}${search ? `&search=${search}` : ''}`),
+    apiClient.get<PaginatedResponse<Student>>(`/students?page=${page}&limit=${limit}${search ? `&search=${search}` : ''}`),
   getById: (id: string) =>
     apiClient.get<{ success: true; data: Student }>(`/students/${id}`),
-  create: (data: { email: string; firstName: string; lastName: string; jambRegNo: string; facultyId?: string; departmentId?: string }) =>
+  create: (data: { email: string; firstName: string; lastName: string; jambRegNo: string; facultyId?: string; departmentId?: string; matricNo?: string }) =>
     apiClient.post<{ success: true; data: Student & { inviteLink: string; tempPassword: string } }>('/students', data),
   bulkCreate: (data: Array<{ email: string; firstName: string; lastName: string; jambRegNo: string; facultyId?: string; departmentId?: string }>) =>
     apiClient.post<{ success: true; data: { created: number; errors: any[] } }>('/students/bulk', data),
