@@ -36,7 +36,7 @@ export default function StudentDashboard() {
               <StatusBadge status={clearance.status} />
             </div>
             {clearance.status === 'IN_PROGRESS' && (
-              <Link href={ROUTES.student.documents}>
+              <Link href={`${ROUTES.student.documents}?requestId=${clearance.id}`}>
                 <Button size="sm">Continue <ArrowRight className="h-3.5 w-3.5" /></Button>
               </Link>
             )}

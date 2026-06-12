@@ -6,12 +6,22 @@ import { ClearanceSubmissionPanel } from '@/components/student/ClearanceSubmissi
 import { PageHeader } from '@/components/layout/PageHeader'
 import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
 import { ErrorState, EmptyState } from '@/components/shared/EmptyState'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ROUTES } from '@/lib/constants'
+import { Suspense } from 'react'
 
-export default function StudentDocumentsPage() {
+function DocumentsContent() {
   const router = useRouter()
-  const { data: clearance, isLoading: loadingClearance, isError } = useClearanceStatus()
+  const searchParams = useSearchParams()
+  const urlRequestId = searchParams.get('requestId')
+
+  const { data: clearances, isLoading: loadingClearance, isError } = useClearanceStatus()
+  
+  // Support multi-campaign by picking the requested clearance, or falling back to the first active one
+  const clearance = urlRequestId 
+    ? clearances?.find((c: any) => c.id === urlRequestId)
+    : clearances?.find((c: any) => c.status !== 'COMPLETED')
+
   const requestId = clearance?.id ?? ''
   
   const { data: documents, isLoading: loadingDocs } = useDocuments(requestId)
@@ -20,7 +30,7 @@ export default function StudentDocumentsPage() {
   const { mutateAsync: submit } = useSubmitStage()
 
   if (isError) return <ErrorState />
-  if (loadingClearance || loadingDocs) return <LoadingSkeleton rows={3} />
+  if (loadingClearance || (requestId && loadingDocs)) return <LoadingSkeleton rows={3} />
   if (!clearance) return <EmptyState title="No active clearance" description="Start your clearance first from the dashboard." />
 
   const handleUpload = async (file: File, documentTypeId: string) => {
@@ -37,19 +47,26 @@ export default function StudentDocumentsPage() {
   }
 
   return (
+    <ClearanceSubmissionPanel
+      request={clearance as any}
+      documents={documents || []}
+      onUploadDocument={handleUpload}
+      onDeleteDocument={handleDelete}
+      onSubmitStage={handleSubmit}
+    />
+  )
+}
+
+export default function StudentDocumentsPage() {
+  return (
     <div className="max-w-2xl mx-auto space-y-6">
       <PageHeader
         title="Required Documents"
         subtitle="Upload all required documents for your current stage"
       />
-      
-      <ClearanceSubmissionPanel
-        request={clearance as any}
-        documents={documents || []}
-        onUploadDocument={handleUpload}
-        onDeleteDocument={handleDelete}
-        onSubmitStage={handleSubmit}
-      />
+      <Suspense fallback={<LoadingSkeleton rows={3} />}>
+        <DocumentsContent />
+      </Suspense>
     </div>
   )
 }

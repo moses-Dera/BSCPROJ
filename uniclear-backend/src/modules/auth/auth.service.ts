@@ -23,7 +23,19 @@ export class AuthService {
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     await AuthRepository.saveRefreshToken(user.id, refreshToken, expiresAt)
 
-    return { accessToken, refreshToken, user: { id: user.id, email: user.email, role: user.role, universityId: user.universityId, universitySlug: user.university?.slug ?? null } }
+    return { 
+      accessToken, 
+      refreshToken, 
+      user: { 
+        id: user.id, 
+        email: user.email, 
+        role: user.role, 
+        universityId: user.universityId, 
+        universitySlug: user.university?.slug ?? null,
+        student: user.student,
+        officer: user.officer
+      } 
+    }
   }
 
   static async register(data: { universitySlug: string, jambRegNo: string, email: string, password: string }): Promise<LoginResponse> {
@@ -60,7 +72,18 @@ export class AuthService {
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     await AuthRepository.saveRefreshToken(user.id, refreshToken, expiresAt)
 
-    return { accessToken, refreshToken, user: { id: user.id, email: user.email, role: user.role, universityId: university.id, universitySlug: university.slug } }
+    return { 
+      accessToken, 
+      refreshToken, 
+      user: { 
+        id: user.id, 
+        email: user.email, 
+        role: user.role, 
+        universityId: university.id, 
+        universitySlug: university.slug,
+        student: studentRecord
+      } 
+    }
   }
 
   static async refresh(token: string): Promise<{ accessToken: string; refreshToken: string }> {

@@ -17,5 +17,7 @@ export interface LoginResponse {
     role: Role
     universityId: string | null
     universitySlug: string | null
+    student?: any
+    officer?: any
   }
 }

@@ -28,6 +28,13 @@ export class ClearanceRepository {
         campaign: true,
         session: true,
         stageApprovals: { include: { stage: true }, orderBy: { decidedAt: 'asc' } },
+        currentStage: {
+          include: {
+            documentRequirements: {
+              include: { documentType: true }
+            }
+          }
+        }
       },
       orderBy: { createdAt: 'desc' },
     })
@@ -95,3 +102,4 @@ export class ClearanceRepository {
     })
   }
 }
+// force restart

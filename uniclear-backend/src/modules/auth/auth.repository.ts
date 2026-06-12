@@ -4,7 +4,7 @@ export class AuthRepository {
   static async findUserByEmail(email: string) {
     return db.user.findUnique({
       where: { email },
-      include: { officer: true, university: { select: { slug: true } } },
+      include: { student: true, officer: true, university: { select: { slug: true } } },
     })
   }
 
