@@ -1,16 +1,35 @@
 import { serverFetch } from '@/lib/api/server'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Card } from '@/components/ui/card'
+import { DashboardSessionFilter } from '@/components/admin/DashboardSessionFilter'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Download } from 'lucide-react'
 
-export default async function AdminReportsPage() {
-  const [summary, stages] = await Promise.all([
-    serverFetch<any>('/reports/summary'),
-    serverFetch<any[]>('/reports/by-stage'),
+export default async function AdminReportsPage({ searchParams }: { searchParams: { sessionId?: string } }) {
+  const sessions = await serverFetch<any>('/sessions').then(res => Array.isArray(res) ? res : res.data || [])
+  const activeSessionId = sessions.find((s: any) => s.isActive)?.id
+
+  let sessionId = searchParams.sessionId
+  if (sessionId === undefined && activeSessionId) {
+    sessionId = activeSessionId
+  } else if (sessionId === 'all') {
+    sessionId = undefined
+  }
+
+  const [summary, campaigns] = await Promise.all([
+    serverFetch<any>(`/reports/summary${sessionId ? `?sessionId=${sessionId}` : ''}`),
+    serverFetch<any>(`/campaigns${sessionId ? `?sessionId=${sessionId}` : ''}`).then(res => Array.isArray(res) ? res : res.data || [])
   ])
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Reports" subtitle="Clearance analytics for this session" />
+      <div className="flex items-center justify-between">
+        <PageHeader title="Reports" subtitle={sessionId ? "Clearance analytics for session" : "Global clearance analytics"} />
+        <div className="flex items-center gap-3">
+          <DashboardSessionFilter sessions={sessions} baseUrl="/admin/reports" />
+        </div>
+      </div>
 
       {/* Summary */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -27,29 +46,37 @@ export default async function AdminReportsPage() {
         ))}
       </div>
 
-      {/* Stage breakdown table */}
       <Card padding="sm">
-        <h2 className="text-sm font-semibold text-[var(--color-text)] px-3 py-3">Stage Breakdown</h2>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-[var(--color-border)] text-left">
-              <th className="pb-3 px-3 text-xs font-medium text-[var(--color-muted)] uppercase tracking-wide">Stage</th>
-              <th className="pb-3 px-3 text-xs font-medium text-[var(--color-pending)] uppercase tracking-wide">Pending</th>
-              <th className="pb-3 px-3 text-xs font-medium text-[var(--color-approved)] uppercase tracking-wide">Approved</th>
-              <th className="pb-3 px-3 text-xs font-medium text-[var(--color-rejected)] uppercase tracking-wide">Rejected</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[var(--color-border)]">
-            {stages.map((row: any) => (
-              <tr key={row.stage.id} className="hover:bg-[var(--color-bg)] transition-colors">
-                <td className="py-3 px-3 font-medium text-[var(--color-text)]">{row.stage.name}</td>
-                <td className="py-3 px-3 text-[var(--color-pending)]">{row.pending}</td>
-                <td className="py-3 px-3 text-[var(--color-approved)]">{row.approved}</td>
-                <td className="py-3 px-3 text-[var(--color-rejected)]">{row.rejected}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)]">
+          <h2 className="text-sm font-semibold text-[var(--color-text)]">Campaign Reports</h2>
+          <a 
+            href={`/api/reports/export${sessionId ? `?sessionId=${sessionId}` : ''}`} 
+            target="_blank" 
+            download
+            className="inline-flex items-center justify-center font-medium rounded-md text-xs px-3 py-1.5 gap-1.5 border border-[var(--color-border)] hover:bg-[var(--color-bg)]"
+          >
+            <Download className="h-4 w-4 mr-1" />
+            Export Session Data (CSV)
+          </a>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-4">
+          {campaigns.map((campaign) => (
+            <Link key={campaign.id} href={`/admin/campaigns/${campaign.id}`}>
+              <div className="border border-[var(--color-border)] hover:border-[var(--color-primary)] transition-colors rounded-lg p-3 bg-[var(--color-bg-secondary)] cursor-pointer group">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="text-sm font-medium text-[var(--color-text)] group-hover:text-[var(--color-primary)] transition-colors line-clamp-1">{campaign.name}</h3>
+                  {campaign.isActive && <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0 mt-1"></span>}
+                </div>
+                <div className="mt-3 flex items-center text-[11px] font-medium text-[var(--color-primary)] opacity-0 group-hover:opacity-100 transition-opacity">
+                  View Campaign Details <span className="ml-1">→</span>
+                </div>
+              </div>
+            </Link>
+          ))}
+          {campaigns.length === 0 && (
+            <div className="col-span-full text-center py-6 text-sm text-[var(--color-muted)]">No campaigns available for reporting in this session.</div>
+          )}
+        </div>
       </Card>
     </div>
   )

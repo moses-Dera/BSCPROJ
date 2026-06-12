@@ -4,8 +4,8 @@ import { NotFoundError } from '@/core/errors/AppError'
 import { StudentsRepository } from '@/modules/students/students.repository'
 
 export class CampaignsService {
-  static async list(universityId: string) {
-    return CampaignsRepository.findAll(universityId)
+  static async list(universityId: string, sessionId?: string) {
+    return CampaignsRepository.findAll(universityId, sessionId)
   }
 
   static async listActive(universityId: string, studentFilter?: { userId: string }) {
@@ -63,5 +63,20 @@ export class CampaignsService {
   static async delete(id: string, universityId: string) {
     await CampaignsService.getById(id, universityId)
     return CampaignsRepository.delete(id)
+  }
+
+  static async uploadCertificateTemplate(id: string, universityId: string, file: Express.Multer.File) {
+    const campaign = await CampaignsService.getById(id, universityId)
+    const { storage } = await import('@/modules/documents/storage')
+    const { url } = await storage.upload(file.buffer, `campaigns/${universityId}/${id}/cert-template-${Date.now()}`, file.mimetype)
+    
+    // We update via repository or db directly
+    const { db } = await import('@/lib/db')
+    await db.clearanceCampaign.update({
+      where: { id: campaign.id },
+      data: { customCertificateUrl: url }
+    })
+    
+    return { customCertificateUrl: url }
   }
 }

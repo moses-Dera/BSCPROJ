@@ -101,8 +101,8 @@ export default function CertificatePage() {
                 jambRegNo: clearance.student?.jambRegNo || 'N/A',
                 universityName: tenant.name || 'University',
                 completedAt: clearance.completedAt ? formatDate(clearance.completedAt) : new Date().toLocaleDateString(),
-                templateUrl: tenant.certificateTemplateUrl,
-                coordinates: tenant.certificateCoordinates,
+                templateUrl: clearance.campaign?.customCertificateUrl || tenant.certificateTemplateUrl,
+                coordinates: clearance.campaign?.customCertificateCoords || tenant.certificateCoordinates,
               })
             })
           }}

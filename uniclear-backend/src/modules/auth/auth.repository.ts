@@ -31,7 +31,7 @@ export class AuthRepository {
   }
 
   static async deleteRefreshToken(token: string) {
-    return db.refreshToken.delete({ where: { token } })
+    return db.refreshToken.deleteMany({ where: { token } })
   }
 
   static async deleteAllUserRefreshTokens(userId: string) {

@@ -1,9 +1,11 @@
 import { serverFetch } from '@/lib/api/server'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Card } from '@/components/ui/card'
-import { Users, CheckCircle, Clock, AlertTriangle } from 'lucide-react'
+import { Users, CheckCircle, Clock, AlertTriangle, Layers } from 'lucide-react'
+import { DashboardSessionFilter } from '@/components/admin/DashboardSessionFilter'
+import Link from 'next/link'
 
-async function getSummary() {
+async function getSummary(sessionId?: string) {
   return serverFetch<{
     totalStudents: number
     totalClearances: number
@@ -12,15 +14,39 @@ async function getSummary() {
     completionRate: string
     avgProcessingDays: number
     departmentRates: { name: string; total: number; completed: number; rate: number }[]
-  }>('/reports/summary')
+  }>(`/reports/summary${sessionId ? `?sessionId=${sessionId}` : ''}`)
 }
 
-async function getStageBreakdown() {
-  return serverFetch<{ stage: { name: string }; pending: number; approved: number; rejected: number }[]>('/reports/by-stage')
+async function getStageBreakdown(campaignId?: string) {
+  return serverFetch<{ stage: { name: string }; pending: number; approved: number; rejected: number }[]>(`/reports/by-stage${campaignId ? `?campaignId=${campaignId}` : ''}`)
 }
 
-export default async function AdminDashboard() {
-  const [summary, stages] = await Promise.all([getSummary(), getStageBreakdown()])
+async function getCampaigns(sessionId?: string) {
+  const res = await serverFetch<any>(`/campaigns${sessionId ? `?sessionId=${sessionId}` : ''}`)
+  return Array.isArray(res) ? res : res.data || []
+}
+
+async function getSessions() {
+  const res = await serverFetch<any>('/sessions')
+  return Array.isArray(res) ? res : res.data || []
+}
+
+export default async function AdminDashboard({ searchParams }: { searchParams: { sessionId?: string } }) {
+  const sessions = await getSessions()
+  const activeSessionId = sessions.find((s: any) => s.isActive)?.id
+  
+  // If no sessionId in URL, default to active session. Use 'all' if user explicitly wants global.
+  let sessionId = searchParams.sessionId
+  if (sessionId === undefined && activeSessionId) {
+    sessionId = activeSessionId
+  } else if (sessionId === 'all') {
+    sessionId = undefined
+  }
+
+  const [summary, campaigns] = await Promise.all([
+    getSummary(sessionId), 
+    getCampaigns(sessionId)
+  ])
 
   const statCards = [
     { label: 'Students',    value: summary.totalStudents,        icon: Users,         note: '' },
@@ -31,7 +57,10 @@ export default async function AdminDashboard() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Dashboard" subtitle="Clearance activity overview" />
+      <div className="flex items-center justify-between">
+        <PageHeader title="Dashboard" subtitle={sessionId ? `Clearance activity for session` : `Clearance activity overview`} />
+        <DashboardSessionFilter sessions={sessions} />
+      </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {statCards.map(({ label, value, icon: Icon, note }) => (
@@ -49,40 +78,27 @@ export default async function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-sm font-semibold text-[var(--color-text)]">Clearance Funnel Analytics</h2>
-            <div className="flex gap-4 text-[11px] font-medium">
-              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500"></span> Approved</span>
-              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-yellow-400"></span> Pending</span>
-              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-red-500"></span> Rejected</span>
-            </div>
+            <h2 className="text-sm font-semibold text-[var(--color-text)]">Active Campaigns</h2>
           </div>
-          <div className="space-y-5">
-            {stages.map(row => {
-              const total = Math.max(row.approved + row.pending + row.rejected, 1)
-              const approvedPct = (row.approved / total) * 100
-              const pendingPct = (row.pending / total) * 100
-              const rejectedPct = (row.rejected / total) * 100
-
-              return (
-                <div key={row.stage.name}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <p className="text-sm font-medium text-[var(--color-text)]">{row.stage.name}</p>
-                    <div className="flex gap-3 text-xs shrink-0 ml-2 font-medium">
-                      <span className="text-emerald-600">{row.approved}</span>
-                      <span className="text-yellow-600">{row.pending}</span>
-                      <span className="text-red-600">{row.rejected}</span>
-                    </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+            {campaigns.map(campaign => (
+              <Link key={campaign.id} href={`/admin/campaigns/${campaign.id}`}>
+                <div className="border border-[var(--color-border)] hover:border-[var(--color-primary)] transition-colors rounded-lg p-3 bg-[var(--color-bg-secondary)] cursor-pointer group">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-sm font-medium text-[var(--color-text)] group-hover:text-[var(--color-primary)] transition-colors line-clamp-1">{campaign.name}</h3>
+                    {campaign.isActive && <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0 mt-1"></span>}
                   </div>
-                  <div className="bg-[var(--color-bg-secondary)] rounded-full h-2.5 overflow-hidden flex border border-[var(--color-border)] shadow-inner">
-                    {approvedPct > 0 && <div className="bg-emerald-500 h-full transition-all duration-500" style={{ width: `${approvedPct}%` }} title={`Approved: ${row.approved}`} />}
-                    {pendingPct > 0 && <div className="bg-yellow-400 h-full transition-all duration-500" style={{ width: `${pendingPct}%` }} title={`Pending: ${row.pending}`} />}
-                    {rejectedPct > 0 && <div className="bg-red-500 h-full transition-all duration-500" style={{ width: `${rejectedPct}%` }} title={`Rejected: ${row.rejected}`} />}
+                  <p className="text-xs text-[var(--color-muted)] line-clamp-2">
+                    {campaign.description || 'No description provided.'}
+                  </p>
+                  <div className="mt-3 flex items-center text-[11px] font-medium text-[var(--color-primary)] opacity-0 group-hover:opacity-100 transition-opacity">
+                    View Details <span className="ml-1">→</span>
                   </div>
                 </div>
-              )
-            })}
-            {stages.length === 0 && (
-              <div className="text-center py-6 text-sm text-[var(--color-muted)]">No active clearance stages found.</div>
+              </Link>
+            ))}
+            {campaigns.length === 0 && (
+              <div className="col-span-full text-center py-6 text-sm text-[var(--color-muted)]">No active campaigns found.</div>
             )}
           </div>
         </Card>

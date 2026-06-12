@@ -19,12 +19,15 @@ const createSchema = z.object({
   sessionId: z.string().uuid()
 })
 
-const updateSchema = createSchema.partial()
+const updateSchema = createSchema.partial().extend({
+  customCertificateCoords: z.any().optional()
+})
 
 export class CampaignsController {
   static async list(req: Request, res: Response, next: NextFunction) {
     try {
-      const campaigns = await CampaignsService.list(req.universityId!)
+      const sessionId = req.query.sessionId as string | undefined
+      const campaigns = await CampaignsService.list(req.universityId!, sessionId)
       return ApiResponse.success(res, campaigns)
     } catch (err) { next(err) }
   }
@@ -67,6 +70,14 @@ export class CampaignsController {
     try {
       await CampaignsService.delete(req.params.id, req.universityId!)
       return ApiResponse.success(res, null, 'Campaign deleted')
+    } catch (err) { next(err) }
+  }
+
+  static async uploadCertificateTemplate(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.file) throw new Error('No file uploaded') // Throw generic error, or ValidationError if you import it
+      const result = await CampaignsService.uploadCertificateTemplate(req.params.id, req.universityId!, req.file)
+      return ApiResponse.success(res, result)
     } catch (err) { next(err) }
   }
 }

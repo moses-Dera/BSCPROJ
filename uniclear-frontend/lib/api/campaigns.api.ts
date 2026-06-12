@@ -8,4 +8,8 @@ export const campaignsApi = {
   update:     (id: string, data: Partial<ClearanceCampaign>) => apiClient.patch(`/campaigns/${id}`, data),
   toggle:     (id: string) => apiClient.patch(`/campaigns/${id}/toggle`),
   delete:     (id: string) => apiClient.delete(`/campaigns/${id}`),
+  uploadCertificateTemplate: (id: string, file: File) => {
+    const form = new FormData(); form.append('file', file)
+    return apiClient.post(`/campaigns/${id}/certificate`, form, { headers: { 'Content-Type': 'multipart/form-data' } })
+  },
 }

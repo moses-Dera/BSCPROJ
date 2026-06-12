@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useQuery } from '@tanstack/react-query'
 import { useOfficerQueue } from '@/features/clearance/hooks/useClearance'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
@@ -16,21 +17,62 @@ import { ROUTES } from '@/lib/constants'
 
 export default function OfficerQueuePage() {
   const [search, setSearch] = useState('')
+  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [campaignId, setCampaignId] = useState('')
   const router = useRouter()
 
-  const { data, error, isLoading, isError, refetch } = useOfficerQueue(1, search || undefined)
+  const { data: sessionsRes } = useQuery({
+    queryKey: ['sessions'],
+    queryFn: () => import('@/lib/api/misc.api').then(m => m.sessionsApi.list()).then(r => {
+      const active = r.data.find((s: any) => s.isActive)
+      if (active && sessionId === null) setSessionId(active.id)
+      else if (sessionId === null) setSessionId('')
+      return r.data
+    })
+  })
+
+  const { data: campaignsRes } = useQuery({
+    queryKey: ['campaigns'],
+    queryFn: () => import('@/lib/api/campaigns.api').then(m => m.campaignsApi.list()).then(r => r.data)
+  })
+
+  const { data, error, isLoading, isError, refetch } = useOfficerQueue(1, search || undefined, sessionId || undefined, campaignId || undefined)
 
   return (
     <div className="space-y-4">
       <PageHeader title="Pending Queue" subtitle="Students awaiting your review" />
 
-      <Input
-        placeholder="Search by name or JAMB Reg No..."
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        icon={<Search className="h-4 w-4" />}
-        className="max-w-sm"
-      />
+      <div className="flex flex-col sm:flex-row gap-3 items-center mb-4">
+        <Input
+          placeholder="Search by name or JAMB Reg No..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          icon={<Search className="h-4 w-4" />}
+          className="max-w-sm flex-1"
+        />
+        
+        <select
+          className="text-sm border border-[var(--color-border)] bg-[var(--color-bg)] rounded-md px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--color-primary)] w-full sm:w-auto"
+          value={sessionId || ''}
+          onChange={(e) => setSessionId(e.target.value)}
+        >
+          <option value="">All Sessions</option>
+          {sessionsRes?.data?.map(s => (
+            <option key={s.id} value={s.id}>{s.name}</option>
+          ))}
+        </select>
+
+        <select
+          className="text-sm border border-[var(--color-border)] bg-[var(--color-bg)] rounded-md px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--color-primary)] w-full sm:w-auto"
+          value={campaignId}
+          onChange={(e) => setCampaignId(e.target.value)}
+        >
+          <option value="">All Campaigns</option>
+          {campaignsRes?.data?.filter(c => !sessionId || c.sessionId === sessionId).map(c => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
+      </div>
 
       {isLoading && <LoadingSkeleton rows={5} />}
       {isError   && <ErrorState message={(error as any)?.response?.data?.message ?? "We couldn't load your data."} onRetry={() => refetch()} />}

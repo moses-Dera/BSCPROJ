@@ -50,8 +50,4 @@ export const brandingApi = {
     const form = new FormData(); form.append('file', file)
     return apiClient.post('/branding/login-bg', form, { headers: { 'Content-Type': 'multipart/form-data' } })
   },
-  uploadCertificateTemplate: (file: File) => {
-    const form = new FormData(); form.append('file', file)
-    return apiClient.post('/branding/certificate-template', form, { headers: { 'Content-Type': 'multipart/form-data' } })
-  },
 }

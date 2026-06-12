@@ -18,4 +18,6 @@ export const queueQuerySchema = z.object({
   page:   z.coerce.number().default(1),
   limit:  z.coerce.number().default(20),
   search: z.string().optional(),
+  sessionId: z.string().uuid().optional(),
+  campaignId: z.string().uuid().optional(),
 })

@@ -30,8 +30,8 @@ export const clearanceApi = {
   getByStudent: (studentId: string) =>
     apiClient.get(`/clearance/by-student/${studentId}`),
 
-  getQueue:    (page = 1, limit = 20, search?: string) =>
-    apiClient.get(`/clearance/queue?page=${page}&limit=${limit}${search ? `&search=${search}` : ''}`),
+  getQueue:    (page = 1, limit = 20, search?: string, sessionId?: string, campaignId?: string) =>
+    apiClient.get(`/clearance/queue?page=${page}&limit=${limit}${search ? `&search=${search}` : ''}${sessionId ? `&sessionId=${sessionId}` : ''}${campaignId ? `&campaignId=${campaignId}` : ''}`),
 
   getHistory:  (requestId: string) =>
     apiClient.get(`/clearance/${requestId}/history`),

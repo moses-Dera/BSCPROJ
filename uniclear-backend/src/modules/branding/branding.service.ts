@@ -53,18 +53,4 @@ export class BrandingService {
     })
     return { loginBgUrl: url }
   }
-
-  static async uploadCertificateTemplate(universityId: string, file: Express.Multer.File) {
-    const contract = await db.contractPlan.findUnique({ where: { universityId } })
-    const tier = contract?.tier ?? 'TRIAL'
-    if (!TIER_LIMITS[tier].customBranding) throw new TierLimitError('Custom branding not available on your plan')
-
-    const { url, key } = await storage.upload(file.buffer, `branding/${universityId}/cert-template-${Date.now()}`, file.mimetype)
-    await db.universityBranding.upsert({
-      where: { universityId },
-      create: { universityId, certificateTemplateUrl: url, certificateTemplateKey: key },
-      update: { certificateTemplateUrl: url, certificateTemplateKey: key },
-    })
-    return { certificateTemplateUrl: url }
-  }
 }

@@ -2,9 +2,11 @@ import { db } from '@/lib/db'
 import { Prisma } from '@prisma/client'
 
 export class CampaignsRepository {
-  static async findAll(universityId: string) {
+  static async findAll(universityId: string, sessionId?: string) {
+    const where: any = { universityId }
+    if (sessionId) where.sessionId = sessionId
     return db.clearanceCampaign.findMany({
-      where: { universityId },
+      where,
       orderBy: { createdAt: 'desc' },
       include: {
         eligibilityRules: true,

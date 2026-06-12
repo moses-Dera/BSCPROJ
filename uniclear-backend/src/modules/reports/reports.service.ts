@@ -1,16 +1,20 @@
 import { db } from '@/lib/db'
 
 export class ReportsService {
-  static async summary(universityId: string) {
+  static async summary(universityId: string, campaignId?: string, sessionId?: string) {
+    const clearanceWhere: any = { universityId }
+    if (campaignId) clearanceWhere.campaignId = campaignId
+    if (sessionId) clearanceWhere.sessionId = sessionId
+
     const [totalStudents, totalClearances, completed, inProgress] = await Promise.all([
       db.student.count({ where: { universityId } }),
-      db.clearanceRequest.count({ where: { universityId } }),
-      db.clearanceRequest.count({ where: { universityId, status: 'COMPLETED' } }),
-      db.clearanceRequest.count({ where: { universityId, status: 'IN_PROGRESS' } }),
+      db.clearanceRequest.count({ where: clearanceWhere }),
+      db.clearanceRequest.count({ where: { ...clearanceWhere, status: 'COMPLETED' } }),
+      db.clearanceRequest.count({ where: { ...clearanceWhere, status: 'IN_PROGRESS' } }),
     ])
 
     const completedRequests = await db.clearanceRequest.findMany({
-      where: { universityId, status: 'COMPLETED', completedAt: { not: null } },
+      where: { ...clearanceWhere, status: 'COMPLETED', completedAt: { not: null } },
       select: { createdAt: true, completedAt: true }
     })
     
@@ -22,7 +26,7 @@ export class ReportsService {
     const avgDays = (avgMs / (1000 * 60 * 60 * 24)).toFixed(1)
 
     const deptClearances = await db.clearanceRequest.findMany({
-      where: { universityId },
+      where: clearanceWhere,
       select: { status: true, student: { select: { department: { select: { id: true, name: true } } } } }
     })
 
@@ -55,27 +59,40 @@ export class ReportsService {
     }
   }
 
-  static async byStage(universityId: string) {
+  static async byStage(universityId: string, campaignId?: string, sessionId?: string) {
+    const stageWhere: any = { universityId }
+    if (campaignId) stageWhere.campaignId = campaignId
+    // note: stages don't directly belong to a session, they belong to campaigns.
+    // but we'll apply sessionId later to clearances.
+
     const stages = await db.clearanceStage.findMany({
-      where: { universityId },
+      where: stageWhere,
       orderBy: { orderIndex: 'asc' },
     })
+
+    const clearanceWhere: any = { universityId, currentStageId: { not: null } }
+    if (campaignId) clearanceWhere.campaignId = campaignId
+    if (sessionId) clearanceWhere.sessionId = sessionId
+
+    const approvalWhere: any = { universityId }
+    if (campaignId) approvalWhere.stage = { campaignId }
+    if (sessionId) approvalWhere.clearanceRequest = { sessionId }
 
     // Single query per metric instead of 3 per stage (eliminates N+1)
     const [pendingCounts, approvedCounts, rejectedCounts] = await Promise.all([
       db.clearanceRequest.groupBy({
         by: ['currentStageId'],
-        where: { universityId, currentStageId: { not: null } },
+        where: clearanceWhere,
         _count: true,
       }),
       db.stageApproval.groupBy({
         by: ['stageId'],
-        where: { universityId, status: 'APPROVED' },
+        where: { ...approvalWhere, status: 'APPROVED' },
         _count: true,
       }),
       db.stageApproval.groupBy({
         by: ['stageId'],
-        where: { universityId, status: 'REJECTED' },
+        where: { ...approvalWhere, status: 'REJECTED' },
         _count: true,
       }),
     ])

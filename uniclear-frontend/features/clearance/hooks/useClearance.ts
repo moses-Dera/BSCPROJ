@@ -28,10 +28,10 @@ export function useClearanceStatus() {
   })
 }
 
-export function useOfficerQueue(page = 1, search?: string) {
+export function useOfficerQueue(page = 1, search?: string, sessionId?: string, campaignId?: string) {
   return useQuery({
-    queryKey: [...clearanceKeys.queue(), page, search],
-    queryFn:  () => clearanceApi.getQueue(page, 20, search).then((r: any) => ({
+    queryKey: [...clearanceKeys.queue(), page, search, sessionId, campaignId],
+    queryFn:  () => clearanceApi.getQueue(page, 20, search, sessionId, campaignId).then((r: any) => ({
       items: r.data.data,
       total: r.data.pagination.total
     })),

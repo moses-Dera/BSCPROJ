@@ -88,6 +88,15 @@ export function CampaignList() {
   const [targetGroups, setTargetGroups] = useState<{ id: string, faculties: string[], departments: string[], levels: string[] }[]>([])
 
   const { data: sessions = [] } = useQuery({ queryKey: ['sessions'], queryFn: () => sessionsApi.list().then(r => r.data.data) })
+  
+  // Default to active session
+  useEffect(() => {
+    if (sessions.length > 0 && !sessionId) {
+      const active = sessions.find((s: any) => s.isActive)
+      if (active) setSessionId(active.id)
+    }
+  }, [sessions, sessionId])
+
   const { data: faculties = [] } = useQuery({ queryKey: ['faculties'], queryFn: () => structureApi.faculties().then(r => r.data.data) })
   const { data: allDepartments = [] } = useQuery({ queryKey: ['departments'], queryFn: () => structureApi.departments().then(r => r.data.data) })
   const getLevelsForGroup = (group: any) => {
@@ -115,6 +124,10 @@ export function CampaignList() {
 
   const { mutate: create, isPending } = useMutation({
     mutationFn: () => {
+      if (!sessionId) {
+        throw new Error('Please select an Academic Session for this campaign.')
+      }
+
       const issuedDataFields = issuedDataFieldsStr.split(',').map(s => s.trim()).filter(Boolean)
       
       const formattedRules: any[] = []
@@ -148,7 +161,7 @@ export function CampaignList() {
       setSessionId('')
       setTargetGroups([])
     },
-    onError: (e: any) => toast.error(e.response?.data?.message ?? 'Failed to create campaign'),
+    onError: (e: any) => toast.error(e.response?.data?.message ?? e.message ?? 'Failed to create campaign'),
   })
 
   const getFacultyColor = (id: string) => {
@@ -214,6 +227,9 @@ export function CampaignList() {
             <div className="flex items-center gap-2 mt-4 pt-4 border-t border-[var(--color-border)]">
               <Link href={`${ROUTES.admin.stages}?campaignId=${campaign.id}`} className="flex-1">
                 <Button variant="secondary" className="w-full"><Settings className="h-4 w-4 mr-2" /> Stages</Button>
+              </Link>
+              <Link href={`/admin/campaigns/${campaign.id}/certificate`} className="flex-1">
+                <Button variant="secondary" className="w-full">Certificate</Button>
               </Link>
               <Button variant="secondary" size="sm" onClick={() => toggle(campaign.id)} title={campaign.isActive ? 'Deactivate' : 'Activate'}>
                 <Power className={`h-4 w-4 ${campaign.isActive ? 'text-amber-500' : 'text-emerald-500'}`} />
