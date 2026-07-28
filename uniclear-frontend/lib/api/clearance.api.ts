@@ -28,6 +28,9 @@ export const clearanceApi = {
   getByStudent: (studentId: string) =>
     apiClient.get(`/clearance/by-student/${studentId}`),
 
+  getById: (requestId: string) =>
+    apiClient.get(`/clearance/${requestId}`),
+
   getQueue:    (page = 1, limit = 20, search?: string, sessionId?: string, campaignId?: string) =>
     apiClient.get(`/clearance/queue?page=${page}&limit=${limit}${search ? `&search=${search}` : ''}${sessionId ? `&sessionId=${sessionId}` : ''}${campaignId ? `&campaignId=${campaignId}` : ''}`),
 

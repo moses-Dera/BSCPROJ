@@ -10,16 +10,15 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 *
 router.use(authMiddleware, requireTenant)
 
 router.get('/me',                    requireRole('OFFICER'),             OfficersController.getMe)
+router.get('/stamps',                requireRole('OFFICER'),             OfficersController.getStamps)
+router.post('/stamps',               requireRole('OFFICER'),             upload.single('file'), OfficersController.uploadStamp)
+router.delete('/stamps/:id',         requireRole('OFFICER'),             OfficersController.deleteStamp)
+router.post('/stage/:stageId/assign',         requireRole('SUPER_ADMIN'), OfficersController.assign)
+router.delete('/assignment/:assignmentId',    requireRole('SUPER_ADMIN'), OfficersController.unassign)
 router.get('/',                      requireRole('SUPER_ADMIN', 'ADMIN'), OfficersController.list)
 router.get('/:id',                   requireRole('SUPER_ADMIN', 'ADMIN'), OfficersController.getById)
 router.post('/',                     requireRole('SUPER_ADMIN'),          OfficersController.create)
 router.patch('/:id',                 requireRole('SUPER_ADMIN'),          OfficersController.update)
 router.delete('/:id',                requireRole('SUPER_ADMIN'),          OfficersController.delete)
-router.post('/stage/:stageId/assign',         requireRole('SUPER_ADMIN'), OfficersController.assign)
-router.delete('/assignment/:assignmentId',    requireRole('SUPER_ADMIN'), OfficersController.unassign)
-
-router.get('/stamps',                requireRole('OFFICER'),             OfficersController.getStamps)
-router.post('/stamps',               requireRole('OFFICER'),             upload.single('file'), OfficersController.uploadStamp)
-router.delete('/stamps/:id',         requireRole('OFFICER'),             OfficersController.deleteStamp)
 
 export default router

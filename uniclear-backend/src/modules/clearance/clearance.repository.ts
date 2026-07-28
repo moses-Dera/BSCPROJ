@@ -17,6 +17,13 @@ export class ClearanceRepository {
         session: true,
         stageApprovals: { include: { stage: true }, orderBy: { decidedAt: 'desc' } },
         documents: { include: { documentType: true } },
+        currentStage: {
+          include: {
+            documentRequirements: {
+              include: { documentType: true }
+            }
+          }
+        }
       },
     })
   }
@@ -55,34 +62,47 @@ export class ClearanceRepository {
     return db.clearanceRequest.update({ where: { id }, data: { stageStatus } })
   }
 
-  static async findOfficerQueue(universityId: string, stageId: string, facultyId: string | undefined, departmentId: string | undefined, opts: { page: number; limit: number; search?: string; sessionId?: string; campaignId?: string }) {
+  static async findOfficerQueue(universityId: string, assignments: any[], opts: { page: number; limit: number; search?: string; sessionId?: string; campaignId?: string }) {
     const { page, limit, search, sessionId, campaignId } = opts
     const skip = (page - 1) * limit
+
+    const assignmentOrs = assignments.map(a => {
+      const cond: any = { currentStageId: a.stageId }
+      if (a.facultyId || a.departmentId) {
+        cond.student = {}
+        if (a.facultyId) cond.student.facultyId = a.facultyId
+        if (a.departmentId) cond.student.departmentId = a.departmentId
+      }
+      return cond
+    })
+
+    const stageIds = [...new Set(assignments.map(a => a.stageId))]
+
     const where: any = {
       universityId,
-      currentStageId: stageId,
       status: 'IN_PROGRESS',
       stageStatus: 'SUBMITTED',
-      stageApprovals: { none: { stageId, status: { in: ['APPROVED', 'REJECTED'] as StageStatus[] }, decidedAt: { gte: new Date(Date.now() - 1000) } } },
+      stageApprovals: { none: { stageId: { in: stageIds }, status: { in: ['APPROVED', 'REJECTED'] as StageStatus[] }, decidedAt: { gte: new Date(Date.now() - 1000) } } },
+      AND: [
+        { OR: assignmentOrs }
+      ]
     }
+
     if (sessionId) where.sessionId = sessionId
     if (campaignId) where.campaignId = campaignId
-    // Scope to faculty or department if officer has specific assignments
-    if (facultyId || departmentId) {
-      where.student = { ...(where.student ?? {}) }
-      if (facultyId) where.student.facultyId = facultyId
-      if (departmentId) where.student.departmentId = departmentId
-    }
+
     if (search) {
-      where.student = {
-        ...(where.student ?? {}),
-        OR: [
-          { firstName: { contains: search, mode: 'insensitive' } },
-          { lastName:  { contains: search, mode: 'insensitive' } },
-          { jambRegNo: { contains: search, mode: 'insensitive' } },
-        ],
-      }
+      where.AND.push({
+        student: {
+          OR: [
+            { firstName: { contains: search, mode: 'insensitive' } },
+            { lastName:  { contains: search, mode: 'insensitive' } },
+            { jambRegNo: { contains: search, mode: 'insensitive' } },
+          ]
+        }
+      })
     }
+
     const [data, total] = await Promise.all([
       db.clearanceRequest.findMany({ where, skip, take: limit, include: { student: { include: { faculty: true, department: true } } }, orderBy: { updatedAt: 'asc' } }),
       db.clearanceRequest.count({ where }),

@@ -11,7 +11,7 @@ import { StampManagerDialog } from './StampManagerDialog'
 import Image from 'next/image'
 import { toast } from 'sonner'
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js'
 
 interface PdfStampViewerProps {
   fileUrl: string
@@ -133,22 +133,29 @@ export function PdfStampViewer({ fileUrl, onSaveStampedFile }: PdfStampViewerPro
 
         <div 
           ref={pageRef} 
-          onClick={handlePageClick} 
-          className={`relative bg-white shadow-xl ${selectedStamp ? 'cursor-crosshair' : ''}`}
+          className="relative bg-white shadow-xl"
         >
           <Document file={fileUrl} onLoadSuccess={onDocumentLoadSuccess}>
             <Page 
               pageNumber={pageNumber} 
-              width={600} // fixed width for MVP rendering
+              width={600}
               renderTextLayer={false}
               renderAnnotationLayer={false}
             />
           </Document>
 
-          {/* Visual Indicator of where the stamp will be placed */}
+          {/* Transparent overlay to capture stamp placement clicks */}
+          {selectedStamp && (
+            <div
+              className="absolute inset-0 cursor-crosshair z-10"
+              onClick={handlePageClick}
+            />
+          )}
+
+          {/* Visual preview of where stamp will be placed */}
           {stampPosition && selectedStamp && (
             <div 
-              className="absolute pointer-events-none opacity-80 shadow-md border border-blue-400 rounded bg-white"
+              className="absolute pointer-events-none opacity-80 shadow-md border border-blue-400 rounded bg-white z-20"
               style={{
                 left: `${stampPosition.x * 100}%`,
                 bottom: `${stampPosition.y * 100}%`,

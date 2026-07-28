@@ -97,8 +97,13 @@ export function ClearanceSubmissionPanel({
                     </Button>
                   </div>
                 ) : (
-                  <label className="cursor-pointer">
-                    <Button variant="secondary" size="sm" disabled={uploadingId === req.documentTypeId}>
+                  <div>
+                    <Button 
+                      variant="secondary" 
+                      size="sm" 
+                      disabled={uploadingId === req.documentTypeId}
+                      onClick={() => document.getElementById(`file-input-${req.id}`)?.click()}
+                    >
                         {uploadingId === req.documentTypeId ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
@@ -109,13 +114,14 @@ export function ClearanceSubmissionPanel({
                         )}
                     </Button>
                     <input 
+                      id={`file-input-${req.id}`}
                       type="file" 
                       className="hidden" 
                       onChange={(e) => handleFileChange(e, req.documentTypeId)}
                       disabled={uploadingId === req.documentTypeId}
                       data-testid={`file-input-${req.documentTypeId}`}
                     />
-                  </label>
+                  </div>
                 )}
               </div>
             </div>

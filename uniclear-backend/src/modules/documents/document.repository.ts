@@ -31,6 +31,14 @@ export class DocumentsRepository {
     return db.document.create({ data })
   }
 
+  static async updateStatus(id: string, status: 'APPROVED' | 'REJECTED', rejectionReason?: string) {
+    return db.document.update({
+      where: { id },
+      data: { status, rejectionReason: status === 'REJECTED' ? rejectionReason : null },
+      include: { documentType: true },
+    })
+  }
+
   static async delete(id: string) {
     return db.document.delete({ where: { id } })
   }

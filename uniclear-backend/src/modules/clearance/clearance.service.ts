@@ -34,6 +34,12 @@ export class ClearanceService {
     return clearances
   }
 
+  static async getById(id: string, universityId: string) {
+    const clearance = await ClearanceRepository.findById(id, universityId)
+    if (!clearance) throw new NotFoundError('Clearance request not found')
+    return clearance
+  }
+
   static async getStatus(userId: string, universityId: string) {
     const student = await StudentsRepository.findByUserId(userId, universityId)
     if (!student) throw new NotFoundError('Student profile not found')
@@ -144,13 +150,14 @@ export class ClearanceService {
     const officer = await OfficersRepository.findByUserId(officerUserId)
     if (!officer?.stageAssignments?.length) throw new ForbiddenError('You are not assigned to any stage')
 
-    // Find the active assignment for this officer
-    const assignment = officer.stageAssignments[0]
-    const stageId    = assignment.stageId
-    const facultyId  = assignment.facultyId ?? undefined
-    const departmentId = assignment.departmentId ?? undefined
+    let assignments = officer.stageAssignments
+    if (opts.campaignId) {
+      assignments = assignments.filter(a => (a as any).stage.campaignId === opts.campaignId)
+    }
 
-    return ClearanceRepository.findOfficerQueue(universityId, stageId, facultyId, departmentId, opts)
+    if (assignments.length === 0) return { data: [], total: 0 }
+
+    return ClearanceRepository.findOfficerQueue(universityId, assignments, opts)
   }
 
   static async getHistory(requestId: string, universityId: string) {

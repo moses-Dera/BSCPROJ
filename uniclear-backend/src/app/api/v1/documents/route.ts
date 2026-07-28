@@ -13,6 +13,8 @@ router.get('/request/:requestId',              requireRole('SUPER_ADMIN', 'ADMIN
 router.get('/request/:requestId/stage/:stageId', requireRole('OFFICER', 'SUPER_ADMIN', 'ADMIN'),          DocumentsController.getByStage)
 router.post('/upload',                         requireRole('STUDENT'), upload.single('file'),              DocumentsController.upload)
 router.get('/:id/url',                         requireRole('SUPER_ADMIN', 'ADMIN', 'OFFICER', 'STUDENT'), DocumentsController.getSignedUrl)
-router.delete('/:id',                          requireRole('STUDENT', 'SUPER_ADMIN'),                     DocumentsController.delete)
+router.patch('/:id/approve',                   requireRole('OFFICER', 'SUPER_ADMIN', 'ADMIN'),    DocumentsController.approveDocument)
+router.patch('/:id/reject',                    requireRole('OFFICER', 'SUPER_ADMIN', 'ADMIN'),    DocumentsController.rejectDocument)
+router.delete('/:id',                          requireRole('STUDENT', 'SUPER_ADMIN'),             DocumentsController.delete)
 
 export default router

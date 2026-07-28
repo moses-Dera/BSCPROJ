@@ -119,7 +119,7 @@ export default function OfficerQueuePage() {
                         <Button
                           size="sm"
                           variant="secondary"
-                          onClick={() => router.push(ROUTES.officer.review(item.student?.id))}
+                          onClick={() => router.push(ROUTES.officer.review(item.id))}
                         >
                           <Eye className="h-3.5 w-3.5 mr-1" /> Review
                         </Button>

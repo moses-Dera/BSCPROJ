@@ -13,6 +13,7 @@ router.post('/start',                       requireRole('STUDENT'),             
 router.get('/status',                       requireRole('STUDENT'),                     ClearanceController.getStatus)
 router.get('/queue',                        requireRole('OFFICER'),                     ClearanceController.getQueue)
 router.get('/by-student/:studentId',        requireRole('OFFICER', 'SUPER_ADMIN', 'ADMIN'), ClearanceController.getByStudent)
+router.get('/:requestId',                   requireRole('OFFICER', 'SUPER_ADMIN', 'ADMIN'), ClearanceController.getById)
 router.post('/:requestId/submit',           requireRole('STUDENT'),                     ClearanceController.submit)
 router.post('/:requestId/approve',          requireRole('OFFICER'),                     upload.single('file'), ClearanceController.approve)
 router.post('/:requestId/reject',           requireRole('OFFICER'),                     ClearanceController.reject)

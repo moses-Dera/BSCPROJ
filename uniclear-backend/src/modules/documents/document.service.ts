@@ -70,6 +70,20 @@ export class DocumentsService {
     return DocumentsRepository.delete(id)
   }
 
+  static async approveDocument(id: string, universityId: string) {
+    const doc = await DocumentsRepository.findById(id, universityId)
+    if (!doc) throw new NotFoundError('Document not found')
+    return DocumentsRepository.updateStatus(id, 'APPROVED')
+  }
+
+  static async rejectDocument(id: string, universityId: string, reason: string) {
+    if (!reason?.trim()) throw new ValidationError('Rejection reason is required')
+    const doc = await DocumentsRepository.findById(id, universityId)
+    if (!doc) throw new NotFoundError('Document not found')
+    // When an officer rejects a doc, reset it so the student can re-upload
+    return DocumentsRepository.updateStatus(id, 'REJECTED', reason.trim())
+  }
+
   static async getSignedUrl(id: string, universityId: string) {
     const doc = await DocumentsRepository.findById(id, universityId)
     if (!doc) throw new NotFoundError('Document not found')

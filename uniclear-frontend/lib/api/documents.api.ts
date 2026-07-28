@@ -13,8 +13,10 @@ export const documentsApi = {
     return apiClient.post<{ success: true; data: Document }>('/documents/upload', form)
   },
 
-  delete:       (id: string) => apiClient.delete(`/documents/${id}`),
-  getSignedUrl: (id: string) => apiClient.get(`/documents/${id}/url`),
+  delete:          (id: string) => apiClient.delete(`/documents/${id}`),
+  getSignedUrl:    (id: string) => apiClient.get(`/documents/${id}/url`),
+  approve:         (id: string) => apiClient.patch(`/documents/${id}/approve`, {}),
+  reject:          (id: string, reason: string) => apiClient.patch(`/documents/${id}/reject`, { reason }),
 }
 
 export const documentTypesApi = {

@@ -25,6 +25,12 @@ enum ClearanceStatus {
   REJECTED
 }
 
+enum DocumentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum StageStatus {
   PENDING
   SUBMITTED
@@ -520,6 +526,8 @@ model Document {
   fileKey        String
   fileSizeMB     Float
   mimeType       String
+  status         DocumentStatus @default(PENDING)
+  rejectionReason String?
   uploadedAt     DateTime @default(now())
 
   student        Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)

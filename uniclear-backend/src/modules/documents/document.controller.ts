@@ -23,7 +23,10 @@ export class DocumentsController {
     try {
       if (!req.file) throw new ValidationError('No file uploaded')
       const { requestId, documentTypeId } = req.body
-      const doc = await DocumentsService.upload(req.universityId!, req.user!.sub, requestId, documentTypeId, req.file)
+      const { db } = await import('@/lib/db')
+      const student = await db.student.findUnique({ where: { userId: req.user!.sub } })
+      if (!student) throw new ValidationError('Student profile not found')
+      const doc = await DocumentsService.upload(req.universityId!, student.id, requestId, documentTypeId, req.file)
       return ApiResponse.created(res, doc)
     } catch (err) { next(err) }
   }
@@ -32,6 +35,21 @@ export class DocumentsController {
     try {
       await DocumentsService.delete(param(req.params.id), req.universityId!)
       return ApiResponse.noContent(res)
+    } catch (err) { next(err) }
+  }
+
+  static async approveDocument(req: Request, res: Response, next: NextFunction) {
+    try {
+      const doc = await DocumentsService.approveDocument(param(req.params.id), req.universityId!)
+      return ApiResponse.success(res, doc)
+    } catch (err) { next(err) }
+  }
+
+  static async rejectDocument(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { reason } = req.body
+      const doc = await DocumentsService.rejectDocument(param(req.params.id), req.universityId!, reason)
+      return ApiResponse.success(res, doc)
     } catch (err) { next(err) }
   }
 
