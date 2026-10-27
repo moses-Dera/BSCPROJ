@@ -506,7 +506,7 @@ export class CertificateGenerator {
           borderColor: rgb(34 / 255, 197 / 255, 94 / 255),
           borderWidth: 0.6,
         })
-        page.drawText('✓ APPROVED', {
+        page.drawText('APPROVED', {
           x: cellX + 10,
           y: cellY + 8,
           size: 6,

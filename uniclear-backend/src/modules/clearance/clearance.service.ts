@@ -103,8 +103,10 @@ export class ClearanceService {
       level:        student?.level        ?? undefined,
     })
     const required = requirements.filter(r => r.isRequired)
-    const allUploaded = await DocumentsRepository.findByRequest(requestId, universityId)
-    const validUploaded = allUploaded.filter(d => d.status !== 'REJECTED')
+    const stageUploaded = (await DocumentsRepository.findByStage(requestId, targetStageId, universityId)) || []
+    const allUploaded = (await DocumentsRepository.findByRequest(requestId, universityId)) || []
+    const combinedDocs = Array.from(new Map([...stageUploaded, ...allUploaded].map(d => [d.id || d.documentTypeId, d])).values())
+    const validUploaded = combinedDocs.filter(d => d.status !== 'REJECTED')
     const uploadedTypeIds = validUploaded.map(d => d.documentTypeId)
     const missing = required.filter(r => !uploadedTypeIds.includes(r.documentTypeId))
 
@@ -202,10 +204,12 @@ export class ClearanceService {
     })
     const required = requirements.filter(r => r.isRequired)
     if (required.length > 0) {
-      // Fetch ALL documents for this request (not just stage-filtered) so that
-      // documents uploaded before stage routing are still found
-      const allUploaded = await DocumentsRepository.findByRequest(requestId, universityId)
-      const validUploaded = allUploaded.filter(d => d.status !== 'REJECTED')
+      // Fetch both stage-routed and request-level documents so that
+      // documents uploaded in advance or during earlier stages are verified
+      const stageUploaded = (await DocumentsRepository.findByStage(requestId, stageIdToApprove, universityId)) || []
+      const allUploaded = (await DocumentsRepository.findByRequest(requestId, universityId)) || []
+      const combinedDocs = Array.from(new Map([...stageUploaded, ...allUploaded].map(d => [d.id || d.documentTypeId, d])).values())
+      const validUploaded = combinedDocs.filter(d => d.status !== 'REJECTED')
       const uploadedTypeIds = validUploaded.map(d => d.documentTypeId)
       const missing = required.filter(r => !uploadedTypeIds.includes(r.documentTypeId))
       if (missing.length > 0) {
