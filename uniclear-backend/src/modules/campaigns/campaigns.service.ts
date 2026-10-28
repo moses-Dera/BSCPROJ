@@ -28,7 +28,7 @@ export class CampaignsService {
     return campaign
   }
 
-  static async create(universityId: string, data: { name: string; description?: string; sessionId: string; eligibilityRules?: { facultyId?: string | null; departmentId?: string | null; level?: string | null }[]; whitelistEnabled?: boolean; whitelist?: string[]; issuesCertificate?: boolean; issuesClearanceSlip?: boolean; issuedDataFields?: string[] }) {
+  static async create(universityId: string, data: { name: string; description?: string; sessionId: string; eligibilityRules?: { facultyId?: string | null; departmentId?: string | null; level?: string | null }[]; whitelistEnabled?: boolean; whitelist?: string[]; issuesCertificate?: boolean; issuesClearanceSlip?: boolean; issuesMatricNumber?: boolean; matricPrefix?: string | null; issuedDataFields?: string[] }) {
     const { eligibilityRules, ...rest } = data
     return CampaignsRepository.create({
       universityId,

@@ -75,6 +75,8 @@ export interface ClearanceCampaign {
   whitelist: string[]
   issuesCertificate: boolean
   issuesClearanceSlip: boolean
+  issuesMatricNumber: boolean
+  matricPrefix: string | null
   issuedDataFields: string[]
   customCertificateUrl: string | null
   customCertificateCoords: any | null

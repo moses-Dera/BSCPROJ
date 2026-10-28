@@ -15,6 +15,8 @@ const createSchema = z.object({
   whitelist: z.array(z.string()).optional(),
   issuesCertificate: z.boolean().optional(),
   issuesClearanceSlip: z.boolean().optional(),
+  issuesMatricNumber: z.boolean().optional(),
+  matricPrefix: z.string().optional().nullable(),
   issuedDataFields: z.array(z.string()).optional(),
   sessionId: z.string().uuid()
 })

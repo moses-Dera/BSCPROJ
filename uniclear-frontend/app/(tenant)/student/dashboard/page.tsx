@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { useTenantStore } from '@/store/useTenantStore'
@@ -34,6 +34,106 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 
+function MatricCelebrationModal({ matricNo, studentName, onClose }: { matricNo: string; studentName: string; onClose: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.5, opacity: 0, y: 40 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.1 }}
+        className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full mx-4 overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Confetti-style top decoration */}
+        <div className="h-2 bg-gradient-to-r from-amber-400 via-emerald-500 via-blue-500 to-purple-500" />
+        
+        {/* Floating emoji particles */}
+        <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+          {['🎉', '🎓', '✨', '🏆', '🎊', '⭐'].map((emoji, i) => (
+            <motion.span
+              key={i}
+              initial={{ y: -20, x: `${15 + i * 14}%`, opacity: 0, scale: 0 }}
+              animate={{ 
+                y: ['-20px', `${60 + (i % 3) * 40}px`], 
+                opacity: [0, 1, 1, 0], 
+                scale: [0, 1.2, 1, 0.5],
+                rotate: [0, (i % 2 ? 20 : -20)]
+              }}
+              transition={{ duration: 2.5, delay: 0.3 + i * 0.15, ease: 'easeOut' }}
+              className="absolute text-2xl"
+            >
+              {emoji}
+            </motion.span>
+          ))}
+        </div>
+
+        <div className="px-8 pt-8 pb-6 text-center relative z-10">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 15, delay: 0.2 }}
+            className="h-20 w-20 mx-auto rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200 mb-5"
+          >
+            <GraduationCap className="h-10 w-10 text-white" />
+          </motion.div>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+            className="text-2xl font-extrabold text-slate-900 mb-1"
+          >
+            Congratulations, {studentName}! 🎉
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45 }}
+            className="text-sm text-slate-500 mb-6"
+          >
+            You have been officially assigned your Matriculation Number
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 12, delay: 0.55 }}
+            className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-6 shadow-xl mb-6"
+          >
+            <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-2">Your Matric Number</p>
+            <p className="text-3xl font-extrabold text-white font-mono tracking-wider">{matricNo}</p>
+          </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7 }}
+            className="text-xs text-slate-400 mb-5 leading-relaxed"
+          >
+            This is your official university identification number. It will appear on your profile, certificate, and all academic records.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+          >
+            <Button onClick={onClose} size="lg" className="w-full font-bold text-base shadow-md">
+              <Sparkles className="h-4 w-4 mr-2" /> Continue to Dashboard
+            </Button>
+          </motion.div>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
 export default function StudentDashboard() {
   const tenant = useTenantStore()
   const { data: clearances, isLoading: loadingClearance } = useClearanceStatus()
@@ -42,6 +142,24 @@ export default function StudentDashboard() {
   const [stageFilter, setStageFilter] = useState<'ALL' | 'ACTION' | 'APPROVED' | 'PENDING'>('ALL')
   const [docHubFilter, setDocHubFilter] = useState<'ALL' | 'APPROVED' | 'PENDING' | 'REJECTED'>('ALL')
   const [docHubSearch, setDocHubSearch] = useState('')
+  const [showMatricCelebration, setShowMatricCelebration] = useState(false)
+  const [celebrationMatricNo, setCelebrationMatricNo] = useState('')
+  const [celebrationStudentName, setCelebrationStudentName] = useState('')
+
+  // Show celebration modal when a completed clearance issued a matric number
+  useEffect(() => {
+    if (!clearances) return
+    const completed = clearances.find(c => c.status === 'COMPLETED' && c.student?.matricNo)
+    if (completed?.student?.matricNo) {
+      const dismissedKey = `matric_celebrated_${completed.student.matricNo}`
+      if (!sessionStorage.getItem(dismissedKey)) {
+        setCelebrationMatricNo(completed.student.matricNo)
+        setCelebrationStudentName(`${completed.student.firstName || ''} ${completed.student.lastName || ''}`.trim())
+        setShowMatricCelebration(true)
+        sessionStorage.setItem(dismissedKey, '1')
+      }
+    }
+  }, [clearances])
 
   const isLoading = loadingClearance || loadingStages
 
@@ -132,6 +250,15 @@ export default function StudentDashboard() {
                         : 'Student Profile'}
                     </h2>
                     <p className="text-xs text-slate-500 flex flex-wrap items-center gap-2 mt-1">
+                      {clearance.student?.matricNo && (
+                        <>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-[11px]">
+                            <GraduationCap className="h-3 w-3" />
+                            {clearance.student.matricNo}
+                          </span>
+                          <span className="text-slate-300">•</span>
+                        </>
+                      )}
                       <span>JAMB: <strong className="text-slate-800 font-mono font-bold">{clearance.student?.jambRegNo || 'N/A'}</strong></span>
                       {clearance.student?.department?.name && (
                         <>
@@ -661,6 +788,9 @@ export default function StudentDashboard() {
                     {clearance.campaign?.name ?? 'University Clearance'}
                   </h4>
                   <p className="text-xs text-[var(--color-muted)] mt-0.5">
+                    {clearance.student?.matricNo && (
+                      <><span className="font-mono font-bold text-emerald-700">{clearance.student.matricNo}</span> • </>
+                    )}
                     Clearance No: <span className="font-mono font-semibold text-[var(--color-text)]">{clearance.clearanceNumber || 'UNN-CLEARED'}</span> • Cleared on {clearance.completedAt ? formatDate(clearance.completedAt) : 'N/A'}
                   </p>
                 </div>
@@ -727,6 +857,14 @@ export default function StudentDashboard() {
             </Button>
           </Link>
         </Card>
+      )}
+      {/* Matric Number Celebration Modal */}
+      {showMatricCelebration && celebrationMatricNo && (
+        <MatricCelebrationModal
+          matricNo={celebrationMatricNo}
+          studentName={celebrationStudentName}
+          onClose={() => setShowMatricCelebration(false)}
+        />
       )}
     </motion.div>
   )

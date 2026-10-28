@@ -277,6 +277,8 @@ model ClearanceCampaign {
   isActive           Boolean     @default(true)
   issuesCertificate  Boolean     @default(true)
   issuesClearanceSlip Boolean    @default(false)
+  issuesMatricNumber Boolean     @default(false)
+  matricPrefix       String?                    // e.g. "2022" — defaults to session start year
   issuedDataFields   String[]    @default([])
   customCertificateUrl String?
   customCertificateCoords Json?

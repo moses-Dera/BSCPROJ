@@ -83,6 +83,8 @@ export function CampaignList({ initialSessions = [] }: { initialSessions?: any[]
   const [description, setDescription] = useState('')
   const [issuesCertificate, setIssuesCertificate] = useState(true)
   const [issuesClearanceSlip, setIssuesClearanceSlip] = useState(false)
+  const [issuesMatricNumber, setIssuesMatricNumber] = useState(false)
+  const [matricPrefix, setMatricPrefix] = useState('')
   const [issuedDataFieldsStr, setIssuedDataFieldsStr] = useState('')
   const [sessionId, setSessionId] = useState('')
   
@@ -153,7 +155,7 @@ export function CampaignList({ initialSessions = [] }: { initialSessions?: any[]
         })
       })
 
-      return campaignsApi.create({ name, description, sessionId, eligibilityRules: formattedRules, issuesCertificate, issuesClearanceSlip, issuedDataFields })
+      return campaignsApi.create({ name, description, sessionId, eligibilityRules: formattedRules, issuesCertificate, issuesClearanceSlip, issuesMatricNumber, matricPrefix: matricPrefix || undefined, issuedDataFields })
     },
     onSuccess: () => {
       toast.success('Campaign created')
@@ -163,6 +165,8 @@ export function CampaignList({ initialSessions = [] }: { initialSessions?: any[]
       setDescription('')
       setIssuesCertificate(true)
       setIssuesClearanceSlip(false)
+      setIssuesMatricNumber(false)
+      setMatricPrefix('')
       setIssuedDataFieldsStr('')
       setSessionId('')
       setTargetGroups([])
@@ -213,6 +217,7 @@ export function CampaignList({ initialSessions = [] }: { initialSessions?: any[]
                 {campaign.session && <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">{campaign.session.name}</span>}
                 {campaign.issuesCertificate && <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">Issues Certificate</span>}
                 {campaign.issuesClearanceSlip && <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded">Issues Slip</span>}
+                {campaign.issuesMatricNumber && <span className="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded">Issues Matric No.</span>}
               </div>
             </div>
             
@@ -362,6 +367,28 @@ export function CampaignList({ initialSessions = [] }: { initialSessions?: any[]
                 />
                 Issue Clearance Slip
               </label>
+              <label className="flex items-center gap-2 text-sm text-[var(--color-text)]">
+                <input 
+                  type="checkbox" 
+                  checked={issuesMatricNumber} 
+                  onChange={e => setIssuesMatricNumber(e.target.checked)}
+                  className="rounded border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                />
+                Auto-Issue Matric Numbers
+              </label>
+              {issuesMatricNumber && (
+                <div className="ml-6 mt-2 p-3 bg-orange-50 border border-orange-200 rounded-md">
+                  <label className="text-sm font-medium mb-1 block text-orange-800">Matric Number Prefix</label>
+                  <Input 
+                    placeholder="e.g. 2022 (defaults to session start year)" 
+                    value={matricPrefix} 
+                    onChange={e => setMatricPrefix(e.target.value)} 
+                  />
+                  <p className="text-xs text-orange-600 mt-1">
+                    Students without a matric number will be automatically assigned one upon completing clearance. Format: PREFIX/000001, PREFIX/000002, etc.
+                  </p>
+                </div>
+              )}
               <div className="mt-4">
                 <label className="text-sm font-medium mb-1 block">Custom Issued Data Fields (Comma Separated)</label>
                 <Input placeholder="e.g. Matric Number, Hostel Room" value={issuedDataFieldsStr} onChange={e => setIssuedDataFieldsStr(e.target.value)} />

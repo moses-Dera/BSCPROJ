@@ -263,6 +263,47 @@ export class ClearanceService {
             issuedData,
           },
         })
+
+        // Auto-generate matric number if campaign is configured for it
+        const campaign = clearance.campaign as any
+        if (campaign?.issuesMatricNumber) {
+          const existingStudent = await tx.student.findUnique({ where: { id: studentId } })
+          // Only assign if student doesn't already have a matric number
+          if (existingStudent && !existingStudent.matricNo) {
+            // Determine prefix: use campaign's custom prefix or extract start year from session name
+            let prefix = campaign.matricPrefix
+            if (!prefix) {
+              const session = await tx.academicSession.findFirst({ where: { id: clearance.sessionId } })
+              // Session name is like "2022/2023" — take the first part
+              prefix = session?.name?.split('/')[0]?.trim() || new Date().getFullYear().toString()
+            }
+
+            // Find the highest existing matric number with this prefix in this university
+            // Matric format: PREFIX/NNNNNN  e.g. 2022/000001
+            const existing = await tx.student.findMany({
+              where: {
+                universityId,
+                matricNo: { startsWith: `${prefix}/` },
+              },
+              select: { matricNo: true },
+              orderBy: { matricNo: 'desc' },
+              take: 1,
+            })
+
+            let nextCounter = 1
+            if (existing.length > 0 && existing[0].matricNo) {
+              const parts = existing[0].matricNo.split('/')
+              const lastNum = parseInt(parts[parts.length - 1], 10)
+              if (!isNaN(lastNum)) nextCounter = lastNum + 1
+            }
+
+            const matricNo = `${prefix}/${nextCounter.toString().padStart(6, '0')}`
+            await tx.student.update({
+              where: { id: studentId },
+              data: { matricNo },
+            })
+          }
+        }
       } else {
         const nextUnapprovedStage = campaignStages.find(s => remainingUnapprovedStageIds.includes(s.id))
         const nextStageId = nextUnapprovedStage?.id || clearance.currentStageId
