@@ -895,14 +895,9 @@ export function StageBuilder({ campaignId: initialCampaignId }: { campaignId?: s
         </div>
         <div className="p-4 bg-white border border-gray-200 rounded-xl shadow-xs">
           <p className="text-xs text-gray-500 font-medium">Assigned Officers</p>
-          <div className="flex items-baseline gap-1.5 mt-1">
-            <p className="text-2xl font-bold text-blue-600">
-              {new Set(synced.flatMap(s => (s.officerAssignments || []).map((a: any) => a.officerId || a.officer?.id || a.id).filter(Boolean))).size}
-            </p>
-            <span className="text-[11px] text-gray-400 font-normal">
-              ({synced.reduce((acc, s) => acc + (s.officerAssignments?.length || 0), 0)} stage mappings)
-            </span>
-          </div>
+          <p className="text-2xl font-bold text-blue-600 mt-1">
+            {new Set(synced.flatMap(s => (s.officerAssignments || []).map((a: any) => a.officerId || a.officer?.id || a.id).filter(Boolean))).size}
+          </p>
         </div>
         <div className="p-4 bg-white border border-gray-200 rounded-xl shadow-xs">
           <p className="text-xs text-gray-500 font-medium">Required Documents</p>
