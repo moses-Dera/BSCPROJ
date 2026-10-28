@@ -1144,12 +1144,19 @@ export default function ReviewPage({ params }: { params: Promise<{ studentId: st
       {rejectOpen && (
         <RejectDialog
           isPending={rejecting}
+          isRevoke={isCurrentStageApproved}
+          stageName={activeStage?.name}
           onConfirm={remarks =>
             reject(
               { requestId: clearance.id, stageId: activeStageId, remarks },
               {
                 onSuccess: () => {
                   setRejectOpen(false)
+                  toast.success(
+                    isCurrentStageApproved
+                      ? `Official endorsement for "${activeStage?.name}" has been revoked.`
+                      : `Stage "${activeStage?.name}" rejected.`
+                  )
                   qc.invalidateQueries()
                   router.push(ROUTES.officer.queue)
                 },

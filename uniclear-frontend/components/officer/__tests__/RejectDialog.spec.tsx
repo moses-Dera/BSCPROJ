@@ -54,4 +54,27 @@ describe('RejectDialog', () => {
 
     expect(mockOnCancel).toHaveBeenCalledTimes(1)
   })
+
+  it('requires confirmation checkbox when isRevoke is true', () => {
+    render(<RejectDialog onConfirm={mockOnConfirm} onCancel={mockOnCancel} isRevoke={true} stageName="JAMB Admission Letter" />)
+
+    expect(screen.getByText(/revoke endorsement/i)).toBeInTheDocument()
+    expect(screen.getByText(/official seal revocation warning/i)).toBeInTheDocument()
+
+    const textarea = screen.getByRole('textbox', { name: /rejection reason/i })
+    fireEvent.change(textarea, { target: { value: 'Discovered fraudulent certificate upon inspection.' } })
+
+    const confirmBtn = screen.getByRole('button', { name: /confirm revoke & reject/i })
+    // Disabled because checkbox is not yet checked
+    expect(confirmBtn).toBeDisabled()
+
+    const checkbox = screen.getByRole('checkbox')
+    fireEvent.click(checkbox)
+
+    // Now enabled
+    expect(confirmBtn).toBeEnabled()
+    fireEvent.click(confirmBtn)
+
+    expect(mockOnConfirm).toHaveBeenCalledWith('Discovered fraudulent certificate upon inspection.')
+  })
 })
