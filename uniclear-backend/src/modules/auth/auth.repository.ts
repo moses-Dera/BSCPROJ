@@ -38,6 +38,20 @@ export class AuthRepository {
   }
 
   static async saveRefreshToken(userId: string, token: string, expiresAt: Date) {
+    // Retry on unique constraint collision (multiple tabs refreshing simultaneously)
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        return await db.refreshToken.create({ data: { userId, token, expiresAt } })
+      } catch (err: any) {
+        if (err?.code === 'P2002' && attempt < 2) {
+          // Generate a new token and retry
+          const crypto = await import('crypto')
+          token = crypto.randomBytes(64).toString('hex')
+          continue
+        }
+        throw err
+      }
+    }
     return db.refreshToken.create({ data: { userId, token, expiresAt } })
   }
 

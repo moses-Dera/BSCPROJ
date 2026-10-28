@@ -29,6 +29,9 @@ import campaignRoutes       from '@/app/api/v1/campaigns/route'
 
 const app = express()
 
+// ── Trust proxy for Render / reverse-proxy hosts ──────────────────
+app.set('trust proxy', 1)
+
 // ── Security & Parsing ────────────────────────────────────────────
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
 app.use(cors({ origin: env.CLIENT_URL, credentials: true }))
