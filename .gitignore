@@ -17,3 +17,10 @@
 /diagrams/
 /uniclear-frontend/capture_wireframes.js
 .puppeteer_cache/
+
+# Local defense setup files
+pgadmin_servers.json
+start
+start.sh
+.local-logs/
+/uniclear-backend/scripts/sync-s3.js

@@ -84,8 +84,10 @@ async function loadImageBuffer(keyOrUrl: string): Promise<Buffer | null> {
   try {
     if (!keyOrUrl) return null
 
-    // Check local filesystem first
-    const cleanKey = path.basename(keyOrUrl)
+    
+    // Check local filesystem first (strip any query/hash from URL)
+    const urlWithoutQuery = keyOrUrl.split('?')[0].split('#')[0]
+    const cleanKey = path.basename(urlWithoutQuery)
     const localPath = path.resolve(process.cwd(), 'uploads', cleanKey)
     if (fs.existsSync(localPath)) {
       return await fs.promises.readFile(localPath)

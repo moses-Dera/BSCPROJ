@@ -16,6 +16,14 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'res.cloudinary.com' },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/uploads/:path*',
+        destination: `${process.env.API_URL || 'http://localhost:5000'}/uploads/:path*`,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
