@@ -186,7 +186,7 @@ export default function OfficerDashboard() {
               </p>
               <p className="text-xs text-[var(--color-muted)] mt-1.5 flex items-center gap-1.5">
                 <Award className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                <span>Cleared today</span>
+                <span>Stages endorsed today</span>
               </p>
             </Card>
 

@@ -1122,11 +1122,17 @@ export default function ReviewPage({ params }: { params: Promise<{ studentId: st
               variant="danger"
               className="w-full py-3 h-auto text-sm font-bold bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white shadow-xs rounded-xl flex items-center justify-center gap-2"
               loading={rejecting}
-              disabled={rejecting || isCurrentStageApproved}
+              disabled={rejecting}
               onClick={() => setRejectOpen(true)}
             >
               <XCircle className="h-4 w-4" />
-              <span>{rejecting ? 'Rejecting...' : `Reject ${activeStage?.name || 'Stage'}`}</span>
+              <span>
+                {rejecting
+                  ? 'Rejecting...'
+                  : isCurrentStageApproved
+                  ? `Revoke Endorsement & Reject ${activeStage?.name || 'Stage'}`
+                  : `Reject ${activeStage?.name || 'Stage'}`}
+              </span>
             </Button>
           </div>
         </Card>
